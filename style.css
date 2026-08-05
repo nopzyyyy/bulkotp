@@ -255,10 +255,10 @@ code {
   border-radius: 4px 4px 14px 14px;
 }
 
-/* Background Right-Side Watermark Logo (Fade from Bottom) */
+/* Background Right-Side Watermark Logo (Positioned at bottom page end, fading away) */
 .bg-watermark-right {
-  position: fixed;
-  right: -40px;
+  position: absolute;
+  right: -30px;
   bottom: 0;
   width: 480px;
   max-width: 42vw;
@@ -266,8 +266,8 @@ code {
   z-index: 0;
   opacity: 0.08;
   filter: drop-shadow(0 0 35px rgba(255, 37, 92, 0.4));
-  -webkit-mask-image: linear-gradient(to bottom, #000 15%, transparent 88%);
-  mask-image: linear-gradient(to bottom, #000 15%, transparent 88%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 10%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 10%, transparent 92%);
 }
 
 .bg-watermark-img {
