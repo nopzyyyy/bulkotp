@@ -67,50 +67,71 @@
         </div>
     </div>
 
-    <!-- Admin Main Dashboard Wrapper -->
-    <div id="adminDashboard" class="admin-dashboard-layout" style="display: none;">
-        <!-- Top Navbar Header -->
-        <header class="admin-header">
-            <div class="admin-nav-container">
-                <div class="brand">
-                    <div class="brand-logo-wrap">
-                        <img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img">
-                    </div>
-                    <span class="brand-text">BULK <span class="text-accent">OTP</span> <span class="admin-tag">ADMIN</span></span>
+    <!-- Admin Main Dashboard Wrapper with Vertical Sidebar -->
+    <div id="adminDashboard" class="admin-sidebar-layout" style="display: none;">
+        <!-- Left Vertical Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo-wrap">
+                    <img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img">
                 </div>
+                <div class="brand-info">
+                    <span class="brand-name">BULK <span class="text-accent">OTP</span></span>
+                    <span class="admin-tag">ADMIN CONTROL</span>
+                </div>
+            </div>
 
-                <div class="admin-top-right">
-                    <span class="admin-user-pill">
-                        <i class="fa-solid fa-circle-user"></i>
-                        <span id="currentAdminName">admin</span>
-                    </span>
-                    <a href="index.html" target="_blank" class="btn btn-glass btn-sm">
-                        <i class="fa-solid fa-store"></i> View Store
+            <nav class="sidebar-menu">
+                <span class="sidebar-heading">MAIN NAVIGATION</span>
+                <button class="sidebar-link active" onclick="switchAdminTab('overview', this)">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Overview &amp; Revenue</span>
+                </button>
+                <button class="sidebar-link" onclick="switchAdminTab('products', this)">
+                    <i class="fa-solid fa-box-open"></i>
+                    <span>Products &amp; Stock</span>
+                </button>
+                <button class="sidebar-link" onclick="switchAdminTab('orders', this)">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Orders &amp; Sales</span>
+                </button>
+                
+                <span class="sidebar-heading" style="margin-top: 1.5rem;">SYSTEM</span>
+                <button class="sidebar-link" onclick="switchAdminTab('settings', this)">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings &amp; Security</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="admin-user-info">
+                    <i class="fa-solid fa-circle-user user-avatar"></i>
+                    <div>
+                        <span id="currentAdminName" class="user-name">admin</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                    <a href="index.html" target="_blank" class="btn btn-glass btn-sm" style="flex: 1; justify-content: center;">
+                        <i class="fa-solid fa-store"></i> Store
                     </a>
-                    <button class="btn btn-danger btn-sm" onclick="handleAdminLogout()">
-                        <i class="fa-solid fa-power-off"></i> Logout
+                    <button class="btn btn-danger btn-sm" onclick="handleAdminLogout()" title="Logout">
+                        <i class="fa-solid fa-power-off"></i>
                     </button>
                 </div>
             </div>
-        </header>
+        </aside>
 
-        <!-- Admin Main Content Area -->
-        <main class="container section" style="padding-top: 2rem;">
-            <!-- Tab Navigation Bar -->
-            <div class="admin-tabs">
-                <button class="admin-tab active" onclick="switchAdminTab('overview', this)">
-                    <i class="fa-solid fa-chart-line"></i> Overview &amp; Revenue
-                </button>
-                <button class="admin-tab" onclick="switchAdminTab('products', this)">
-                    <i class="fa-solid fa-box-open"></i> Products &amp; Stock
-                </button>
-                <button class="admin-tab" onclick="switchAdminTab('orders', this)">
-                    <i class="fa-solid fa-receipt"></i> Orders &amp; Sales
-                </button>
-                <button class="admin-tab" onclick="switchAdminTab('settings', this)">
-                    <i class="fa-solid fa-gear"></i> Settings &amp; Security
-                </button>
-            </div>
+        <!-- Main Content Area -->
+        <main class="admin-main-panel">
+            <header class="admin-topbar">
+                <h2 id="adminCurrentTabTitle" style="margin: 0; font-size: 1.35rem;">Overview &amp; Revenue</h2>
+                <a href="index.html" target="_blank" class="btn btn-glass btn-sm">
+                    <i class="fa-solid fa-store"></i> View Live Store
+                </a>
+            </header>
+
+            <div class="admin-content-body">
 
             <!-- SECTION 1: OVERVIEW & REVENUE -->
             <section id="tab-overview" class="admin-tab-content active">
@@ -256,6 +277,7 @@
                     </div>
                 </div>
             </section>
+            </div>
         </main>
     </div>
 

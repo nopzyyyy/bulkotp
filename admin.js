@@ -122,7 +122,7 @@ function handleAdminLogout() {
 }
 
 function switchAdminTab(tabId, btn) {
-  const tabs = document.querySelectorAll('.admin-tab');
+  const tabs = document.querySelectorAll('.sidebar-link, .admin-tab');
   tabs.forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
@@ -131,6 +131,17 @@ function switchAdminTab(tabId, btn) {
 
   const target = document.getElementById(`tab-${tabId}`);
   if (target) target.classList.add('active');
+
+  const titleEl = document.getElementById('adminCurrentTabTitle');
+  if (titleEl) {
+    const titles = {
+      overview: 'Overview & Revenue',
+      products: 'Products & Stock Management',
+      orders: 'Customer Orders & Sales',
+      settings: 'Settings & Security'
+    };
+    titleEl.textContent = titles[tabId] || 'Admin Dashboard';
+  }
 
   if (tabId === 'overview' || tabId === 'orders') {
     loadAdminDashboardData();
