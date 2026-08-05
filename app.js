@@ -784,30 +784,70 @@ function renderHeaderUserArea() {
 
   if (currentUser) {
     container.innerHTML = `
-      <button class="btn btn-glass btn-sm" onclick="openMyOrdersModal()" title="View Delivered Keys">
-        <i class="fa-solid fa-box-open text-accent"></i> <span class="hide-mobile">My Orders</span>
-      </button>
-      <div class="user-balance-pill" title="Store Balance">
-        <i class="fa-solid fa-wallet text-green"></i>
-        <span>$${(currentUser.balance || 0).toFixed(2)}</span>
+      <div class="user-profile-menu-wrap" style="position:relative;">
+        <button class="nav-profile-btn" onclick="toggleUserProfileDropdown(event)" title="${escapeHtml(currentUser.email)}">
+          <i class="fa-solid fa-user"></i>
+        </button>
+
+        <div id="userProfileDropdown" class="user-profile-dropdown">
+          <div class="dropdown-header">
+            <span class="dropdown-user-email">${escapeHtml(currentUser.email)}</span>
+            <span class="dropdown-user-role">${escapeHtml(currentUser.role)}</span>
+          </div>
+
+          <div class="dropdown-balance-row">
+            <span style="font-size:0.75rem; color:var(--text-dim);">Store Balance</span>
+            <span class="dropdown-balance-val">$${(currentUser.balance || 0).toFixed(2)}</span>
+          </div>
+
+          <div class="dropdown-divider"></div>
+
+          <button class="dropdown-item" onclick="openMyOrdersModal()">
+            <i class="fa-solid fa-box-open text-accent"></i> My Orders &amp; Keys
+          </button>
+
+          <button class="dropdown-item" onclick="openUserTicketsModal()">
+            <i class="fa-solid fa-headset text-green"></i> Support Tickets
+          </button>
+
+          ${currentUser.role === 'ADMIN' ? `
+            <a href="admin.html" class="dropdown-item" style="color:var(--accent);">
+              <i class="fa-solid fa-gauge-high"></i> Admin Panel
+            </a>
+          ` : ''}
+
+          <div class="dropdown-divider"></div>
+
+          <button class="dropdown-item text-red" onclick="handleUserLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+          </button>
+        </div>
       </div>
-      ${currentUser.role === 'ADMIN' ? `
-        <a href="admin.html" class="btn btn-primary btn-sm hide-mobile" style="border-radius:var(--radius-pill); font-weight:700;">
-          <i class="fa-solid fa-gauge-high"></i> Admin
-        </a>
-      ` : ''}
-      <button class="btn btn-ghost btn-sm text-dim" onclick="handleUserLogout()" title="Log Out">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </button>
     `;
   } else {
     container.innerHTML = `
-      <a href="login.html" class="btn btn-glass btn-sm">
-        <i class="fa-solid fa-right-to-bracket"></i> <span>Sign In</span>
-      </a>
+      <button class="nav-profile-btn" onclick="window.location.href='login.html'" title="Sign In">
+        <i class="fa-solid fa-user"></i>
+      </button>
     `;
   }
 }
+
+function toggleUserProfileDropdown(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown) dropdown.classList.toggle('active');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('userProfileDropdown');
+  if (dropdown && dropdown.classList.contains('active')) {
+    if (!dropdown.contains(e.target) && !e.target.closest('.nav-profile-btn')) {
+      dropdown.classList.remove('active');
+    }
+  }
+});
 
 async function handleUserLogout() {
   await fetch('/api/auth/logout', { method: 'POST' });

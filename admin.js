@@ -1,56 +1,12 @@
 let allAdminProducts = [];
 let allAdminOrders = [];
 let allAdminUsers = [];
+let allAdminTickets = [];
+let activeAdminTicketId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAdminAuth();
-  initBackgroundParticles();
 });
-
-function initBackgroundParticles() {
-  let canvas = document.getElementById('bgParticlesCanvas');
-  if (!canvas) {
-    canvas = document.createElement('canvas');
-    canvas.id = 'bgParticlesCanvas';
-    document.body.prepend(canvas);
-  }
-  const ctx = canvas.getContext('2d');
-  let width = canvas.width = window.innerWidth;
-  let height = canvas.height = window.innerHeight;
-
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
-
-  const particles = [];
-  for (let i = 0; i < 45; i++) {
-    particles.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      radius: Math.random() * 1.8 + 0.8,
-      speedY: -(Math.random() * 0.75 + 0.35),
-      speedX: (Math.random() - 0.5) * 0.2,
-      opacity: Math.random() * 0.22 + 0.08,
-      isRed: Math.random() > 0.35
-    });
-  }
-
-  function render() {
-    ctx.clearRect(0, 0, width, height);
-    particles.forEach(p => {
-      p.y += p.speedY;
-      p.x += p.speedX;
-      if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.isRed ? `rgba(255, 37, 92, ${p.opacity})` : `rgba(255, 255, 255, ${p.opacity * 0.8})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(render);
-  }
-  render();
-}
 
 async function checkAdminAuth() {
   try {
@@ -96,8 +52,9 @@ function switchAdminTab(tabId, btn) {
     const titles = {
       overview: 'Revenue Analytics',
       products: 'Products & Stock Management',
-      orders: 'Customer Orders & Sales',
-      users: 'Registered Users & Balances',
+      orders: 'Customer Orders & History',
+      users: 'Users & Balances Manager',
+      tickets: 'Customer Support Tickets',
       audit: 'Security Audit Logs'
     };
     titleEl.textContent = titles[tabId] || 'Admin Dashboard';
@@ -113,6 +70,7 @@ function switchAdminTab(tabId, btn) {
   else if (tabId === 'products') loadAdminProducts();
   else if (tabId === 'orders') loadAdminOrders();
   else if (tabId === 'users') loadAdminUsers();
+  else if (tabId === 'tickets') loadAdminTickets();
   else if (tabId === 'audit') loadAdminAuditLogs();
 }
 
@@ -139,9 +97,11 @@ async function loadAdminDashboardData() {
     // Recent Orders Table
     renderRecentOrdersTable(stats.recentOrders || []);
 
-    // Draw Line Chart
+    // Draw Full-Width Line Chart
     if (stats.chart) {
-      drawDailyRevenueChart(stats.chart.labels || [], stats.chart.data || []);
+      setTimeout(() => {
+        drawDailyRevenueChart(stats.chart.labels || [], stats.chart.data || []);
+      }, 50);
     }
   } catch (err) {
     console.error('Error loading dashboard stats:', err);
@@ -175,16 +135,18 @@ function drawDailyRevenueChart(labels, data) {
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = 180 * dpr;
+  const parent = canvas.parentElement;
+  const width = parent ? parent.clientWidth : 800;
+  const height = 180;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
   ctx.scale(dpr, dpr);
 
-  const w = rect.width;
-  const h = 180;
-  const padding = { top: 20, right: 20, bottom: 30, left: 35 };
-
-  ctx.clearRect(0, 0, w, h);
+  const padding = { top: 20, right: 30, bottom: 30, left: 45 };
+  ctx.clearRect(0, 0, width, height);
 
   if (data.length === 0) return;
 
@@ -193,41 +155,41 @@ function drawDailyRevenueChart(labels, data) {
   const peakPill = document.getElementById('chartPeakPill');
   if (peakPill) peakPill.textContent = `$${Math.max(...data, 0).toFixed(2)}`;
 
-  const graphW = w - padding.left - padding.right;
-  const graphH = h - padding.top - padding.bottom;
+  const graphW = width - padding.left - padding.right;
+  const graphH = height - padding.top - padding.bottom;
 
   // Grid Lines
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 3; i++) {
     const y = padding.top + (graphH / 3) * i;
     ctx.beginPath();
     ctx.moveTo(padding.left, y);
-    ctx.lineTo(w - padding.right, y);
+    ctx.lineTo(width - padding.right, y);
     ctx.stroke();
 
     const val = maxVal - (maxVal / 3) * i;
     ctx.fillStyle = '#6b6f66';
     ctx.font = '10px "JetBrains Mono"';
-    ctx.fillText(`$${Math.round(val)}`, 5, y + 3);
+    ctx.fillText(`$${Math.round(val)}`, 8, y + 3);
   }
 
-  // Draw Line
+  // Draw Smooth Curve
   const points = data.map((val, idx) => {
     const x = padding.left + (graphW / (data.length - 1 || 1)) * idx;
     const y = padding.top + graphH - (val / maxVal) * graphH;
     return { x, y };
   });
 
-  // Area Fill
-  const gradient = ctx.createLinearGradient(0, padding.top, 0, h - padding.bottom);
+  // Gradient Area Fill
+  const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
   gradient.addColorStop(0, 'rgba(255, 37, 92, 0.35)');
   gradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
 
   ctx.beginPath();
-  ctx.moveTo(points[0].x, h - padding.bottom);
+  ctx.moveTo(points[0].x, height - padding.bottom);
   points.forEach(p => ctx.lineTo(p.x, p.y));
-  ctx.lineTo(points[points.length - 1].x, h - padding.bottom);
+  ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
   ctx.closePath();
   ctx.fillStyle = gradient;
   ctx.fill();
@@ -245,16 +207,33 @@ function drawDailyRevenueChart(labels, data) {
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
+  // Draw Dots on Points
+  points.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff255c';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
   // X Axis Labels
   ctx.fillStyle = '#8a8d85';
   ctx.font = '10px "JetBrains Mono"';
   labels.forEach((lbl, idx) => {
-    if (idx % 2 === 0 || idx === labels.length - 1) {
-      const x = points[idx].x;
-      ctx.fillText(lbl, x - 12, h - 8);
-    }
+    const x = points[idx].x;
+    ctx.fillText(lbl, x - 14, height - 8);
   });
 }
+
+// Window Resize Redraw
+window.addEventListener('resize', () => {
+  const overviewTab = document.getElementById('tab-overview');
+  if (overviewTab && overviewTab.classList.contains('active')) {
+    loadAdminDashboardData();
+  }
+});
 
 // Products Management
 async function loadAdminProducts() {
@@ -495,6 +474,106 @@ function renderAdminOrders(orders) {
       </tr>
     `;
   }).join('');
+}
+
+// Support Tickets Management
+async function loadAdminTickets() {
+  try {
+    const res = await fetch('/api/admin/tickets');
+    if (!res.ok) return;
+    allAdminTickets = await res.json();
+    renderAdminTickets(allAdminTickets);
+  } catch (err) {
+    console.error('Error loading admin tickets:', err);
+  }
+}
+
+function renderAdminTickets(tickets) {
+  const tbody = document.getElementById('adminTicketsTable');
+  if (!tbody) return;
+
+  if (tickets.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">No customer support tickets.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tickets.map(t => `
+    <tr>
+      <td><span class="font-mono text-accent" style="font-weight:700;">#${escapeHtml(t.ticketNumber || t.id)}</span></td>
+      <td><strong style="color:#fff;">${escapeHtml(t.email)}</strong></td>
+      <td>${escapeHtml(t.subject)}</td>
+      <td><span class="cat-pill">${escapeHtml(t.category)}</span></td>
+      <td>
+        <span class="pinks-status-pill ${t.status === 'REPLIED' ? 'status-completed' : 'status-open'}">
+          ${escapeHtml(t.status)}
+        </span>
+      </td>
+      <td class="text-dim">${formatDate(t.updatedAt || t.createdAt)}</td>
+      <td>
+        <button class="btn btn-primary btn-sm" onclick="openAdminTicketModal('${t.id}')">
+          <i class="fa-solid fa-reply"></i> Reply
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAdminTicketModal(ticketId) {
+  activeAdminTicketId = ticketId;
+  const ticket = allAdminTickets.find(t => t.id === ticketId);
+  if (!ticket) return;
+
+  const modal = document.getElementById('adminTicketModal');
+  if (!modal) return;
+
+  document.getElementById('adminTicketTitle').textContent = `Ticket #${ticket.ticketNumber} — ${ticket.subject}`;
+  document.getElementById('adminTicketStatusSelect').value = ticket.status || 'REPLIED';
+
+  const threadEl = document.getElementById('adminTicketThread');
+  if (threadEl) {
+    threadEl.innerHTML = (ticket.messages || []).map(m => `
+      <div class="ticket-msg-bubble ${m.senderRole === 'ADMIN' ? 'admin' : 'user'}">
+        <div class="ticket-msg-meta">
+          <span class="ticket-msg-author">${escapeHtml(m.sender)} ${m.senderRole === 'ADMIN' ? '<span class="role-badge admin">STAFF</span>' : ''}</span>
+          <span class="ticket-msg-time">${formatDate(m.createdAt)}</span>
+        </div>
+        <div class="ticket-msg-text">${escapeHtml(m.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('adminTicketReplyText').value = '';
+  modal.classList.add('active');
+}
+
+function closeAdminTicketModal() {
+  const modal = document.getElementById('adminTicketModal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function handleAdminTicketReplySubmit(e) {
+  e.preventDefault();
+  if (!activeAdminTicketId) return;
+
+  const text = document.getElementById('adminTicketReplyText').value.trim();
+  const status = document.getElementById('adminTicketStatusSelect').value;
+
+  try {
+    const res = await fetch(`/api/admin/tickets/${activeAdminTicketId}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, status })
+    });
+    if (res.ok) {
+      showToast('Reply sent to customer!');
+      closeAdminTicketModal();
+      loadAdminTickets();
+    } else {
+      showToast('Failed to send reply.');
+    }
+  } catch (err) {
+    showToast('Error submitting reply.');
+  }
 }
 
 // Audit Logs

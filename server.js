@@ -43,6 +43,7 @@ const FILES = {
   sessions: path.join(DATA_DIR, 'sessions.json'),
   products: path.join(DATA_DIR, 'products.json'),
   orders: path.join(DATA_DIR, 'orders.json'),
+  tickets: path.join(DATA_DIR, 'tickets.json'),
   auditLogs: path.join(DATA_DIR, 'audit-logs.json'),
   store: path.join(DATA_DIR, 'store.json')
 };
@@ -755,6 +756,108 @@ app.post('/api/upload', requireAdmin, upload.single('thumbnail'), (req, res) => 
 app.get('/api/admin/audit-logs', requireAdmin, (req, res) => {
   const logs = readJson(FILES.auditLogs, []);
   res.json(logs);
+});
+
+// ==========================================
+// SUPPORT TICKETS ROUTES
+// ==========================================
+
+// Create Ticket
+app.post('/api/tickets', requireAuth, (req, res) => {
+  const { subject, category, message } = req.body;
+  if (!subject || !message) {
+    return res.status(400).json({ error: 'Subject and message required.' });
+  }
+
+  const ticketId = `TCK-${Date.now().toString().slice(-6)}`;
+  const newTicket = {
+    id: ticketId,
+    ticketNumber: ticketId,
+    userId: req.currentUser.id,
+    email: req.currentUser.email,
+    subject: subject.trim(),
+    category: category || 'General',
+    status: 'OPEN',
+    messages: [
+      {
+        sender: req.currentUser.email,
+        senderRole: req.currentUser.role,
+        text: message.trim(),
+        createdAt: new Date().toISOString()
+      }
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  const tickets = readJson(FILES.tickets, []);
+  tickets.unshift(newTicket);
+  writeJson(FILES.tickets, tickets);
+
+  res.json({ success: true, ticket: newTicket });
+});
+
+// GET User Tickets
+app.get('/api/tickets', requireAuth, (req, res) => {
+  const tickets = readJson(FILES.tickets, []);
+  const userTickets = tickets.filter(t => t.userId === req.currentUser.id || t.email === req.currentUser.email);
+  res.json(userTickets);
+});
+
+// User Reply to Ticket
+app.post('/api/tickets/:id/reply', requireAuth, (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: 'Message text required.' });
+
+  const tickets = readJson(FILES.tickets, []);
+  const ticket = tickets.find(t => t.id === req.params.id && (t.userId === req.currentUser.id || t.email === req.currentUser.email));
+
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
+
+  ticket.messages.push({
+    sender: req.currentUser.email,
+    senderRole: req.currentUser.role,
+    text: text.trim(),
+    createdAt: new Date().toISOString()
+  });
+  ticket.status = 'OPEN';
+  ticket.updatedAt = new Date().toISOString();
+
+  writeJson(FILES.tickets, tickets);
+  res.json({ success: true, ticket });
+});
+
+// Admin Get All Tickets
+app.get('/api/admin/tickets', requireAdmin, (req, res) => {
+  const tickets = readJson(FILES.tickets, []);
+  res.json(tickets);
+});
+
+// Admin Reply & Update Ticket Status
+app.post('/api/admin/tickets/:id/reply', requireAdmin, (req, res) => {
+  const { text, status } = req.body;
+
+  const tickets = readJson(FILES.tickets, []);
+  const ticket = tickets.find(t => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
+
+  if (text && text.trim().length > 0) {
+    ticket.messages.push({
+      sender: req.currentUser.email,
+      senderRole: 'ADMIN',
+      text: text.trim(),
+      createdAt: new Date().toISOString()
+    });
+    ticket.status = status || 'REPLIED';
+  } else if (status) {
+    ticket.status = status;
+  }
+
+  ticket.updatedAt = new Date().toISOString();
+  writeJson(FILES.tickets, tickets);
+
+  logAudit(req.currentUser.email, 'REPLY_TICKET', `Replied to ticket #${ticket.ticketNumber}`, req.ip);
+  res.json({ success: true, ticket });
 });
 
 app.listen(PORT, () => {

@@ -456,6 +456,55 @@
         </div>
     </div>
 
+    <!-- User Support Tickets Modal -->
+    <div id="userTicketsModal" class="modal-overlay">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-headset text-accent"></i> Support Tickets</h3>
+                <button class="modal-close" onclick="closeUserTicketsModal()">&times;</button>
+            </div>
+            
+            <div class="tickets-modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <h4 style="margin: 0; font-size: 1rem; color: #fff;">My Support Requests</h4>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateTicketForm()">
+                        <i class="fa-solid fa-plus"></i> Open New Ticket
+                    </button>
+                </div>
+
+                <!-- Create Ticket Form -->
+                <form id="createTicketForm" onsubmit="handleCreateTicketSubmit(event)" style="display: none; background: var(--bg-surface-deep); padding: 1.25rem; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); margin-bottom: 1.5rem;">
+                    <h5 style="margin: 0 0 1rem; font-size: 0.95rem; color: #fff;">Create Support Ticket</h5>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Subject</label>
+                        <input type="text" id="ticketSubject" class="form-input" placeholder="e.g. Help with Key Activation" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Category</label>
+                        <select id="ticketCategory" class="form-input">
+                            <option value="Key Issue">Key / Activation Issue</option>
+                            <option value="Payment">Payment / Balance</option>
+                            <option value="General">General Question</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label class="form-label">Message</label>
+                        <textarea id="ticketMessage" class="form-input" rows="3" placeholder="Explain your issue..." required></textarea>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                        <button type="button" class="btn btn-glass btn-sm" onclick="hideCreateTicketForm()">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Submit Ticket</button>
+                    </div>
+                </form>
+
+                <!-- Ticket Thread List -->
+                <div id="userTicketsList" style="max-height: 55vh; overflow-y: auto;">
+                    <!-- Populated by app.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Script -->
     <script src="app.js"></script>
 </body>
