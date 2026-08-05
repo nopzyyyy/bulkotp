@@ -2219,80 +2219,125 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 1024px) {
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden !important;
+  }
+
   /* Hero Khaled Layout: Preserve PC 3-Column Side-by-Side Layout on Mobile */
   .hero-khaled-container {
-    padding: 0 0.5rem;
-    margin: 0.5rem auto 1rem;
+    padding: 0 0.25rem;
+    margin: 0.25rem auto 1rem;
     width: 100%;
-    max-width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
     overflow: hidden;
   }
 
   .hero-khaled-wrap {
-    grid-template-columns: 0.95fr 1.15fr 0.95fr;
-    gap: 0.35rem;
+    display: grid;
+    grid-template-columns: 0.9fr 1.2fr 1fr;
+    gap: 0.2rem;
     align-items: center;
+    width: 100%;
+  }
+
+  .hero-khaled-wrap * {
+    min-width: 0;
   }
 
   .khaled-left {
+    display: flex;
+    flex-direction: column;
     text-align: right;
     align-items: flex-end;
-    gap: 0.35rem;
+    gap: 0.2rem;
   }
 
   .khaled-right {
+    display: flex;
+    flex-direction: column;
     text-align: left;
     align-items: flex-start;
-    gap: 0.35rem;
+    gap: 0.2rem;
   }
 
   .khaled-badge {
-    font-size: 0.55rem;
-    padding: 0.2rem 0.45rem;
+    font-size: 0.45rem;
+    padding: 0.15rem 0.35rem;
+    white-space: nowrap;
   }
 
   .khaled-title {
-    font-size: 0.75rem;
-    line-height: 1.15;
+    font-size: 0.6rem;
+    line-height: 1.1;
+    margin-bottom: 0;
   }
 
   .khaled-handle-pill {
-    font-size: 0.65rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.55rem;
+    padding: 0.2rem 0.4rem;
   }
 
   .khaled-center-img {
+    width: 100%;
     max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .khaled-right-heading {
+    font-size: 0.48rem;
+    margin-bottom: 0.15rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
   }
 
   .khaled-link-card {
-    padding: 0.35rem 0.5rem;
-    gap: 0.35rem;
-    border-radius: var(--radius-sm);
+    padding: 0.25rem 0.35rem;
+    gap: 0.2rem;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .link-icon-box {
-    width: 24px;
-    height: 24px;
-    font-size: 0.7rem;
-    border-radius: 6px;
+    width: 20px;
+    height: 20px;
+    font-size: 0.55rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .link-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .link-label {
-    font-size: 0.5rem;
+    font-size: 0.4rem;
+    line-height: 1;
   }
 
   .link-val {
-    font-size: 0.65rem;
+    font-size: 0.52rem;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .link-arrow {
-    font-size: 0.6rem;
+    display: none;
   }
 
   .khaled-note-text {
-    font-size: 0.55rem;
-    padding: 0.25rem 0.4rem;
+    font-size: 0.45rem;
+    padding: 0.2rem 0.3rem;
+    line-height: 1.1;
   }
 
   /* Admin Off-Canvas Mobile Sidebar */
