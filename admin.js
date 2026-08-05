@@ -1,124 +1,76 @@
-let adminToken = localStorage.getItem('adminToken') || '';
-let currentAdminUsername = localStorage.getItem('adminUsername') || 'admin';
 let allAdminProducts = [];
 let allAdminOrders = [];
+let allAdminUsers = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (adminToken) {
-    verifyAdminToken();
-  } else {
-    showLoginOverlay();
-  }
-
-  const hiddenSwitch = document.getElementById('modalHidden');
-  if (hiddenSwitch) {
-    hiddenSwitch.addEventListener('change', (e) => {
-      const statusText = document.getElementById('hiddenStatusText');
-      if (statusText) {
-        statusText.textContent = e.target.checked ? 'Hidden (Draft)' : 'Visible in Shop';
-        statusText.style.color = e.target.checked ? 'var(--status-red)' : 'var(--status-green)';
-      }
-    });
-  }
+  checkAdminAuth();
+  initBackgroundParticles();
 });
 
-function getAuthHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${adminToken}`
-  };
-}
-
-function showLoginOverlay() {
-  const overlay = document.getElementById('adminLoginOverlay');
-  const dashboard = document.getElementById('adminDashboard');
-  if (overlay) overlay.style.display = 'flex';
-  if (dashboard) dashboard.style.display = 'none';
-}
-
-function hideLoginOverlay() {
-  const overlay = document.getElementById('adminLoginOverlay');
-  const dashboard = document.getElementById('adminDashboard');
-  if (overlay) overlay.style.display = 'none';
-  if (dashboard) dashboard.style.display = 'block';
-
-  const userPill = document.getElementById('currentAdminName');
-  if (userPill) userPill.textContent = currentAdminUsername;
-}
-
-async function verifyAdminToken() {
-  try {
-    const res = await fetch('/api/admin/verify', {
-      headers: getAuthHeaders()
-    });
-    if (res.ok) {
-      hideLoginOverlay();
-      loadAdminDashboardData();
-    } else {
-      adminToken = '';
-      localStorage.removeItem('adminToken');
-      showLoginOverlay();
-    }
-  } catch (err) {
-    console.error('Verify error:', err);
-    showLoginOverlay();
+function initBackgroundParticles() {
+  let canvas = document.getElementById('bgParticlesCanvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'bgParticlesCanvas';
+    document.body.prepend(canvas);
   }
-}
+  const ctx = canvas.getContext('2d');
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
 
-async function handleAdminLogin(event) {
-  event.preventDefault();
-  const user = document.getElementById('adminUser').value.trim();
-  const pass = document.getElementById('adminPass').value.trim();
-  const btn = document.getElementById('loginBtn');
-  const errorAlert = document.getElementById('loginError');
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
 
-  if (errorAlert) errorAlert.style.display = 'none';
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+  const particles = [];
+  for (let i = 0; i < 45; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 1.8 + 0.8,
+      speedY: -(Math.random() * 0.75 + 0.35),
+      speedX: (Math.random() - 0.5) * 0.2,
+      opacity: Math.random() * 0.22 + 0.08,
+      isRed: Math.random() > 0.35
+    });
   }
 
-  try {
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user, password: pass })
+  function render() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = p.isRed ? `rgba(255, 37, 92, ${p.opacity})` : `rgba(255, 255, 255, ${p.opacity * 0.8})`;
+      ctx.fill();
     });
+    requestAnimationFrame(render);
+  }
+  render();
+}
+
+async function checkAdminAuth() {
+  try {
+    const res = await fetch('/api/auth/me');
     const data = await res.json();
-
-    if (res.ok && data.token) {
-      adminToken = data.token;
-      currentAdminUsername = data.username || user;
-      localStorage.setItem('adminToken', adminToken);
-      localStorage.setItem('adminUsername', currentAdminUsername);
-      hideLoginOverlay();
-      showToast('Welcome to Admin Control Center');
-      loadAdminDashboardData();
-    } else {
-      if (errorAlert) {
-        document.getElementById('loginErrorText').textContent = data.error || 'Invalid credentials.';
-        errorAlert.style.display = 'flex';
-      }
+    if (!res.ok || !data.authenticated || data.user.role !== 'ADMIN') {
+      window.location.href = 'login.html?redirect=/admin.html';
+      return;
     }
+    const userEl = document.getElementById('adminUsernameDisplay');
+    if (userEl) userEl.textContent = data.user.email;
+    loadAdminDashboardData();
   } catch (err) {
-    console.error('Login error:', err);
-    if (errorAlert) {
-      document.getElementById('loginErrorText').textContent = 'Server connection failed.';
-      errorAlert.style.display = 'flex';
-    }
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login to Dashboard';
-    }
+    window.location.href = 'login.html?redirect=/admin.html';
   }
 }
 
-function handleAdminLogout() {
-  adminToken = '';
-  localStorage.removeItem('adminToken');
-  showLoginOverlay();
-  showToast('Logged out of Admin Panel');
+async function logoutAdmin() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = 'login.html';
 }
 
 function toggleMobileSidebar() {
@@ -129,7 +81,7 @@ function toggleMobileSidebar() {
 }
 
 function switchAdminTab(tabId, btn) {
-  const tabs = document.querySelectorAll('.sidebar-link, .admin-tab');
+  const tabs = document.querySelectorAll('.sidebar-link');
   tabs.forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
@@ -142,282 +94,212 @@ function switchAdminTab(tabId, btn) {
   const titleEl = document.getElementById('adminCurrentTabTitle');
   if (titleEl) {
     const titles = {
-      overview: 'Overview & Revenue',
+      overview: 'Revenue Analytics',
       products: 'Products & Stock Management',
       orders: 'Customer Orders & Sales',
-      settings: 'Settings & Security'
+      users: 'Registered Users & Balances',
+      audit: 'Security Audit Logs'
     };
     titleEl.textContent = titles[tabId] || 'Admin Dashboard';
   }
 
-  // Auto-close mobile sidebar on selection
+  // Auto-close mobile sidebar
   const sidebar = document.querySelector('.admin-sidebar');
   const overlay = document.getElementById('adminSidebarOverlay');
-  if (sidebar && sidebar.classList.contains('mobile-open')) {
-    sidebar.classList.remove('mobile-open');
-  }
-  if (overlay && overlay.classList.contains('active')) {
-    overlay.classList.remove('active');
-  }
+  if (sidebar && sidebar.classList.contains('mobile-open')) sidebar.classList.remove('mobile-open');
+  if (overlay && overlay.classList.contains('active')) overlay.classList.remove('active');
 
-  if (tabId === 'overview' || tabId === 'orders') {
-    loadAdminDashboardData();
-  } else if (tabId === 'products') {
-    loadAdminProducts();
-  }
+  if (tabId === 'overview') loadAdminDashboardData();
+  else if (tabId === 'products') loadAdminProducts();
+  else if (tabId === 'orders') loadAdminOrders();
+  else if (tabId === 'users') loadAdminUsers();
+  else if (tabId === 'audit') loadAdminAuditLogs();
 }
 
 async function loadAdminDashboardData() {
   try {
-    const res = await fetch('/api/admin/stats', { headers: getAuthHeaders() });
+    const res = await fetch('/api/admin/stats');
     if (!res.ok) return;
-    const data = await res.json();
+    const stats = await res.json();
 
-    if (document.getElementById('statRevenue')) document.getElementById('statRevenue').textContent = '$' + data.totalRevenue.toFixed(2);
-    if (document.getElementById('statOrders')) document.getElementById('statOrders').textContent = data.totalOrders;
-    if (document.getElementById('statProducts')) document.getElementById('statProducts').textContent = data.totalProducts;
+    // Metric Cards
+    document.getElementById('statTotalRevenue').textContent = `$${(stats.totalRevenue || 0).toFixed(2)}`;
+    document.getElementById('statTodayRevenue').textContent = `$${(stats.todayRevenue || 0).toFixed(2)}`;
+    document.getElementById('statMonthRevenue').textContent = `$${(stats.monthRevenue || 0).toFixed(2)}`;
+    document.getElementById('statTotalOrders').textContent = stats.totalOrders || 0;
 
-    allAdminOrders = data.recentOrders || [];
-    renderOverviewOrdersTable(allAdminOrders);
-    renderAllOrdersTable(allAdminOrders);
+    // Payment Breakdowns
+    if (stats.breakdown) {
+      document.getElementById('statCryptoRev').textContent = `$${(stats.breakdown.crypto || 0).toFixed(2)}`;
+      document.getElementById('statBalanceRev').textContent = `$${(stats.breakdown.balance || 0).toFixed(2)}`;
+      document.getElementById('statChimeRev').textContent = `$${(stats.breakdown.chime || 0).toFixed(2)}`;
+      document.getElementById('statStarsRev').textContent = `$${(stats.breakdown.stars || 0).toFixed(2)}`;
+    }
+
+    // Recent Orders Table
+    renderRecentOrdersTable(stats.recentOrders || []);
+
+    // Draw Line Chart
+    if (stats.chart) {
+      drawDailyRevenueChart(stats.chart.labels || [], stats.chart.data || []);
+    }
   } catch (err) {
-    console.error('Error loading stats:', err);
+    console.error('Error loading dashboard stats:', err);
   }
 }
 
-function renderOverviewOrdersTable(orders) {
-  const tbody = document.getElementById('overviewOrdersTable');
+function renderRecentOrdersTable(orders) {
+  const tbody = document.getElementById('overviewRecentOrdersTable');
   if (!tbody) return;
 
-  if (!orders || orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-dim);">No orders recorded yet.</td></tr>';
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 2rem;">No orders recorded yet.</td></tr>`;
     return;
   }
 
-  let html = '';
-  orders.slice(0, 5).forEach(ord => {
-    const dateStr = new Date(ord.createdAt).toLocaleString();
-    const keysStr = ord.dispensedKeys ? ord.dispensedKeys.join(', ') : 'N/A';
-    const itemsStr = ord.items ? ord.items.map(i => `${i.qty}x ${i.title}`).join(', ') : 'Pass';
-
-    html += `
-      <tr>
-        <td><strong>${ord.orderNumber || ord.id}</strong></td>
-        <td>${escapeHtml(ord.email)}</td>
-        <td>${escapeHtml(itemsStr)}</td>
-        <td><span class="status-chip">${escapeHtml(ord.paymentMethod || 'Crypto')}</span></td>
-        <td class="text-accent"><strong>$${ord.total ? ord.total.toFixed(2) : '0.00'}</strong></td>
-        <td><code class="font-mono text-muted" style="font-size:0.8125rem;">${escapeHtml(keysStr)}</code></td>
-        <td class="text-dim" style="font-size:0.8125rem;">${dateStr}</td>
-      </tr>
-    `;
-  });
-  tbody.innerHTML = html;
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td><span class="font-mono text-accent" style="font-weight: 700;">#${escapeHtml(o.orderNumber || o.id)}</span></td>
+      <td>${escapeHtml(o.email || 'Guest')}</td>
+      <td><strong style="color:#fff;">$${(o.total || 0).toFixed(2)}</strong></td>
+      <td><span class="badge-method">${escapeHtml(o.paymentMethod || 'Crypto')}</span></td>
+      <td><span class="pinks-status-pill status-completed"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(o.status || 'COMPLETED')}</span></td>
+      <td class="text-dim">${formatDate(o.createdAt)}</td>
+    </tr>
+  `).join('');
 }
 
-function renderAllOrdersTable(orders) {
-  const tbody = document.getElementById('allOrdersTable');
-  if (!tbody) return;
+function drawDailyRevenueChart(labels, data) {
+  const canvas = document.getElementById('dailyRevenueChart');
+  if (!canvas) return;
 
-  if (!orders || orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-dim);">No customer orders found.</td></tr>';
-    return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 180 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = 180;
+  const padding = { top: 20, right: 20, bottom: 30, left: 35 };
+
+  ctx.clearRect(0, 0, w, h);
+
+  if (data.length === 0) return;
+
+  const maxVal = Math.max(...data, 50);
+
+  const peakPill = document.getElementById('chartPeakPill');
+  if (peakPill) peakPill.textContent = `$${Math.max(...data, 0).toFixed(2)}`;
+
+  const graphW = w - padding.left - padding.right;
+  const graphH = h - padding.top - padding.bottom;
+
+  // Grid Lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = padding.top + (graphH / 3) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+
+    const val = maxVal - (maxVal / 3) * i;
+    ctx.fillStyle = '#6b6f66';
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.fillText(`$${Math.round(val)}`, 5, y + 3);
   }
 
-  let html = '';
-  orders.forEach(ord => {
-    const dateStr = new Date(ord.createdAt).toLocaleString();
-    const keysStr = ord.dispensedKeys ? ord.dispensedKeys.join(', ') : 'N/A';
-    const itemsStr = ord.items ? ord.items.map(i => `${i.qty}x ${i.title}`).join(', ') : 'Pass';
-
-    html += `
-      <tr>
-        <td><strong>${ord.orderNumber || ord.id}</strong></td>
-        <td>${escapeHtml(ord.email)}</td>
-        <td>${escapeHtml(itemsStr)}</td>
-        <td><span class="status-chip">${escapeHtml(ord.paymentMethod || 'Crypto')}</span></td>
-        <td class="text-accent"><strong>$${ord.total ? ord.total.toFixed(2) : '0.00'}</strong></td>
-        <td><code class="font-mono text-muted" style="font-size:0.8125rem;">${escapeHtml(keysStr)}</code></td>
-        <td class="text-dim" style="font-size:0.8125rem;">${dateStr}</td>
-      </tr>
-    `;
+  // Draw Line
+  const points = data.map((val, idx) => {
+    const x = padding.left + (graphW / (data.length - 1 || 1)) * idx;
+    const y = padding.top + graphH - (val / maxVal) * graphH;
+    return { x, y };
   });
-  tbody.innerHTML = html;
-}
 
-function filterOrdersTable() {
-  const term = document.getElementById('orderSearchInput').value.toLowerCase().trim();
-  if (!term) {
-    renderAllOrdersTable(allAdminOrders);
-    return;
+  // Area Fill
+  const gradient = ctx.createLinearGradient(0, padding.top, 0, h - padding.bottom);
+  gradient.addColorStop(0, 'rgba(255, 37, 92, 0.35)');
+  gradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, h - padding.bottom);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, h - padding.bottom);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Stroke Line
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const xc = (points[i].x + points[i - 1].x) / 2;
+    const yc = (points[i].y + points[i - 1].y) / 2;
+    ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
   }
-  const filtered = allAdminOrders.filter(ord => {
-    const emailMatch = ord.email && ord.email.toLowerCase().includes(term);
-    const keyMatch = ord.dispensedKeys && ord.dispensedKeys.some(k => k.toLowerCase().includes(term));
-    const idMatch = ord.orderNumber && ord.orderNumber.toLowerCase().includes(term);
-    return emailMatch || keyMatch || idMatch;
+  ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+  ctx.strokeStyle = '#ff255c';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // X Axis Labels
+  ctx.fillStyle = '#8a8d85';
+  ctx.font = '10px "JetBrains Mono"';
+  labels.forEach((lbl, idx) => {
+    if (idx % 2 === 0 || idx === labels.length - 1) {
+      const x = points[idx].x;
+      ctx.fillText(lbl, x - 12, h - 8);
+    }
   });
-  renderAllOrdersTable(filtered);
 }
 
+// Products Management
 async function loadAdminProducts() {
   try {
-    const res = await fetch('/api/products', { headers: getAuthHeaders() });
+    const res = await fetch('/api/admin/products');
     if (!res.ok) return;
     allAdminProducts = await res.json();
-
-    renderAdminProductGrid(allAdminProducts);
+    renderAdminProducts(allAdminProducts);
   } catch (err) {
     console.error('Error loading products:', err);
   }
 }
 
-function renderAdminProductGrid(products) {
-  const container = document.getElementById('adminProductGrid');
-  if (!container) return;
+function renderAdminProducts(products) {
+  const grid = document.getElementById('adminProductGrid');
+  if (!grid) return;
 
-  if (!products || products.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-dim);">
-        <i class="fa-solid fa-box-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-        <p>No products exist yet. Click "Create New Product" above.</p>
+  grid.innerHTML = products.map(p => `
+    <div class="admin-product-card ${p.hidden ? 'is-hidden' : ''}">
+      <div class="admin-card-art">
+        <img src="${p.art}" alt="${escapeHtml(p.title)}">
+        <span class="stock-badge ${p.stockCount > 0 ? '' : 'out'}">${p.stockCount} Keys Available</span>
       </div>
-    `;
-    return;
-  }
-
-  let html = '';
-  products.forEach(p => {
-    const keyCount = p.stockKeys ? p.stockKeys.length : 0;
-    const isHidden = Boolean(p.hidden);
-
-    html += `
-      <div class="admin-prod-card ${isHidden ? 'hidden-card' : ''}">
-        <div class="admin-prod-img-wrap">
-          <img src="${p.art}" alt="${escapeHtml(p.title)}">
-          <span class="status-chip ${isHidden ? 'status-red' : 'status-green'}">
-            ${isHidden ? 'Hidden (Draft)' : 'Visible'}
-          </span>
+      <div class="admin-card-body">
+        <h4 style="margin:0 0 0.5rem; font-size: 1rem; color:#fff;">${escapeHtml(p.title)}</h4>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+          <span style="font-size: 1.25rem; font-weight: 800; color: var(--accent);">$${(p.price || 0).toFixed(2)}</span>
+          <span class="cat-pill">${escapeHtml(p.category || 'hourly')}</span>
         </div>
-        <div class="admin-prod-body">
-          <h3 class="admin-prod-title">${escapeHtml(p.title)}</h3>
-          <p class="admin-prod-desc">${escapeHtml(p.description)}</p>
-
-          <div class="admin-prod-meta">
-            <div><strong class="text-accent">$${p.price.toFixed(2)}</strong></div>
-            <div>
-              <span class="status-chip ${keyCount > 0 ? 'status-cyan' : 'status-red'}">
-                <i class="fa-solid fa-key"></i> ${keyCount} Keys in Stock
-              </span>
-            </div>
-          </div>
-
-          <div class="admin-prod-actions">
-            <button class="btn btn-glass btn-sm" onclick="editProduct('${p.id}')">
-              <i class="fa-solid fa-pen"></i> Edit
-            </button>
-            <button class="btn btn-glass btn-sm" onclick="toggleProductVisibility('${p.id}', ${!isHidden})">
-              <i class="fa-solid ${isHidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${isHidden ? 'Show' : 'Hide'}
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
+        <div class="admin-card-actions">
+          <button class="btn btn-glass btn-sm" onclick="editProduct('${p.id}')">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
+          </button>
+          <button class="btn btn-ghost btn-sm text-red" onclick="deleteProduct('${p.id}')">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
         </div>
       </div>
-    `;
-  });
-
-  container.innerHTML = html;
-}
-
-function renderStockEngineList(products) {
-  const container = document.getElementById('stockProductsContainer');
-  if (!container) return;
-
-  if (!products || products.length === 0) {
-    container.innerHTML = '<p class="text-dim">No products found.</p>';
-    return;
-  }
-
-  let html = '';
-  products.forEach(p => {
-    const keysArray = p.stockKeys || [];
-    const keysText = keysArray.join('\n');
-    const keyCount = keysArray.length;
-
-    html += `
-      <div class="admin-panel-card stock-card" style="margin-bottom: 1.5rem;">
-        <div class="panel-header" style="align-items: center;">
-          <div style="display:flex; align-items:center; gap: 1rem;">
-            <img src="${p.art}" style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm);">
-            <div>
-              <h4 style="margin: 0; font-size: 1.125rem;">${escapeHtml(p.shortTitle || p.title)}</h4>
-              <span class="text-dim" style="font-size: 0.8125rem;">Prefix: <code>${p.prefix}</code> &bull; Price: $${p.price.toFixed(2)}</span>
-            </div>
-          </div>
-          <span class="status-chip ${keyCount > 0 ? 'status-green' : 'status-red'}">
-            <i class="fa-solid fa-key"></i> <span id="stockCountBadge-${p.id}">${keyCount}</span> Keys Available
-          </span>
-        </div>
-
-        <div style="margin-top: 1rem;">
-          <label class="form-label" style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.5rem; display: block;">
-            Enter Stock Keys (One key per line):
-          </label>
-          <textarea id="stockTextArea-${p.id}" class="form-input font-mono" rows="4" placeholder="BOT-XXXX-XXXX-XXXX-KEY" oninput="updateStockCountLive('${p.id}')">${escapeHtml(keysText)}</textarea>
-          
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.75rem;">
-            <span class="text-dim" style="font-size: 0.75rem;">Tip: Paste list of keys. Stock level updates dynamically upon purchase.</span>
-            <button class="btn btn-primary btn-sm" onclick="saveProductStock('${p.id}')">
-              <i class="fa-solid fa-floppy-disk"></i> Update Stock Keys
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-}
-
-function updateStockCountLive(productId) {
-  const area = document.getElementById(`stockTextArea-${productId}`);
-  const badge = document.getElementById(`stockCountBadge-${productId}`);
-  if (area && badge) {
-    const lines = area.value.split('\n').map(k => k.trim()).filter(k => k.length > 0);
-    badge.textContent = lines.length;
-  }
-}
-
-async function saveProductStock(productId) {
-  const area = document.getElementById(`stockTextArea-${productId}`);
-  if (!area) return;
-
-  const keysText = area.value;
-  try {
-    const res = await fetch(`/api/products/${productId}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ keysText })
-    });
-    if (res.ok) {
-      showToast('Stock keys saved successfully!');
-      loadAdminProducts();
-      loadAdminDashboardData();
-    } else {
-      showToast('Failed to save stock keys.');
-    }
-  } catch (err) {
-    console.error('Save stock error:', err);
-    showToast('Network error saving stock.');
-  }
+    </div>
+  `).join('');
 }
 
 function openProductModal(product = null) {
   const modal = document.getElementById('productModal');
   const title = document.getElementById('productModalTitle');
-
   if (!modal) return;
 
   if (product) {
@@ -430,29 +312,13 @@ function openProductModal(product = null) {
     document.getElementById('modalArt').value = product.art || '';
     document.getElementById('modalDescription').value = product.description || '';
     document.getElementById('modalHidden').checked = Boolean(product.hidden);
-
-    const keysArray = product.stockKeys || [];
-    document.getElementById('modalKeysText').value = keysArray.join('\n');
-
-    if (product.art) {
-      document.getElementById('modalPreviewImg').src = product.art;
-      document.getElementById('modalArtPreview').style.display = 'block';
-    }
+    document.getElementById('modalKeysText').value = (product.stockKeys || []).join('\n');
   } else {
     title.textContent = 'Create New Product';
     document.getElementById('modalProductId').value = '';
     document.getElementById('productForm').reset();
     document.getElementById('modalHidden').checked = false;
-    document.getElementById('modalArtPreview').style.display = 'none';
   }
-
-  const statusText = document.getElementById('hiddenStatusText');
-  if (statusText) {
-    const isHidden = document.getElementById('modalHidden').checked;
-    statusText.textContent = isHidden ? 'Hidden (Draft)' : 'Visible in Shop';
-    statusText.style.color = isHidden ? 'var(--status-red)' : 'var(--status-green)';
-  }
-
   modal.classList.add('active');
 }
 
@@ -461,84 +327,18 @@ function closeProductModal() {
   if (modal) modal.classList.remove('active');
 }
 
-function editProduct(productId) {
-  const prod = allAdminProducts.find(p => p.id === productId);
+function editProduct(id) {
+  const prod = allAdminProducts.find(p => p.id === id);
   if (prod) openProductModal(prod);
 }
 
-async function toggleProductVisibility(productId, hideState) {
-  try {
-    const res = await fetch(`/api/products/${productId}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ hidden: hideState })
-    });
-    if (res.ok) {
-      showToast(hideState ? 'Product set to Hidden' : 'Product set to Visible');
-      loadAdminProducts();
-    }
-  } catch (err) {
-    console.error('Toggle visibility error:', err);
-  }
-}
-
-async function deleteProduct(productId) {
-  if (!confirm('Are you sure you want to delete this product?')) return;
-
-  try {
-    const res = await fetch(`/api/products/${productId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    });
-    if (res.ok) {
-      showToast('Product deleted');
-      loadAdminProducts();
-      loadAdminDashboardData();
-    }
-  } catch (err) {
-    console.error('Delete product error:', err);
-  }
-}
-
-async function handleThumbnailUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('thumbnail', file);
-
-  try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${adminToken}`
-      },
-      body: formData
-    });
-    const data = await res.json();
-    if (res.ok && data.url) {
-      document.getElementById('modalArt').value = data.url;
-      document.getElementById('modalPreviewImg').src = data.url;
-      document.getElementById('modalArtPreview').style.display = 'block';
-      showToast('Thumbnail uploaded successfully!');
-    } else {
-      showToast(data.error || 'Upload failed');
-    }
-  } catch (err) {
-    console.error('Upload error:', err);
-    showToast('Upload error');
-  }
-}
-
-async function handleProductFormSubmit(event) {
-  event.preventDefault();
+async function handleProductFormSubmit(e) {
+  e.preventDefault();
   const id = document.getElementById('modalProductId').value;
   const payload = {
     title: document.getElementById('modalTitle').value.trim(),
-    shortTitle: document.getElementById('modalShortTitle').value.trim(),
     price: parseFloat(document.getElementById('modalPrice').value) || 0,
     category: document.getElementById('modalCategory').value,
-    duration: document.getElementById('modalDuration').value.trim(),
     prefix: document.getElementById('modalPrefix').value.trim(),
     art: document.getElementById('modalArt').value.trim() || 'assets/compact_pass_1h.jpg',
     description: document.getElementById('modalDescription').value.trim(),
@@ -546,122 +346,221 @@ async function handleProductFormSubmit(event) {
     keysText: document.getElementById('modalKeysText').value
   };
 
-  try {
-    const url = id ? `/api/products/${id}` : '/api/products';
-    const method = id ? 'PUT' : 'POST';
+  const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
+  const method = id ? 'PUT' : 'POST';
 
-    const res = await fetch(url, {
-      method,
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload)
-    });
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 
-    if (res.ok) {
-      showToast(id ? 'Product updated!' : 'Product created!');
-      closeProductModal();
-      loadAdminProducts();
-      loadAdminDashboardData();
-    } else {
-      const errData = await res.json();
-      showToast(errData.error || 'Failed to save product');
-    }
-  } catch (err) {
-    console.error('Product save error:', err);
-    showToast('Network error saving product');
+  if (res.ok) {
+    showToast(id ? 'Product updated!' : 'Product created!');
+    closeProductModal();
+    loadAdminProducts();
+  } else {
+    showToast('Failed to save product.');
   }
 }
 
-async function handleUpdateCredentials(event) {
-  event.preventDefault();
-  const newUsername = document.getElementById('settingUsername').value.trim();
-  const newPassword = document.getElementById('settingPassword').value.trim();
+async function deleteProduct(id) {
+  if (!confirm('Are you sure you want to delete this product?')) return;
+  const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('Product deleted');
+    loadAdminProducts();
+  }
+}
 
-  if (!newUsername && !newPassword) {
-    showToast('Please enter new username or password.');
+// Users & Balances Management
+async function loadAdminUsers() {
+  try {
+    const res = await fetch('/api/admin/users');
+    if (!res.ok) return;
+    allAdminUsers = await res.json();
+    renderAdminUsers(allAdminUsers);
+  } catch (err) {
+    console.error('Error loading users:', err);
+  }
+}
+
+function renderAdminUsers(users) {
+  const tbody = document.getElementById('adminUsersTable');
+  if (!tbody) return;
+
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No registered users.</td></tr>`;
     return;
   }
 
-  try {
-    const res = await fetch('/api/admin/settings', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ newUsername, newPassword })
-    });
-    if (res.ok) {
-      showToast('Admin credentials updated! Please log in again.');
-      setTimeout(() => handleAdminLogout(), 1500);
-    } else {
-      showToast('Failed to update credentials.');
-    }
-  } catch (err) {
-    console.error('Settings error:', err);
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td><span class="font-mono text-accent">${escapeHtml(u.id)}</span></td>
+      <td><strong style="color:#fff;">${escapeHtml(u.email)}</strong></td>
+      <td><span class="role-badge ${u.role === 'ADMIN' ? 'admin' : 'user'}">${escapeHtml(u.role)}</span></td>
+      <td><span style="color:var(--status-green); font-weight:800;">$${(u.balance || 0).toFixed(2)}</span></td>
+      <td class="text-dim">${formatDate(u.createdAt)}</td>
+      <td>
+        <button class="btn btn-glass btn-sm" onclick="quickTopUp('${escapeHtml(u.email)}')">
+          <i class="fa-solid fa-wallet"></i> Adjust Balance
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAdjustBalanceModal(email = '') {
+  const modal = document.getElementById('adjustBalanceModal');
+  if (modal) {
+    document.getElementById('balanceUserEmail').value = email;
+    document.getElementById('balanceAmount').value = '';
+    modal.classList.add('active');
   }
 }
 
-async function handleUpdateWallets(event) {
-  event.preventDefault();
-  const wallets = {
-    btc: document.getElementById('walletBTC').value.trim(),
-    usdt_trc20: document.getElementById('walletUSDT').value.trim(),
-    eth: document.getElementById('walletETH').value.trim(),
-    sol: document.getElementById('walletSOL').value.trim(),
-    ltc: document.getElementById('walletLTC').value.trim()
-  };
+function closeAdjustBalanceModal() {
+  const modal = document.getElementById('adjustBalanceModal');
+  if (modal) modal.classList.remove('active');
+}
 
-  try {
-    const res = await fetch('/api/admin/settings', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ wallets })
-    });
-    if (res.ok) {
-      showToast('Crypto wallet addresses updated!');
-    } else {
-      showToast('Failed to update wallet addresses.');
-    }
-  } catch (err) {
-    console.error('Wallet save error:', err);
+function quickTopUp(email) {
+  openAdjustBalanceModal(email);
+}
+
+async function handleAdjustBalanceSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById('balanceUserEmail').value.trim();
+  const amount = parseFloat(document.getElementById('balanceAmount').value);
+
+  if (!email || isNaN(amount)) {
+    showToast('Valid user email and amount required.');
+    return;
+  }
+
+  const res = await fetch('/api/admin/users/balance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, amount })
+  });
+
+  if (res.ok) {
+    showToast(`Updated balance for ${email}!`);
+    closeAdjustBalanceModal();
+    loadAdminUsers();
+  } else {
+    const data = await res.json();
+    showToast(data.error || 'Failed to update balance.');
   }
 }
 
-function showToast(message) {
+// Orders List
+async function loadAdminOrders() {
+  try {
+    const res = await fetch('/api/admin/orders');
+    if (!res.ok) return;
+    allAdminOrders = await res.json();
+    renderAdminOrders(allAdminOrders);
+  } catch (err) {
+    console.error('Error loading orders:', err);
+  }
+}
+
+function renderAdminOrders(orders) {
+  const tbody = document.getElementById('adminOrdersTable');
+  if (!tbody) return;
+
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">No orders.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = orders.map(o => {
+    const itemsList = (o.purchasedItems || o.items || []).map(i => `
+      <div style="font-size:0.8125rem;">
+        <span style="color:#fff;">${escapeHtml(i.name || i.title)}</span>
+        ${i.credentials ? `<br><code class="delivered-key-code" onclick="copyToClipboard('${escapeHtml(i.credentials)}')">${escapeHtml(i.credentials)}</code>` : ''}
+      </div>
+    `).join('');
+
+    return `
+      <tr>
+        <td><span class="font-mono text-accent" style="font-weight:700;">#${escapeHtml(o.orderNumber || o.id)}</span></td>
+        <td>${escapeHtml(o.email)}</td>
+        <td>${itemsList}</td>
+        <td><strong style="color:#fff;">$${(o.total || 0).toFixed(2)}</strong></td>
+        <td><span class="badge-method">${escapeHtml(o.paymentMethod || 'Crypto')}</span></td>
+        <td><span class="pinks-status-pill status-completed"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(o.status || 'COMPLETED')}</span></td>
+        <td class="text-dim">${formatDate(o.createdAt)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Audit Logs
+async function loadAdminAuditLogs() {
+  try {
+    const res = await fetch('/api/admin/audit-logs');
+    if (!res.ok) return;
+    const logs = await res.json();
+    renderAdminAuditLogs(logs);
+  } catch (err) {
+    console.error('Error loading audit logs:', err);
+  }
+}
+
+function renderAdminAuditLogs(logs) {
+  const tbody = document.getElementById('adminAuditTable');
+  if (!tbody) return;
+
+  if (logs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding:2rem;">No audit logs.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = logs.map(l => `
+    <tr>
+      <td class="text-dim">${formatDate(l.createdAt)}</td>
+      <td><strong style="color:#fff;">${escapeHtml(l.adminEmail)}</strong></td>
+      <td><span class="cat-pill">${escapeHtml(l.action)}</span></td>
+      <td>${escapeHtml(l.details)}</td>
+      <td class="font-mono text-dim">${escapeHtml(l.ip)}</td>
+    </tr>
+  `).join('');
+}
+
+// Helper Utilities
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text);
+  showToast('Key copied to clipboard!');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function showToast(msg) {
   let container = document.getElementById('toastContainer');
   if (!container) {
     container = document.createElement('div');
     container.id = 'toastContainer';
-    container.className = 'toast-container';
     document.body.appendChild(container);
   }
 
   const toast = document.createElement('div');
   toast.className = 'toast-notification';
-  toast.style.padding = '0.875rem 1.25rem';
-  toast.style.display = 'flex';
-  toast.style.alignItems = 'center';
-  toast.style.gap = '0.75rem';
-  toast.style.fontSize = '0.875rem';
-  toast.style.fontWeight = '500';
-  toast.style.color = '#fff';
-  toast.style.transition = 'all 0.3s ease';
-
-  toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--status-green); font-size: 1rem;"></i> <span>${message}</span>`;
+  toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--status-green);"></i> <span>${escapeHtml(msg)}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    setTimeout(() => {
-      if (toast.parentNode) toast.parentNode.removeChild(toast);
-    }, 300);
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
   }, 2500);
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

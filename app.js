@@ -19,7 +19,10 @@ let mouseY = window.innerHeight * 0.3;
 let targetX = mouseX;
 let targetY = mouseY;
 
+let currentUser = null;
+
 document.addEventListener('DOMContentLoaded', () => {
+  fetchCurrentUser();
   fetchProductsFromBackend();
   fetchWalletsFromBackend();
 
@@ -756,4 +759,124 @@ function initBackgroundParticles() {
   }
 
   renderParticles();
+}
+
+async function fetchCurrentUser() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated) {
+        currentUser = data.user;
+      } else {
+        currentUser = null;
+      }
+    }
+  } catch (err) {
+    currentUser = null;
+  }
+  renderHeaderUserArea();
+}
+
+function renderHeaderUserArea() {
+  const container = document.getElementById('userHeaderArea');
+  if (!container) return;
+
+  if (currentUser) {
+    container.innerHTML = `
+      <button class="btn btn-glass btn-sm" onclick="openMyOrdersModal()" title="View Delivered Keys">
+        <i class="fa-solid fa-box-open text-accent"></i> <span class="hide-mobile">My Orders</span>
+      </button>
+      <div class="user-balance-pill" title="Store Balance">
+        <i class="fa-solid fa-wallet text-green"></i>
+        <span>$${(currentUser.balance || 0).toFixed(2)}</span>
+      </div>
+      ${currentUser.role === 'ADMIN' ? `
+        <a href="admin.html" class="btn btn-primary btn-sm hide-mobile" style="border-radius:var(--radius-pill); font-weight:700;">
+          <i class="fa-solid fa-gauge-high"></i> Admin
+        </a>
+      ` : ''}
+      <button class="btn btn-ghost btn-sm text-dim" onclick="handleUserLogout()" title="Log Out">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
+    `;
+  } else {
+    container.innerHTML = `
+      <a href="login.html" class="btn btn-glass btn-sm">
+        <i class="fa-solid fa-right-to-bracket"></i> <span>Sign In</span>
+      </a>
+    `;
+  }
+}
+
+async function handleUserLogout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  currentUser = null;
+  renderHeaderUserArea();
+  showToast('Logged out');
+}
+
+async function openMyOrdersModal() {
+  const modal = document.getElementById('myOrdersModal');
+  if (!modal) return;
+  modal.classList.add('active');
+
+  const listEl = document.getElementById('myOrdersList');
+  if (!listEl) return;
+
+  listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading delivered keys...</div>';
+
+  try {
+    const res = await fetch('/api/orders');
+    if (!res.ok) {
+      listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--status-red);">Please log in to view delivered keys.</div>';
+      return;
+    }
+
+    const orders = await res.json();
+    if (orders.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-dim);">No orders found. Purchase a pass key to see your delivered keys here!</div>';
+      return;
+    }
+
+    listEl.innerHTML = orders.map(o => `
+      <div class="user-order-card">
+        <div class="user-order-header">
+          <div>
+            <span class="font-mono text-accent" style="font-weight:700;">#${escapeHtml(o.orderNumber || o.id)}</span>
+            <span class="text-dim" style="font-size:0.75rem; margin-left:0.5rem;">${formatDate(o.createdAt)}</span>
+          </div>
+          <span class="pinks-status-pill status-completed"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(o.status)}</span>
+        </div>
+        <div class="user-order-body">
+          ${(o.purchasedItems || o.items || []).map(item => `
+            <div class="user-order-item">
+              <div style="font-weight:600; color:#fff;">${escapeHtml(item.name || item.title)}</div>
+              ${item.credentials ? `
+                <div class="delivered-key-box">
+                  <code class="font-mono text-accent">${escapeHtml(item.credentials)}</code>
+                  <button class="btn btn-primary btn-sm" onclick="copySingleKey('${escapeHtml(item.credentials)}')">
+                    <i class="fa-regular fa-copy"></i> Copy Key
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--status-red);">Failed to load orders.</div>';
+  }
+}
+
+function closeMyOrdersModal() {
+  const modal = document.getElementById('myOrdersModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }

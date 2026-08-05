@@ -41,11 +41,15 @@
             </div>
             
             <div class="nav-right">
-                <a href="https://t.me/BULK_OTPBOT" target="_blank" class="nav-tg-btn">
+                <div id="userHeaderArea" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <!-- Populated by app.js -->
+                </div>
+
+                <a href="https://t.me/TAXBUM" target="_blank" class="nav-tg-btn">
                     <i class="fa-brands fa-telegram tg-icon"></i>
-                    <span>Telegram Support</span>
+                    <span>Support</span>
                 </a>
-                
+
                 <button class="nav-cart-btn" onclick="toggleCartDrawer()" title="View Cart">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span class="cart-badge" id="cartBadge">0</span>
@@ -438,6 +442,19 @@
             </div>
         </div>
     </footer>
+
+    <!-- My Orders & Delivered Keys Modal -->
+    <div id="myOrdersModal" class="modal-overlay">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-box-open text-accent"></i> My Orders &amp; Delivered Keys</h3>
+                <button class="modal-close" onclick="closeMyOrdersModal()">&times;</button>
+            </div>
+            <div id="myOrdersList" style="max-height: 60vh; overflow-y: auto; padding: 0.5rem 0;">
+                <!-- Populated by app.js -->
+            </div>
+        </div>
+    </div>
 
     <!-- Script -->
     <script src="app.js"></script>

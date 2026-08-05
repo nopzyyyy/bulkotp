@@ -2543,4 +2543,538 @@ input:checked + .slider:before {
   }
 }
 
+/* ==========================================================================
+   PINKS.CC ADMIN DASHBOARD & REVENUE ANALYTICS STYLES
+   ========================================================================== */
+
+.admin-sidebar-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-dark);
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #0e0f12;
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+.admin-sidebar-header {
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.admin-brand-img {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.admin-brand-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-brand-name {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.admin-brand-sub {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.admin-sidebar-menu {
+  padding: 1.25rem 0.85rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-category {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  margin: 1.25rem 0.75rem 0.5rem;
+}
+
+.sidebar-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.2rem;
+  text-align: left;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.sidebar-link.active {
+  background: rgba(255, 37, 92, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(255, 37, 92, 0.25);
+}
+
+.sidebar-link i {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.admin-sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-user-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-surface-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.admin-main-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  background: rgba(14, 15, 18, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.admin-content-body {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* Pinks.cc Metric Stats Cards */
+.pinks-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.pinks-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pinks-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.pinks-stat-value {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.85rem;
+  color: #fff;
+  letter-spacing: -0.03em;
+}
+
+/* Payment Method Breakdown Cards */
+.pinks-payments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.pinks-payment-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.pinks-payment-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.icon-crypto { background: rgba(247, 147, 26, 0.15); color: #f7931a; }
+.icon-balance { background: rgba(94, 234, 212, 0.15); color: #5eead4; }
+.icon-chime { background: rgba(255, 37, 92, 0.15); color: var(--accent); }
+.icon-stars { background: rgba(42, 171, 238, 0.15); color: #2aabee; }
+
+.pinks-payment-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.pinks-payment-value {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #fff;
+  margin: 0.25rem 0;
+}
+
+.pinks-payment-sub {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* Pinks.cc Chart Card */
+.pinks-chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+.pinks-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.pinks-rev-pill {
+  background: rgba(255, 37, 92, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(255, 37, 92, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 0.3rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+/* Tables */
+.pinks-table-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.pinks-table-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pinks-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pinks-table th {
+  padding: 1rem 1.5rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  background: var(--bg-surface-deep);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pinks-table td {
+  padding: 1.1rem 1.5rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+
+.pinks-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pinks-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
+.status-completed {
+  background: rgba(94, 234, 212, 0.15);
+  color: #5eead4;
+  border: 1px solid rgba(94, 234, 212, 0.3);
+}
+
+.role-badge {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+
+}
+
+.role-badge.admin {
+  background: rgba(255, 37, 92, 0.2);
+  color: var(--accent);
+  border: 1px solid rgba(255, 37, 92, 0.4);
+}
+
+.role-badge.user {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+/* User Header Profile & Balance Pill */
+.user-balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: #fff;
+}
+
+/* Login Page Styles */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: var(--bg-dark);
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 440px;
+  padding: 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.brand-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.header-logo-img {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+}
+
+.login-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.login-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg-surface-deep);
+  padding: 0.3rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.login-tab {
+  padding: 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-tab.active {
+  background: var(--bg-surface);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.input-icon-wrap {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+}
+
+.form-input.with-icon {
+  padding-left: 2.75rem;
+}
+
+.auth-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.auth-alert.error {
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border: 1px solid rgba(255, 69, 58, 0.3);
+}
+
+.auth-alert.success {
+  background: rgba(94, 234, 212, 0.15);
+  color: #5eead4;
+  border: 1px solid rgba(94, 234, 212, 0.3);
+}
+
+.login-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  font-size: 0.8125rem;
+}
+
+.dot-separator {
+  color: var(--text-dim);
+}
+
+/* User Order Cards inside Modal */
+.user-order-card {
+  background: var(--bg-surface-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.user-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.delivered-key-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #08080a;
+  border: 1px solid rgba(255, 37, 92, 0.3);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  .pinks-stats-grid, .pinks-payments-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pinks-stats-grid, .pinks-payments-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-sidebar {
+    position: fixed;
+    left: -260px;
+    transition: left 0.3s ease;
+  }
+  .admin-sidebar.mobile-open {
+    left: 0;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+
 

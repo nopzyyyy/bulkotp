@@ -1,0 +1,50 @@
+[
+  {
+    "id": "ORD-1001",
+    "orderNumber": "ORD-1001",
+    "userId": "usr_admin_001",
+    "email": "customer1@gmail.com",
+    "items": [
+      {
+        "id": "compact-1h",
+        "name": "OTP BOT COMPACT Pass: 1 - HOUR COMPACT Key",
+        "price": 17,
+        "qty": 1
+      }
+    ],
+    "total": 17,
+    "paymentMethod": "Crypto",
+    "status": "COMPLETED",
+    "purchasedItems": [
+      {
+        "name": "OTP BOT COMPACT Pass: 1 - HOUR COMPACT Key",
+        "credentials": "BOT-COMPACT-SAMPLE-KEY-001"
+      }
+    ],
+    "createdAt": "2026-08-01T08:46:56.167Z"
+  },
+  {
+    "id": "ORD-1002",
+    "orderNumber": "ORD-1002",
+    "userId": "usr_admin_001",
+    "email": "vipbuyer@protonmail.com",
+    "items": [
+      {
+        "id": "daylong-24h",
+        "name": "OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key",
+        "price": 60,
+        "qty": 1
+      }
+    ],
+    "total": 60,
+    "paymentMethod": "Balance",
+    "status": "COMPLETED",
+    "purchasedItems": [
+      {
+        "name": "OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key",
+        "credentials": "BOT-DAYLONG-SAMPLE-KEY-002"
+      }
+    ],
+    "createdAt": "2026-08-03T08:46:56.167Z"
+  }
+]

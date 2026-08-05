@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login &amp; Register — BULK OTP Store</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter+Tight:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+    <canvas id="bgParticlesCanvas"></canvas>
+    <div class="grid-bg"></div>
+
+    <div class="login-wrapper">
+        <div class="login-header">
+            <a href="index.html" class="brand-logo-wrap">
+                <img src="assets/brand_logo.png" alt="BULK OTP Logo" class="header-logo-img">
+                <span class="brand-text">BULK <span style="color:var(--accent);">OTP</span></span>
+            </a>
+        </div>
+
+        <div class="login-card glass-panel">
+            <div class="login-tabs">
+                <button type="button" class="login-tab active" id="tabLogin" onclick="switchAuthTab('login')">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                </button>
+                <button type="button" class="login-tab" id="tabRegister" onclick="switchAuthTab('register')">
+                    <i class="fa-solid fa-user-plus"></i> Create Account
+                </button>
+            </div>
+
+            <!-- Error / Alert Box -->
+            <div id="authAlert" class="auth-alert" style="display: none;"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Email or Username</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="loginEmail" class="form-input with-icon" placeholder="admin or email@domain.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Password</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="loginPassword" class="form-input with-icon" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Account
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="regEmail" class="form-input with-icon" placeholder="yourname@gmail.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Password (Min 6 characters)</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="regPassword" class="form-input with-icon" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Confirm Password</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-shield-halved input-icon"></i>
+                        <input type="password" id="regConfirmPassword" class="form-input with-icon" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" id="regBtn" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-user-check"></i> Create Account
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <a href="index.html" class="text-muted"><i class="fa-solid fa-arrow-left"></i> Back to Store</a>
+                <span class="dot-separator">•</span>
+                <a href="https://t.me/TAXBUM" target="_blank" class="text-accent"><i class="fa-brands fa-telegram"></i> Support</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initBackgroundParticles() {
+            let canvas = document.getElementById('bgParticlesCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const particles = [];
+            for (let i = 0; i < 45; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.8 + 0.8,
+                    speedY: -(Math.random() * 0.75 + 0.35),
+                    speedX: (Math.random() - 0.5) * 0.2,
+                    opacity: Math.random() * 0.25 + 0.1,
+                    isRed: Math.random() > 0.35
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.isRed ? `rgba(255, 37, 92, ${p.opacity})` : `rgba(255, 255, 255, ${p.opacity * 0.8})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+        initBackgroundParticles();
+
+        function switchAuthTab(mode) {
+            const tabL = document.getElementById('tabLogin');
+            const tabR = document.getElementById('tabRegister');
+            const formL = document.getElementById('loginForm');
+            const formR = document.getElementById('registerForm');
+            const alertBox = document.getElementById('authAlert');
+
+            if (alertBox) alertBox.style.display = 'none';
+
+            if (mode === 'login') {
+                tabL.classList.add('active');
+                tabR.classList.remove('active');
+                formL.style.display = 'block';
+                formR.style.display = 'none';
+            } else {
+                tabR.classList.add('active');
+                tabL.classList.remove('active');
+                formR.style.display = 'block';
+                formL.style.display = 'none';
+            }
+        }
+
+        function showAlert(msg, isError = true) {
+            const alertBox = document.getElementById('authAlert');
+            if (alertBox) {
+                alertBox.textContent = msg;
+                alertBox.className = isError ? 'auth-alert error' : 'auth-alert success';
+                alertBox.style.display = 'block';
+            }
+        }
+
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert('Success! Redirecting...', false);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect') || (data.user && data.user.role === 'ADMIN' ? 'admin.html' : 'index.html');
+                    setTimeout(() => { window.location.href = redirect; }, 600);
+                } else {
+                    showAlert(data.error || 'Invalid credentials.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Account';
+                }
+            } catch (err) {
+                showAlert('Network error. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Account';
+            }
+        }
+
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirmPassword').value;
+            const btn = document.getElementById('regBtn');
+
+            if (password !== confirm) {
+                showAlert('Passwords do not match.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showAlert('Account created! Redirecting...', false);
+                    setTimeout(() => { window.location.href = 'index.html'; }, 600);
+                } else {
+                    showAlert(data.error || 'Registration failed.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Create Account';
+                }
+            } catch (err) {
+                showAlert('Network error. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Create Account';
+            }
+        }
+    </script>
+</body>
+</html>

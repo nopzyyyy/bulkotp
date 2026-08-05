@@ -1,0 +1,10 @@
+[
+  {
+    "id": "usr_admin_001",
+    "email": "admin",
+    "passwordHash": "bba529a0dbf4f87e58f12873d233c1a8:78f941342d2c51b97d6b5f9bb3742458d668233e609b9b6e867393a5db330de8dccc71f0331449e6d88e75f368833b2c9bf4b5e12d11b5f3f52234c3fbdf548d",
+    "balance": 500,
+    "role": "ADMIN",
+    "createdAt": "2026-08-05T08:46:56.166Z"
+  }
+]
