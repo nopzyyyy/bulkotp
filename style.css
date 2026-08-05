@@ -223,6 +223,7 @@ code {
   justify-content: space-between;
   align-items: center;
   height: 100%;
+  position: relative;
 }
 
 .brand {
@@ -299,6 +300,9 @@ code {
 }
 
 .nav-links {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 0.375rem;
   align-items: center;
