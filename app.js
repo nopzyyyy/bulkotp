@@ -719,10 +719,10 @@ function initBackgroundParticles() {
     particles.push({
       x: Math.random() * width,
       y: Math.random() * height,
-      radius: Math.random() * 1.8 + 0.8,
-      speedY: -(Math.random() * 0.35 + 0.15),
-      speedX: (Math.random() - 0.5) * 0.15,
-      opacity: Math.random() * 0.22 + 0.08,
+      radius: Math.random() * 2.0 + 0.8,
+      speedY: -(Math.random() * 0.85 + 0.45), // Faster upward float
+      speedX: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.28 + 0.1,
       isRed: Math.random() > 0.35
     });
   }
