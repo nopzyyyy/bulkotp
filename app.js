@@ -92,9 +92,12 @@ async function fetchProductsFromBackend() {
   try {
     const res = await fetch('/api/products');
     if (res.ok) {
-      PRODUCTS = await res.json();
-      renderCatalogGrid(PRODUCTS);
-      return;
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        PRODUCTS = data;
+        renderCatalogGrid(PRODUCTS);
+        return;
+      }
     }
   } catch (err) {
     console.log('Backend offline or standalone fallback.');
