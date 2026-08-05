@@ -524,43 +524,39 @@ code {
    DJ KHALED CRAZY HERO SHOWCASE LAYOUT & ANIMATIONS
    ========================================================================== */
 
-/* ==========================================================================
-   DJ KHALED STEPPED CONTOUR BAR LAYOUT (GOES AROUND PICTURE WITHOUT TOUCHING)
-   ========================================================================== */
-
 .hero-khaled-container {
   width: 100%;
-  max-width: 1240px;
-  margin: 1rem auto 3rem;
+  max-width: 1100px;
+  margin: 1.5rem auto 2.5rem;
   perspective: 1200px;
-  position: relative;
 }
 
 .hero-khaled-wrap {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 380px 1fr;
   align-items: center;
+  gap: 1.5rem;
   position: relative;
-  min-height: 520px;
   transform-style: preserve-3d;
   will-change: transform;
   transition: transform 0.3s ease;
 }
 
-/* Center DJ Khaled Character */
+/* Center Image Container */
 .khaled-center-img-wrap {
   position: relative;
-  z-index: 5;
-  margin: 0 1rem;
-  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .khaled-center-img {
-  width: 380px;
-  max-width: 90vw;
+  width: 100%;
+  max-width: 380px;
   height: auto;
   display: block;
-  filter: drop-shadow(0 0 45px rgba(255, 37, 92, 0.5));
+  filter: drop-shadow(0 0 40px rgba(255, 37, 92, 0.45));
   animation: centerPulse 4s infinite ease-in-out;
 }
 
@@ -569,69 +565,17 @@ code {
   50% { filter: drop-shadow(0 0 55px rgba(255, 37, 92, 0.6)); transform: scale(1.02); }
 }
 
-/* Left Column - Stepped Contour Bars */
-.khaled-left-column {
+/* Left & Right Side Content */
+.khaled-side {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
+  z-index: 2;
+}
+
+.khaled-left {
+  text-align: right;
   align-items: flex-end;
-  z-index: 6;
-  margin-right: 1.5rem; /* Ensures space so it doesn't touch DJ Khaled */
-}
-
-/* Right Column - Stepped Contour Bars */
-.khaled-right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  align-items: flex-start;
-  z-index: 6;
-  margin-left: 1.5rem; /* Ensures space so it doesn't touch DJ Khaled */
-}
-
-/* Glowing Crimson Pill Bar Styling (matching red lines in drawing) */
-.khaled-bar {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 1.35rem;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, rgba(255, 37, 92, 0.3) 0%, rgba(17, 18, 22, 0.9) 100%);
-  border: 1px solid rgba(255, 37, 92, 0.5);
-  box-shadow: 0 0 25px rgba(255, 37, 92, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(14px);
-  color: #ffffff;
-  font-family: var(--font-heading);
-  white-space: nowrap;
-  transition: all 0.3s var(--ease-ideck);
-  text-decoration: none;
-}
-
-.khaled-bar:hover {
-  transform: scale(1.05);
-  border-color: var(--accent);
-  box-shadow: 0 0 35px rgba(255, 37, 92, 0.6);
-}
-
-/* Stepped Horizontal Offsets following contour around image */
-.offset-left-1 { transform: translateX(-30px); }
-.offset-left-2 { transform: translateX(-10px); }
-.offset-left-3 { transform: translateX(-40px); }
-
-.offset-right-1 { transform: translateX(40px); }
-.offset-right-2 { transform: translateX(15px); }
-.offset-right-3 { transform: translateX(5px); }
-.offset-right-4 { transform: translateX(25px); }
-.offset-right-5 { transform: translateX(50px); }
-
-.khaled-subtitle {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  text-transform: uppercase;
-  text-shadow: 0 0 15px rgba(255, 37, 92, 0.8);
 }
 
 .khaled-right {
@@ -712,9 +656,39 @@ code {
   box-shadow: 0 12px 30px rgba(255, 37, 92, 0.4);
 }
 
-.link-icon {
-  font-size: 1.25rem;
+.link-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 37, 92, 0.15);
+  border: 1px solid rgba(255, 37, 92, 0.4);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
   flex-shrink: 0;
+  box-shadow: 0 0 15px rgba(255, 37, 92, 0.25);
+  transition: all var(--trans-fast);
+}
+
+.khaled-link-card:hover .link-icon-box {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(255, 37, 92, 0.6);
+}
+
+.link-arrow {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  transition: transform var(--trans-fast), color var(--trans-fast);
+}
+
+.khaled-link-card:hover .link-arrow {
+  color: var(--accent);
+  transform: translateX(4px);
 }
 
 .link-info {
