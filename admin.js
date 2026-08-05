@@ -121,6 +121,13 @@ function handleAdminLogout() {
   showToast('Logged out of Admin Panel');
 }
 
+function toggleMobileSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const overlay = document.getElementById('adminSidebarOverlay');
+  if (sidebar) sidebar.classList.toggle('mobile-open');
+  if (overlay) overlay.classList.toggle('active');
+}
+
 function switchAdminTab(tabId, btn) {
   const tabs = document.querySelectorAll('.sidebar-link, .admin-tab');
   tabs.forEach(t => t.classList.remove('active'));
@@ -141,6 +148,16 @@ function switchAdminTab(tabId, btn) {
       settings: 'Settings & Security'
     };
     titleEl.textContent = titles[tabId] || 'Admin Dashboard';
+  }
+
+  // Auto-close mobile sidebar on selection
+  const sidebar = document.querySelector('.admin-sidebar');
+  const overlay = document.getElementById('adminSidebarOverlay');
+  if (sidebar && sidebar.classList.contains('mobile-open')) {
+    sidebar.classList.remove('mobile-open');
+  }
+  if (overlay && overlay.classList.contains('active')) {
+    overlay.classList.remove('active');
   }
 
   if (tabId === 'overview' || tabId === 'orders') {
