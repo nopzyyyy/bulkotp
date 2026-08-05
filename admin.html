@@ -99,19 +99,16 @@
             <!-- Tab Navigation Bar -->
             <div class="admin-tabs">
                 <button class="admin-tab active" onclick="switchAdminTab('overview', this)">
-                    <i class="fa-solid fa-chart-line"></i> Overview & Revenue
+                    <i class="fa-solid fa-chart-line"></i> Overview &amp; Revenue
                 </button>
                 <button class="admin-tab" onclick="switchAdminTab('products', this)">
-                    <i class="fa-solid fa-box-open"></i> Products Management
-                </button>
-                <button class="admin-tab" onclick="switchAdminTab('stock', this)">
-                    <i class="fa-solid fa-key"></i> Key Stock Engine
+                    <i class="fa-solid fa-box-open"></i> Products &amp; Stock
                 </button>
                 <button class="admin-tab" onclick="switchAdminTab('orders', this)">
-                    <i class="fa-solid fa-receipt"></i> Orders & Sales
+                    <i class="fa-solid fa-receipt"></i> Orders &amp; Sales
                 </button>
                 <button class="admin-tab" onclick="switchAdminTab('settings', this)">
-                    <i class="fa-solid fa-gear"></i> Settings & Wallets
+                    <i class="fa-solid fa-gear"></i> Settings &amp; Security
                 </button>
             </div>
 
@@ -200,25 +197,11 @@
                 </div>
             </section>
 
-            <!-- SECTION 3: KEY STOCK ENGINE -->
-            <section id="tab-stock" class="admin-tab-content">
-                <div class="admin-action-bar">
-                    <div>
-                        <h2 style="font-size: 1.5rem; margin: 0;">Key Stock Engine</h2>
-                        <p class="text-muted" style="font-size: 0.875rem;">Add and manage stock keys line by line (One line = 1 Key, format: <code>XXXX-XXXX-XXXX</code>).</p>
-                    </div>
-                </div>
-
-                <div id="stockProductsContainer" class="stock-editor-list">
-                    <!-- Dynamic product key stock editor panels -->
-                </div>
-            </section>
-
-            <!-- SECTION 4: ORDERS & SALES -->
+            <!-- SECTION 3: ORDERS & SALES -->
             <section id="tab-orders" class="admin-tab-content">
                 <div class="admin-action-bar">
                     <div>
-                        <h2 style="font-size: 1.5rem; margin: 0;">Customer Orders & Sales Log</h2>
+                        <h2 style="font-size: 1.5rem; margin: 0;">Customer Orders &amp; Sales Log</h2>
                         <p class="text-muted" style="font-size: 0.875rem;">Search and track every customer transaction.</p>
                     </div>
                     <div class="search-box" style="width: 300px;">
@@ -249,9 +232,9 @@
                 </div>
             </section>
 
-            <!-- SECTION 5: SETTINGS & CRYPTO WALLETS -->
+            <!-- SECTION 4: SETTINGS & SECURITY -->
             <section id="tab-settings" class="admin-tab-content">
-                <div class="admin-settings-grid">
+                <div style="max-width: 520px; margin: 0 auto;">
                     <!-- Admin Login Security Card -->
                     <div class="admin-panel-card">
                         <div class="panel-header">
@@ -268,38 +251,6 @@
                             </div>
                             <button type="submit" class="btn btn-primary" style="width: 100%;">
                                 <i class="fa-solid fa-floppy-disk"></i> Save Security Credentials
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Crypto Wallets Settings Card -->
-                    <div class="admin-panel-card">
-                        <div class="panel-header">
-                            <h3><i class="fa-brands fa-bitcoin"></i> Store Crypto Wallet Addresses</h3>
-                        </div>
-                        <form onsubmit="handleUpdateWallets(event)">
-                            <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label">Bitcoin (BTC) Address</label>
-                                <input type="text" id="walletBTC" class="form-input font-mono" placeholder="bc1q...">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label">USDT (TRC-20) Address</label>
-                                <input type="text" id="walletUSDT" class="form-input font-mono" placeholder="T9y...">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label">Ethereum (ETH) Address</label>
-                                <input type="text" id="walletETH" class="form-input font-mono" placeholder="0x71...">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 1rem;">
-                                <label class="form-label">Solana (SOL) Address</label>
-                                <input type="text" id="walletSOL" class="form-input font-mono" placeholder="7v99...">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 1.5rem;">
-                                <label class="form-label">Litecoin (LTC) Address</label>
-                                <input type="text" id="walletLTC" class="form-input font-mono" placeholder="LTC1...">
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">
-                                <i class="fa-solid fa-floppy-disk"></i> Update Wallet Addresses
                             </button>
                         </form>
                     </div>

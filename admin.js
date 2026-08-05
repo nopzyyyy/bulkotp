@@ -134,7 +134,7 @@ function switchAdminTab(tabId, btn) {
 
   if (tabId === 'overview' || tabId === 'orders') {
     loadAdminDashboardData();
-  } else if (tabId === 'products' || tabId === 'stock') {
+  } else if (tabId === 'products') {
     loadAdminProducts();
   }
 }
@@ -145,22 +145,13 @@ async function loadAdminDashboardData() {
     if (!res.ok) return;
     const data = await res.json();
 
-    document.getElementById('statRevenue').textContent = '$' + data.totalRevenue.toFixed(2);
-    document.getElementById('statOrders').textContent = data.totalOrders;
-    document.getElementById('statKeys').textContent = data.totalStockKeys;
-    document.getElementById('statProducts').textContent = data.totalProducts;
+    if (document.getElementById('statRevenue')) document.getElementById('statRevenue').textContent = '$' + data.totalRevenue.toFixed(2);
+    if (document.getElementById('statOrders')) document.getElementById('statOrders').textContent = data.totalOrders;
+    if (document.getElementById('statProducts')) document.getElementById('statProducts').textContent = data.totalProducts;
 
     allAdminOrders = data.recentOrders || [];
     renderOverviewOrdersTable(allAdminOrders);
     renderAllOrdersTable(allAdminOrders);
-
-    if (data.wallets) {
-      if (document.getElementById('walletBTC')) document.getElementById('walletBTC').value = data.wallets.btc || '';
-      if (document.getElementById('walletUSDT')) document.getElementById('walletUSDT').value = data.wallets.usdt_trc20 || '';
-      if (document.getElementById('walletETH')) document.getElementById('walletETH').value = data.wallets.eth || '';
-      if (document.getElementById('walletSOL')) document.getElementById('walletSOL').value = data.wallets.sol || '';
-      if (document.getElementById('walletLTC')) document.getElementById('walletLTC').value = data.wallets.ltc || '';
-    }
   } catch (err) {
     console.error('Error loading stats:', err);
   }
@@ -248,7 +239,6 @@ async function loadAdminProducts() {
     allAdminProducts = await res.json();
 
     renderAdminProductGrid(allAdminProducts);
-    renderStockEngineList(allAdminProducts);
   } catch (err) {
     console.error('Error loading products:', err);
   }
