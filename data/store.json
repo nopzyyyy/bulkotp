@@ -1,7 +1,7 @@
 {
   "admin": {
     "username": "admin",
-    "passwordHash": "92f3003eec8d2df0538ab97be76d427edf9c2cdb9045ecc38c2f9bf8671caffd"
+    "passwordHash": "8f390d340be83995e9d91d3abedc2a458f49435ecf76034b32c7f35bcd14fac5"
   },
   "wallets": {
     "btc": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
