@@ -1,0 +1,3 @@
+/api/*  /.netlify/functions/api/:splat  200
+/admin  /admin.html  200
+/cart   /cart.html   200
