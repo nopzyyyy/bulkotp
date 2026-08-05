@@ -520,28 +520,213 @@ code {
   margin: 1.5rem auto 3.5rem;
 }
 
-/* Boxless Native 3D Model Container */
-.hero-3d-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 1rem auto 2rem;
+/* ==========================================================================
+   DJ KHALED CRAZY HERO SHOWCASE LAYOUT & ANIMATIONS
+   ========================================================================== */
+
+.hero-khaled-container {
   width: 100%;
-  perspective: 1000px;
+  max-width: 1100px;
+  margin: 1.5rem auto 2.5rem;
+  perspective: 1200px;
 }
 
-.hero-3d-wrap-clean {
-  width: 100%;
-  max-width: 550px;
-  height: 480px;
-  background: transparent; /* No box background */
-  border: none; /* No box border */
-  box-shadow: none; /* No box shadow */
-  overflow: visible;
+.hero-khaled-wrap {
+  display: grid;
+  grid-template-columns: 1fr 380px 1fr;
+  align-items: center;
+  gap: 1.5rem;
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
   transition: transform 0.3s ease;
+}
+
+/* Center Image Container */
+.khaled-center-img-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.khaled-center-img {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 0 40px rgba(255, 37, 92, 0.45));
+  animation: centerPulse 4s infinite ease-in-out;
+}
+
+@keyframes centerPulse {
+  0%, 100% { filter: drop-shadow(0 0 35px rgba(255, 37, 92, 0.35)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 55px rgba(255, 37, 92, 0.6)); transform: scale(1.02); }
+}
+
+/* Left & Right Side Content */
+.khaled-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 2;
+}
+
+.khaled-left {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.khaled-right {
+  text-align: left;
+  align-items: flex-start;
+}
+
+/* Badges & Titles */
+.khaled-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-pill);
+  background: rgba(17, 18, 22, 0.85);
+  border: 1px solid rgba(255, 37, 92, 0.4);
+  box-shadow: 0 0 20px rgba(255, 37, 92, 0.25);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+}
+
+.khaled-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 25px rgba(255, 37, 92, 0.6);
+  line-height: 1.1;
+  margin: 0;
+}
+
+.khaled-handle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 0 30px rgba(255, 37, 92, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.02em;
+}
+
+.khaled-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+  text-shadow: 0 0 15px rgba(255, 37, 92, 0.8);
+}
+
+/* Link Cards on Right Side */
+.khaled-link-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: rgba(17, 18, 22, 0.85);
+  border: 1px solid rgba(255, 37, 92, 0.35);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 37, 92, 0.15);
+  backdrop-filter: blur(12px);
+  width: 100%;
+  max-width: 290px;
+  transition: all 0.3s var(--ease-ideck);
+}
+
+.khaled-link-card:hover {
+  transform: translateX(6px) scale(1.03);
+  border-color: var(--accent);
+  box-shadow: 0 12px 30px rgba(255, 37, 92, 0.4);
+}
+
+.link-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.link-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.link-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.link-val {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.khaled-note-text {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 37, 92, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 0.5rem 0.85rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 0.25rem;
+}
+
+/* Levitation Animations */
+.float-anim-1 { animation: floatLevitate1 4s infinite ease-in-out; }
+.float-anim-2 { animation: floatLevitate2 4.5s infinite ease-in-out; }
+.float-anim-3 { animation: floatLevitate3 5s infinite ease-in-out; }
+
+@keyframes floatLevitate1 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes floatLevitate2 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(7px); }
+}
+
+@keyframes floatLevitate3 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .hero-khaled-wrap {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .khaled-left, .khaled-right {
+    text-align: center;
+    align-items: center;
+  }
+
+  .khaled-link-card {
+    max-width: 320px;
+  }
 }
 
 .page-title {
