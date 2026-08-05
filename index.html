@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BULK OTP — Official Access Pass Store</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter+Tight:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Model Viewer for Native 3D GLB -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Layers -->
+    <div class="bg-grid"></div>
+    <div class="glow-cursor"></div>
+    <div class="glow glow-1"></div>
+
+    <!-- Floating Liquid Glass Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="brand" onclick="showCatalogView(); return false;">
+                <div class="brand-logo-wrap">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="#" class="nav-link active" onclick="showCatalogView(); return false;">Passes</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#faq" class="nav-link">FAQ</a>
+            </div>
+            
+            <div class="nav-right">
+                <a href="https://t.me/BULK_OTPBOT" target="_blank" class="nav-tg-btn">
+                    <i class="fa-brands fa-telegram tg-icon"></i>
+                    <span>Telegram Support</span>
+                </a>
+                
+                <button class="nav-cart-btn" onclick="toggleCartDrawer()" title="View Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Catalog View -->
+    <main id="catalogView" class="view active">
+        <div class="container section">
+            <header class="catalog-header">
+                <div class="badge">
+                    <span class="pulse-dot-red"></span>
+                    <span>INSTANT KEY DELIVERY</span>
+                </div>
+
+                <!-- Native 3D GLB Model Viewer -->
+                <div class="hero-3d-container">
+                    <div class="hero-3d-wrap" id="hero3dWrap">
+                        <model-viewer
+                            src="assets/model.glb"
+                            alt="Custom 3D Model"
+                            auto-rotate
+                            camera-controls
+                            shadow-intensity="1.5"
+                            exposure="1"
+                            interaction-prompt="none"
+                            style="width: 100%; height: 100%; background: transparent;"
+                        ></model-viewer>
+                    </div>
+                </div>
+                
+                <h1 class="page-title">Select Your Pass</h1>
+                <p class="page-subtitle text-muted">Choose duration and get instant bot access key delivery.</p>
+                
+                <div class="filter-bar">
+                    <div class="category-tabs">
+                        <button class="cat-tab active" onclick="filterCategory('all', this)">All</button>
+                        <button class="cat-tab" onclick="filterCategory('hourly', this)">Hourly</button>
+                        <button class="cat-tab" onclick="filterCategory('daily', this)">Daily</button>
+                        <button class="cat-tab" onclick="filterCategory('weekly', this)">Weekly</button>
+                    </div>
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="catalogSearch" placeholder="Search passes...">
+                    </div>
+                </div>
+            </header>
+
+            <section class="product-grid-section">
+                <div id="productGrid" class="product-grid">
+                    <!-- Cards dynamically rendered by app.js -->
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="section">
+                <span class="subtitle">SYSTEM GUARANTEES</span>
+                <h2>Built for Reliability & Speed</h2>
+                <div class="features-grid">
+                    <div class="feature-mini-card">
+                        <div class="feature-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+                        <h3 class="feature-title">Instant Delivery</h3>
+                        <p class="feature-desc">Keys are generated and delivered instantly upon payment confirmation.</p>
+                    </div>
+                    <div class="feature-mini-card">
+                        <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h3 class="feature-title">Protected Operations</h3>
+                        <p class="feature-desc">High-tier security and privacy protocols for every single operation.</p>
+                    </div>
+                    <div class="feature-mini-card">
+                        <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+                        <h3 class="feature-title">24/7 Support</h3>
+                        <p class="feature-desc">Direct assistance via our official Telegram support channel around the clock.</p>
+                    </div>
+                    <div class="feature-mini-card">
+                        <div class="feature-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+                        <h3 class="feature-title">Replacement Warranty</h3>
+                        <p class="feature-desc">Guaranteed uptime and automatic replacements if any issues occur.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section id="faq" class="section">
+                <span class="subtitle">FAQ</span>
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-container">
+                    <details class="faq-item">
+                        <summary class="faq-summary">
+                            <span>How do I activate my key after purchase?</span>
+                            <i class="fa-solid fa-plus faq-icon"></i>
+                        </summary>
+                        <div class="faq-content">
+                            <p>Simply message <strong>@BULK_OTPBOT</strong> on Telegram with the command <code>/redeem [YOUR_KEY]</code> to instantly link your pass.</p>
+                        </div>
+                    </details>
+                    <details class="faq-item">
+                        <summary class="faq-summary">
+                            <span>When does my pass key duration start?</span>
+                            <i class="fa-solid fa-plus faq-icon"></i>
+                        </summary>
+                        <div class="faq-content">
+                            <p>The time duration for your pass starts precisely at the moment of activation in Telegram, not at the time of purchase. You can buy now and activate later.</p>
+                        </div>
+                    </details>
+                    <details class="faq-item">
+                        <summary class="faq-summary">
+                            <span>What payment methods are supported?</span>
+                            <i class="fa-solid fa-plus faq-icon"></i>
+                        </summary>
+                        <div class="faq-content">
+                            <p>We accept major Cryptocurrencies (USDT-TRC20, BTC, ETH, SOL, LTC), Credit Cards via Stripe, and CashApp for instant automated delivery.</p>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Product Detail View -->
+    <main id="productDetailView" class="view" style="display: none;">
+        <div class="container section">
+            <div class="breadcrumbs">
+                <a href="#" onclick="showCatalogView(); return false;">Home</a> &nbsp;/&nbsp; <span>Products</span> &nbsp;/&nbsp; <span id="detailBreadcrumbTitle" class="text-primary">Pass</span>
+            </div>
+            
+            <div class="product-detail-layout">
+                <!-- Left Sticky Column -->
+                <div class="product-preview-sticky">
+                    <div class="product-preview-card">
+                        <div class="product-preview-img-wrap">
+                            <img id="detailArtImg" src="" alt="Product Art" class="product-preview-img">
+                        </div>
+                        <div style="padding: 1.5rem 0.5rem 0.5rem;">
+                            <span class="subtitle" style="margin-bottom: 0.25rem;">OFFICIAL ACCESS PASS</span>
+                            <h3 id="detailCardTitle" style="font-size: 1.25rem; margin: 0;">Pass Title</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Info Column -->
+                <div class="product-info">
+                    <span id="detailStockBadge" class="status-chip" style="margin-bottom: 1rem;">
+                        <span class="pulse-dot"></span> In Stock
+                    </span>
+                    <h1 id="detailTitle" class="product-info-title">Pass Title</h1>
+                    <p id="detailDescription" class="product-info-desc">Description goes here.</p>
+                    
+                    <div class="product-price-row">
+                        <div id="detailPrice" class="product-info-price">$0.00</div>
+                        <div id="detailStockPill" class="status-chip">In stock</div>
+                    </div>
+
+                    <div class="product-actions">
+                        <div class="quantity-input">
+                            <button class="quantity-btn" onclick="adjustQty(-1)"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="detailQtyInput" value="1" min="1" max="99" class="quantity-val" readonly style="background:none; border:none; text-align:center;">
+                            <button class="quantity-btn" onclick="adjustQty(1)"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <button class="btn btn-glass" onclick="handleDetailAddToCart()"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+                        <button class="btn btn-primary" onclick="handleDetailBuyNow()">Buy Now</button>
+                    </div>
+
+                    <div class="trust-badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Instant 1-click key delivery &bull; 24/7 Replacement Warranty</span>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <button class="btn btn-glass" onclick="showCatalogView()"><i class="fa-solid fa-arrow-left"></i> Back to Catalog</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Drawer Overlay & Drawer -->
+    <div id="cartOverlay" class="modal-overlay" onclick="toggleCartDrawer()"></div>
+    <div id="cartDrawer" class="cart-drawer">
+        <div class="cart-header">
+            <h3><i class="fa-solid fa-cart-shopping" style="color: var(--accent);"></i> Your Cart</h3>
+            <button class="btn-icon" onclick="toggleCartDrawer()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="cartItemsContainer" class="cart-body">
+            <!-- Dynamic Cart Items -->
+        </div>
+        <div class="cart-footer">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem; font-family: var(--font-heading); font-size: 1.25rem;">
+                <span>Total</span>
+                <strong id="cartTotalPrice" class="text-accent">$0.00</strong>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 1rem;" onclick="openCheckoutModal()">
+                <i class="fa-solid fa-lock"></i> Proceed to Checkout
+            </button>
+        </div>
+    </div>
+
+    <!-- Upgraded Crypto & Multi-Payment Checkout Modal -->
+    <div id="checkoutModal" class="modal-overlay">
+        <div class="modal-content modal-lg">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0;"><i class="fa-solid fa-shield-heart" style="color: var(--accent);"></i> Secure Checkout</h3>
+                <button class="btn-icon" onclick="closeCheckoutModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- Step 1: Form & Payment -->
+            <div id="checkoutFormStep">
+                <!-- Customer Email Input -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                        Your Email Address <span style="color: var(--status-red);">*</span>
+                    </label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="userEmail" class="form-input" placeholder="buyer@domain.com" required>
+                    </div>
+                    <span class="text-dim" style="font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                        No account or login required. Your key will be displayed immediately & saved to your email.
+                    </span>
+                </div>
+                
+                <!-- Payment Method Tabs -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Select Payment Method</label>
+                    <div class="payment-methods-grid">
+                        <div class="payment-option active" data-method="crypto" onclick="selectPaymentMethod('crypto', this)">
+                            <i class="fa-brands fa-bitcoin" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: #f7931a;"></i>
+                            <span style="font-size: 0.8125rem; font-weight: 600;">Cryptocurrency</span>
+                        </div>
+                        <div class="payment-option" data-method="card" onclick="selectPaymentMethod('card', this)">
+                            <i class="fa-brands fa-stripe" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: #635bff;"></i>
+                            <span style="font-size: 0.8125rem; font-weight: 600;">Credit / Debit</span>
+                        </div>
+                        <div class="payment-option" data-method="cashapp" onclick="selectPaymentMethod('cashapp', this)">
+                            <i class="fa-solid fa-dollar-sign" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: #00d632;"></i>
+                            <span style="font-size: 0.8125rem; font-weight: 600;">CashApp</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Crypto Coin Selection Drawer (When Crypto Selected) -->
+                <div id="cryptoPaymentBox" class="crypto-payment-box" style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem;">Select Crypto Asset:</div>
+                    <div class="crypto-selector">
+                        <button class="crypto-coin-btn active" onclick="selectCryptoCoin('usdt_trc20', this)">
+                            <i class="fa-solid fa-coins" style="color: #26a17b;"></i> USDT (TRC20)
+                        </button>
+                        <button class="crypto-coin-btn" onclick="selectCryptoCoin('btc', this)">
+                            <i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> Bitcoin (BTC)
+                        </button>
+                        <button class="crypto-coin-btn" onclick="selectCryptoCoin('eth', this)">
+                            <i class="fa-brands fa-ethereum" style="color: #627eea;"></i> Ethereum (ETH)
+                        </button>
+                        <button class="crypto-coin-btn" onclick="selectCryptoCoin('sol', this)">
+                            <i class="fa-solid fa-sun" style="color: #14f195;"></i> Solana (SOL)
+                        </button>
+                    </div>
+
+                    <!-- Crypto Wallet Address Box -->
+                    <div class="crypto-wallet-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.8125rem; color: var(--text-muted);" id="cryptoNetworkLabel">Deposit Address (TRC-20 Network):</span>
+                            <span class="status-chip status-cyan" style="font-size: 0.75rem;">Instant Auto-Verify</span>
+                        </div>
+
+                        <div class="wallet-address-bar">
+                            <code id="activeCryptoAddress" class="font-mono">T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f</code>
+                            <button class="btn-icon btn-sm" onclick="copyCryptoAddress()" title="Copy Wallet Address">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary Breakdown -->
+                <div style="background: var(--bg-surface-deep); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border-subtle);">
+                    <div style="display:flex; justify-content:space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                        <span class="text-muted">Subtotal</span>
+                        <span id="modalSubtotal" class="text-primary">$0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                        <span class="text-muted">Instant Key Delivery Fee</span>
+                        <span class="text-accent" style="font-weight: 600;">FREE</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem;">
+                        <span>Total Due</span>
+                        <span id="modalTotal" class="text-accent">$0.00</span>
+                    </div>
+                </div>
+
+                <button id="payBtn" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 1rem;" onclick="processCheckout(event)">
+                    <i class="fa-solid fa-bolt"></i> Complete Purchase & Get Key
+                </button>
+            </div>
+
+            <!-- Step 2: Key Generated Success Screen -->
+            <div id="checkoutSuccessStep" style="display: none; text-align: center;">
+                <div class="success-icon-wrap">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2>Payment Successful!</h2>
+                <p class="text-muted" style="margin-bottom: 1.5rem;">Here is your official BULK OTP Access Pass key.</p>
+                
+                <!-- Keys Dispensed Display Container -->
+                <div id="keysDispensedContainer" style="margin-bottom: 1.5rem;">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <div class="telegram-instruction-box">
+                    <p style="margin-bottom: 0.5rem; font-weight: 600;">How to Activate on Telegram:</p>
+                    <ol style="text-align: left; margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--text-muted);">
+                        <li>Open Telegram and message <strong>@BULK_OTPBOT</strong></li>
+                        <li>Send command: <code id="activationCommand" style="color: var(--status-green); font-family: var(--font-mono);">/redeem KEY</code></li>
+                        <li>Your session timer begins at the exact moment of redemption.</li>
+                    </ol>
+                </div>
+
+                <button class="btn btn-glass" style="width: 100%; margin-top: 1.5rem;" onclick="closeCheckoutModal()">
+                    <i class="fa-solid fa-xmark"></i> Close Window
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="brand">
+                <div class="brand-logo-wrap">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </div>
+            <div class="footer-text">
+                &copy; 2026 BULK OTP. Instant Bot Access Keys. Support: <a href="https://t.me/BULK_OTPBOT" target="_blank" style="color: var(--accent);">@BULK_OTPBOT</a>
+                &bull; <a href="admin.html" target="_blank" style="color: var(--text-dim); text-decoration: none;"><i class="fa-solid fa-lock" style="font-size: 0.75rem;"></i> Admin Panel</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script -->
+    <script src="app.js"></script>
+</body>
+</html>

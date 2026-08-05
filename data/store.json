@@ -1,0 +1,168 @@
+{
+  "admin": {
+    "username": "admin",
+    "passwordHash": "92f3003eec8d2df0538ab97be76d427edf9c2cdb9045ecc38c2f9bf8671caffd"
+  },
+  "wallets": {
+    "btc": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+    "usdt_trc20": "T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f",
+    "eth": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+    "sol": "7v99fvB1iEe4aV8yK91qR9tL8mX7zP4qS5wE2r1tN8y",
+    "ltc": "LTC1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+  },
+  "products": [
+    {
+      "id": "compact-1h",
+      "category": "hourly",
+      "title": "OTP BOT COMPACT Pass: 1 - HOUR COMPACT Key",
+      "shortTitle": "1-Hour Compact Key",
+      "price": 17,
+      "hidden": false,
+      "duration": "1-Hour",
+      "description": "Experience the power of Bulk OTP Bot with the MINI Pass: 1 - HOUR COMPACT Key. Instant telegram bot access.",
+      "prefix": "BOT-COMPACT",
+      "art": "assets/compact_pass_1h.jpg",
+      "stockKeys": [
+        "BOT-COMPACT-1E2F-3G4H-KEY",
+        "BOT-COMPACT-5I6J-7K8L-KEY",
+        "BOT-COMPACT-9M0N-1P2Q-KEY",
+        "BOT-COMPACT-3R4S-5T6U-KEY"
+      ]
+    },
+    {
+      "id": "extended-3h",
+      "category": "hourly",
+      "title": "OTP BOT EXTENDED Pass: 3 - HOUR EXTENDED Key",
+      "shortTitle": "3-Hour Extended Key",
+      "price": 30,
+      "hidden": false,
+      "duration": "3-Hour",
+      "description": "OTP BOT EXTENDED Pass: 3 - HOUR EXTENDED Key. High-speed session handling with zero interruption.",
+      "prefix": "BOT-EXTENDED",
+      "art": "assets/extended_pass_3h.jpg",
+      "stockKeys": [
+        "BOT-EXTENDED-AA11-BB22-KEY",
+        "BOT-EXTENDED-CC33-DD44-KEY",
+        "BOT-EXTENDED-EE55-FF66-KEY"
+      ]
+    },
+    {
+      "id": "daylong-24h",
+      "category": "daily",
+      "title": "OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key",
+      "shortTitle": "24-Hour Daylong Key",
+      "price": 60,
+      "hidden": false,
+      "duration": "24-Hour",
+      "description": "OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key. Full day uninterrupted high-capacity OTP bypass operations.",
+      "prefix": "BOT-DAYLONG",
+      "art": "assets/daylong_pass_24h.jpg",
+      "stockKeys": [
+        "BOT-DAYLONG-7788-9900-KEY",
+        "BOT-DAYLONG-1122-3344-KEY"
+      ]
+    },
+    {
+      "id": "multiday-3d",
+      "category": "daily",
+      "title": "OTP BOT MULTIDAY Pass: 3 - DAY MULTIDAY Key",
+      "shortTitle": "3-Day Multiday Key",
+      "price": 150,
+      "hidden": false,
+      "duration": "3-Day",
+      "description": "OTP BOT MULTIDAY Pass: 3 - DAY MULTIDAY Key. Multi-day continuous access key for high-volume automated verification.",
+      "prefix": "BOT-MULTIDAY",
+      "art": "assets/multiday_pass_3d.jpg",
+      "stockKeys": [
+        "BOT-MULTIDAY-5566-7788-KEY"
+      ]
+    },
+    {
+      "id": "weekly-1w",
+      "category": "weekly",
+      "title": "OTP BOT WEEKLY Pass: 1 - WEEK WEEKLY Key",
+      "shortTitle": "1-Week Weekly Key",
+      "price": 250,
+      "hidden": false,
+      "duration": "1-Week",
+      "description": "OTP BOT WEEKLY Pass: 1 - WEEK WEEKLY Key. Full week unlimited operations access pass.",
+      "prefix": "BOT-WEEKLY",
+      "art": "assets/weekly_pass_1w.jpg",
+      "stockKeys": [
+        "BOT-WEEKLY-9900-1122-KEY"
+      ]
+    },
+    {
+      "id": "biweekly-2w",
+      "category": "weekly",
+      "title": "OTP BOT BIWEEKLY Pass: 2 - WEEKS BIWEEKLY Key",
+      "shortTitle": "2-Weeks Biweekly Key",
+      "price": 350,
+      "hidden": false,
+      "duration": "2-Weeks",
+      "description": "OTP BOT BIWEEKLY Pass: 2 - WEEKS BIWEEKLY Key. Maximum value 14-day dedicated pass key.",
+      "prefix": "BOT-BIWEEKLY",
+      "art": "assets/biweekly_pass_2w.jpg",
+      "stockKeys": [
+        "BOT-BIWEEKLY-3344-5566-KEY"
+      ]
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-124409",
+      "orderNumber": "ORD-124409",
+      "email": "testbuyer@gmail.com",
+      "items": [
+        {
+          "id": "compact-1h",
+          "title": "1-Hour Compact Key",
+          "price": 17,
+          "qty": 1
+        }
+      ],
+      "total": 17,
+      "paymentMethod": "Crypto (USDT-TRC20)",
+      "dispensedKeys": [
+        "BOT-COMPACT-9A8B-7C6D-KEY"
+      ],
+      "createdAt": "2026-08-05T06:44:16.900Z"
+    },
+    {
+      "id": "ORD-1001",
+      "orderNumber": "ORD-1001",
+      "email": "customer1@gmail.com",
+      "items": [
+        {
+          "title": "1-Hour Compact Key",
+          "qty": 1,
+          "price": 17
+        }
+      ],
+      "total": 17,
+      "paymentMethod": "Crypto (USDT-TRC20)",
+      "dispensedKeys": [
+        "BOT-COMPACT-X1Y2-Z3A4-KEY"
+      ],
+      "createdAt": "2026-08-03T06:43:53.446Z"
+    },
+    {
+      "id": "ORD-1002",
+      "orderNumber": "ORD-1002",
+      "email": "vipbuyer@protonmail.com",
+      "items": [
+        {
+          "title": "24-Hour Daylong Key",
+          "qty": 1,
+          "price": 60
+        }
+      ],
+      "total": 60,
+      "paymentMethod": "Crypto (BTC)",
+      "dispensedKeys": [
+        "BOT-DAYLONG-M9N8-O7P6-KEY"
+      ],
+      "createdAt": "2026-08-04T06:43:53.447Z"
+    }
+  ]
+}

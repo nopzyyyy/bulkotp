@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BULK OTP — Shopping Cart & Checkout</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter+Tight:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Layers -->
+    <div class="bg-grid"></div>
+    <div class="glow glow-1"></div>
+
+    <!-- Floating Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-logo-wrap">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="index.html" class="nav-link"><i class="fa-solid fa-store"></i> Shop Passes</a>
+                <a href="index.html#features" class="nav-link">Features</a>
+                <a href="index.html#faq" class="nav-link">FAQ</a>
+            </div>
+            
+            <div class="nav-right">
+                <a href="index.html" class="btn btn-glass btn-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+                </a>
+                <a href="https://t.me/BULK_OTPBOT" target="_blank" class="nav-tg-btn">
+                    <i class="fa-brands fa-telegram tg-icon"></i>
+                    <span>Support</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart & Checkout Main Container -->
+    <main class="container section" style="padding-top: 2rem;">
+        <header style="margin-bottom: 2.5rem;">
+            <span class="subtitle">SECURE ORDER PROCESS</span>
+            <h1 style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 0.5rem;">Your Shopping Cart</h1>
+            <p class="text-muted">Review your selected access passes and complete your order below.</p>
+        </header>
+
+        <!-- Main Cart & Checkout Grid Layout -->
+        <div id="cartContentLayout" class="cart-page-layout">
+            <!-- Left Column: Cart Items List -->
+            <div class="cart-items-section">
+                <div class="admin-panel-card" style="padding: 1.75rem;">
+                    <div class="panel-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0; font-size: 1.25rem;"><i class="fa-solid fa-cart-shopping" style="color: var(--accent);"></i> Selected Passes</h3>
+                        <span id="cartItemCountBadge" class="status-chip status-cyan">0 Items</span>
+                    </div>
+
+                    <div id="cartPageItemsList">
+                        <!-- Dynamic items rendered by cart.js -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <a href="index.html" class="btn btn-glass">
+                        <i class="fa-solid fa-plus"></i> Add More Passes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column: Checkout Form -->
+            <div class="checkout-summary-section">
+                <div class="admin-panel-card" style="padding: 1.75rem;">
+                    <h3 style="margin-top: 0; margin-bottom: 1.25rem; font-size: 1.25rem;">
+                        <i class="fa-solid fa-shield-heart" style="color: var(--status-green);"></i> Order Checkout
+                    </h3>
+
+                    <!-- Customer Email Input -->
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Customer Email Address <span style="color: var(--status-red);">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="cartUserEmail" class="form-input" placeholder="buyer@example.com" required>
+                        </div>
+                        <span class="text-dim" style="font-size: 0.75rem; margin-top: 0.35rem;">
+                            No login required. Your pass key will be delivered instantly on screen & saved.
+                        </span>
+                    </div>
+
+                    <!-- Payment Method Selector -->
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Select Payment Method</label>
+                        <div class="payment-methods-grid">
+                            <div class="payment-option active" data-method="crypto" onclick="selectCartPaymentMethod('crypto', this)">
+                                <i class="fa-brands fa-bitcoin" style="font-size: 1.25rem; display: block; margin-bottom: 0.25rem; color: #f7931a;"></i>
+                                <span style="font-size: 0.75rem; font-weight: 600;">Crypto</span>
+                            </div>
+                            <div class="payment-option" data-method="card" onclick="selectCartPaymentMethod('card', this)">
+                                <i class="fa-brands fa-stripe" style="font-size: 1.25rem; display: block; margin-bottom: 0.25rem; color: #635bff;"></i>
+                                <span style="font-size: 0.75rem; font-weight: 600;">Card</span>
+                            </div>
+                            <div class="payment-option" data-method="cashapp" onclick="selectCartPaymentMethod('cashapp', this)">
+                                <i class="fa-solid fa-dollar-sign" style="font-size: 1.25rem; display: block; margin-bottom: 0.25rem; color: #00d632;"></i>
+                                <span style="font-size: 0.75rem; font-weight: 600;">CashApp</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crypto Payment Drawer -->
+                    <div id="cartCryptoBox" class="crypto-payment-box" style="margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem;">Select Coin:</div>
+                        <div class="crypto-selector">
+                            <button class="crypto-coin-btn active" onclick="selectCartCryptoCoin('usdt_trc20', this)">USDT (TRC20)</button>
+                            <button class="crypto-coin-btn" onclick="selectCartCryptoCoin('btc', this)">BTC</button>
+                            <button class="crypto-coin-btn" onclick="selectCartCryptoCoin('eth', this)">ETH</button>
+                            <button class="crypto-coin-btn" onclick="selectCartCryptoCoin('sol', this)">SOL</button>
+                        </div>
+
+                        <div class="crypto-wallet-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted);" id="cartCryptoNetworkLabel">Deposit Address (TRC-20):</span>
+                            </div>
+
+                            <div class="wallet-address-bar">
+                                <code id="cartActiveCryptoAddress" class="font-mono" style="font-size: 0.8125rem;">T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f</code>
+                                <button class="btn-icon btn-sm" onclick="copyCartCryptoAddress()" title="Copy Address">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Price Breakdown -->
+                    <div style="background: var(--bg-surface-deep); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border-subtle);">
+                        <div style="display:flex; justify-content:space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                            <span class="text-muted">Subtotal</span>
+                            <span id="cartSubtotalText" class="text-primary">$0.00</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                            <span class="text-muted">Instant Delivery Fee</span>
+                            <span class="text-accent" style="font-weight: 600;">FREE</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; margin-top: 0.5rem;">
+                            <span>Total</span>
+                            <span id="cartTotalText" class="text-accent">$0.00</span>
+                        </div>
+                    </div>
+
+                    <button id="cartCheckoutBtn" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem;" onclick="processCartPageCheckout(event)">
+                        <i class="fa-solid fa-bolt"></i> Complete Purchase & Get Key
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Screen View -->
+        <div id="cartSuccessView" style="display: none; max-width: 640px; margin: 2rem auto 0; text-align: center;">
+            <div class="admin-panel-card" style="padding: 3rem 2rem;">
+                <div class="success-icon-wrap">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2>Payment Confirmed!</h2>
+                <p class="text-muted" style="margin-bottom: 2rem;">Your access key has been successfully generated.</p>
+
+                <div id="cartDispensedKeysList" style="margin-bottom: 2rem;">
+                    <!-- Dispensed Keys -->
+                </div>
+
+                <div class="telegram-instruction-box">
+                    <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">How to Activate in Telegram:</p>
+                    <ol style="text-align: left; margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--text-muted);">
+                        <li>Open Telegram and message <strong>@BULK_OTPBOT</strong></li>
+                        <li>Type and send: <code id="cartActivationCmd" style="color: var(--status-green); font-family: var(--font-mono);">/redeem KEY</code></li>
+                        <li>Your pass timer activates immediately upon redeeming.</li>
+                    </ol>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <a href="index.html" class="btn btn-primary" style="flex: 1;">
+                        <i class="fa-solid fa-store"></i> Return to Shop
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="brand">
+                <div class="brand-logo-wrap">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </div>
+            <div class="footer-text">
+                &copy; 2026 BULK OTP. Instant Access Key Store. Support: <a href="https://t.me/BULK_OTPBOT" target="_blank" style="color: var(--accent);">@BULK_OTPBOT</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="cart.js"></script>
+</body>
+</html>
