@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCartFromLocalStorage();
   fetchWalletsForCart();
   renderCartPage();
+  if (typeof initBackgroundParticles === 'function') initBackgroundParticles();
 });
 
 function loadCartFromLocalStorage() {

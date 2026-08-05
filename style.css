@@ -276,6 +276,17 @@ code {
   display: block;
 }
 
+/* Background Slow Upward Floating Particle Canvas */
+#bgParticlesCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .brand-text {
   font-family: var(--font-heading);
   font-weight: 800;

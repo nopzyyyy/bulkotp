@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateCartBadge();
   initNative3DModel();
+  initBackgroundParticles();
 
   // Scroll navbar styling
   window.addEventListener('scroll', () => {
@@ -692,4 +693,64 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function initBackgroundParticles() {
+  let canvas = document.getElementById('bgParticlesCanvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'bgParticlesCanvas';
+    document.body.prepend(canvas);
+  }
+
+  const ctx = canvas.getContext('2d');
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const particleCount = 45;
+  const particles = [];
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 1.8 + 0.8,
+      speedY: -(Math.random() * 0.35 + 0.15),
+      speedX: (Math.random() - 0.5) * 0.15,
+      opacity: Math.random() * 0.22 + 0.08,
+      isRed: Math.random() > 0.35
+    });
+  }
+
+  function renderParticles() {
+    ctx.clearRect(0, 0, width, height);
+
+    particles.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+
+      if (p.y < -10) {
+        p.y = height + 10;
+        p.x = Math.random() * width;
+      }
+      if (p.x < -10) p.x = width + 10;
+      if (p.x > width + 10) p.x = -10;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = p.isRed
+        ? `rgba(255, 37, 92, ${p.opacity})`
+        : `rgba(255, 255, 255, ${p.opacity * 0.8})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(renderParticles);
+  }
+
+  renderParticles();
 }
