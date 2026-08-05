@@ -66,6 +66,8 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
   overflow-x: hidden;
   position: relative;
   min-height: 100vh;
@@ -2217,29 +2219,80 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 1024px) {
-  /* Hero Khaled Layout Stack for Mobile/Tablet */
+  /* Hero Khaled Layout: Preserve PC 3-Column Side-by-Side Layout on Mobile */
   .hero-khaled-container {
-    padding: 0 1rem;
-    margin: 1rem auto;
+    padding: 0 0.5rem;
+    margin: 0.5rem auto 1rem;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .hero-khaled-wrap {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
-    text-align: center;
-  }
-
-  .khaled-left, .khaled-right {
-    text-align: center;
+    grid-template-columns: 0.95fr 1.15fr 0.95fr;
+    gap: 0.35rem;
     align-items: center;
   }
 
+  .khaled-left {
+    text-align: right;
+    align-items: flex-end;
+    gap: 0.35rem;
+  }
+
+  .khaled-right {
+    text-align: left;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .khaled-badge {
+    font-size: 0.55rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .khaled-title {
+    font-size: 0.75rem;
+    line-height: 1.15;
+  }
+
+  .khaled-handle-pill {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+  }
+
   .khaled-center-img {
-    max-width: 280px;
+    max-width: 100%;
   }
 
   .khaled-link-card {
-    max-width: 340px;
+    padding: 0.35rem 0.5rem;
+    gap: 0.35rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .link-icon-box {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+    border-radius: 6px;
+  }
+
+  .link-label {
+    font-size: 0.5rem;
+  }
+
+  .link-val {
+    font-size: 0.65rem;
+  }
+
+  .link-arrow {
+    font-size: 0.6rem;
+  }
+
+  .khaled-note-text {
+    font-size: 0.55rem;
+    padding: 0.25rem 0.4rem;
   }
 
   /* Admin Off-Canvas Mobile Sidebar */
