@@ -4,11 +4,54 @@ let allAdminUsers = [];
 let allAdminTickets = [];
 let activeAdminTicketId = null;
 
+let progressTimer = null;
+
+function startTopProgress() {
+  let bar = document.getElementById('topProgressBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'topProgressBar';
+    document.body.prepend(bar);
+  }
+
+  if (progressTimer) clearInterval(progressTimer);
+
+  bar.style.width = '0%';
+  bar.classList.add('active');
+
+  let currentW = 10;
+  bar.style.width = currentW + '%';
+
+  progressTimer = setInterval(() => {
+    if (currentW < 80) {
+      currentW += (80 - currentW) * 0.15;
+      bar.style.width = currentW + '%';
+    }
+  }, 100);
+}
+
+function finishTopProgress() {
+  const bar = document.getElementById('topProgressBar');
+  if (!bar) return;
+
+  if (progressTimer) clearInterval(progressTimer);
+
+  bar.style.width = '100%';
+
+  setTimeout(() => {
+    bar.classList.remove('active');
+    setTimeout(() => {
+      bar.style.width = '0%';
+    }, 300);
+  }, 250);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAdminAuth();
 });
 
 async function checkAdminAuth() {
+  startTopProgress();
   try {
     const res = await fetch('/api/auth/me');
     const data = await res.json();
@@ -21,10 +64,13 @@ async function checkAdminAuth() {
     loadAdminDashboardData();
   } catch (err) {
     window.location.href = 'login.html?redirect=/admin.html';
+  } finally {
+    finishTopProgress();
   }
 }
 
 async function logoutAdmin() {
+  startTopProgress();
   await fetch('/api/auth/logout', { method: 'POST' });
   window.location.href = 'login.html';
 }
@@ -37,6 +83,7 @@ function toggleMobileSidebar() {
 }
 
 function switchAdminTab(tabId, btn) {
+  startTopProgress();
   const tabs = document.querySelectorAll('.sidebar-link');
   tabs.forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
@@ -59,6 +106,22 @@ function switchAdminTab(tabId, btn) {
     };
     titleEl.textContent = titles[tabId] || 'Admin Dashboard';
   }
+
+  // Auto-close mobile sidebar
+  const sidebar = document.querySelector('.admin-sidebar');
+  const overlay = document.getElementById('adminSidebarOverlay');
+  if (sidebar && sidebar.classList.contains('mobile-open')) sidebar.classList.remove('mobile-open');
+  if (overlay && overlay.classList.contains('active')) overlay.classList.remove('active');
+
+  if (tabId === 'overview') loadAdminDashboardData();
+  else if (tabId === 'products') loadAdminProducts();
+  else if (tabId === 'orders') loadAdminOrders();
+  else if (tabId === 'users') loadAdminUsers();
+  else if (tabId === 'tickets') loadAdminTickets();
+  else if (tabId === 'audit') loadAdminAuditLogs();
+
+  setTimeout(() => finishTopProgress(), 250);
+}
 
   // Auto-close mobile sidebar
   const sidebar = document.querySelector('.admin-sidebar');

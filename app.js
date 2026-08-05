@@ -21,6 +21,77 @@ let targetY = mouseY;
 
 let currentUser = null;
 
+// Top Progress Bar Engine
+let progressTimer = null;
+
+function startTopProgress() {
+  let bar = document.getElementById('topProgressBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'topProgressBar';
+    document.body.prepend(bar);
+  }
+
+  if (progressTimer) clearInterval(progressTimer);
+
+  bar.style.width = '0%';
+  bar.classList.add('active');
+
+  let currentW = 10;
+  bar.style.width = currentW + '%';
+
+  progressTimer = setInterval(() => {
+    if (currentW < 80) {
+      currentW += (80 - currentW) * 0.15;
+      bar.style.width = currentW + '%';
+    }
+  }, 100);
+}
+
+function finishTopProgress() {
+  const bar = document.getElementById('topProgressBar');
+  if (!bar) return;
+
+  if (progressTimer) clearInterval(progressTimer);
+
+  bar.style.width = '100%';
+
+  setTimeout(() => {
+    bar.classList.remove('active');
+    setTimeout(() => {
+      bar.style.width = '0%';
+    }, 300);
+  }, 250);
+}
+
+// Universal Button Loading Helper with 5s Safety Recovery Timeout
+function setButtonLoading(btn, loadingText = 'Processing...') {
+  if (!btn) return null;
+  const originalHtml = btn.innerHTML;
+  btn.setAttribute('data-original-html', originalHtml);
+  btn.classList.add('is-loading');
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${loadingText}`;
+
+  const recoveryTimer = setTimeout(() => {
+    resetButtonLoading(btn);
+  }, 5000);
+
+  btn._recoveryTimer = recoveryTimer;
+  return originalHtml;
+}
+
+function resetButtonLoading(btn) {
+  if (!btn) return;
+  if (btn._recoveryTimer) clearTimeout(btn._recoveryTimer);
+  const originalHtml = btn.getAttribute('data-original-html');
+  if (originalHtml) {
+    btn.innerHTML = originalHtml;
+  }
+  btn.classList.remove('is-loading');
+  btn.disabled = false;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   fetchCurrentUser();
   fetchProductsFromBackend();

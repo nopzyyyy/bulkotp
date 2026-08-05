@@ -3284,5 +3284,31 @@ input:checked + .slider:before {
   margin-top: 1rem;
 }
 
+/* Global Top Progress Bar */
+#topProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #ff255c 0%, #ff5e85 50%, #5eead4 100%);
+  box-shadow: 0 0 10px rgba(255, 37, 92, 0.7);
+  z-index: 999999;
+  opacity: 0;
+  pointer-events: none;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+#topProgressBar.active {
+  opacity: 1;
+}
+
+/* Button Loading State */
+.btn.is-loading {
+  opacity: 0.75 !important;
+  pointer-events: none !important;
+  cursor: wait !important;
+}
+
 
 
