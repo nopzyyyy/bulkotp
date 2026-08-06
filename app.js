@@ -255,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchCurrentUser();
   fetchProductsFromBackend();
   fetchPaymentConfig();
-  fetchWalletsFromBackend();
 
   updateCartBadge();
   initNative3DModel();

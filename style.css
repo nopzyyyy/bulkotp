@@ -1644,7 +1644,7 @@ details[open] .faq-icon {
 
 .admin-main-panel {
   flex: 1;
-  margin-left: 270px;
+  margin-left: 0 !important;
   display: flex;
   flex-direction: column;
   min-height: 100vh;

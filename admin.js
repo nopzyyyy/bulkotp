@@ -171,14 +171,10 @@ async function loadAdminDashboardData() {
     if (stats.breakdown) {
       document.getElementById('statCryptoRev').textContent = `$${(stats.breakdown.crypto || 0).toFixed(2)}`;
       document.getElementById('statBalanceRev').textContent = `$${(stats.breakdown.balance || 0).toFixed(2)}`;
-      document.getElementById('statChimeRev').textContent = `$${(stats.breakdown.chime || 0).toFixed(2)}`;
-      document.getElementById('statStarsRev').textContent = `$${(stats.breakdown.stars || 0).toFixed(2)}`;
     }
     if (stats.breakdownCounts) {
       document.getElementById('statCryptoCount').textContent = `${stats.breakdownCounts.crypto || 0} transactions`;
       document.getElementById('statBalanceCount').textContent = `${stats.breakdownCounts.balance || 0} transactions`;
-      document.getElementById('statChimeCount').textContent = `${stats.breakdownCounts.chime || 0} transactions`;
-      document.getElementById('statStarsCount').textContent = `${stats.breakdownCounts.stars || 0} transactions`;
     }
 
     // Recent Orders Table
@@ -226,155 +222,167 @@ function drawDailyRevenueChart(labels, data) {
   const maxRevenue = data.length > 0 ? Math.max(...data, 0) : 0;
   if (peakPill) peakPill.textContent = `$${maxRevenue.toFixed(2)}`;
 
-  // Use Chart.js if available for rich, interactive, animated rendering
-  if (typeof Chart !== 'undefined') {
-    if (adminRevenueChartInstance) {
-      adminRevenueChartInstance.destroy();
-    }
-    const ctx = canvas.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-    gradient.addColorStop(0, 'rgba(255, 37, 92, 0.45)');
-    gradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
-
-    adminRevenueChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Daily Revenue',
-          data: data,
-          borderColor: '#ff255c',
-          borderWidth: 3,
-          backgroundColor: gradient,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#ff255c',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (context) => ` Revenue: $${Number(context.raw || 0).toFixed(2)}`
-            }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { color: '#8a8d85', font: { family: 'JetBrains Mono', size: 10 } }
-          },
-          y: {
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: {
-              color: '#8a8d85',
-              font: { family: 'JetBrains Mono', size: 10 },
-              callback: (val) => '$' + val
-            },
-            beginAtZero: true
-          }
-        }
-      }
-    });
-    return;
-  }
-
-  // 2D Canvas Fallback Renderer
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
   const parent = canvas.parentElement;
-  const computedW = parent ? (parent.clientWidth || parent.getBoundingClientRect().width) : 0;
-  const width = computedW > 100 ? computedW : 800;
-  const height = 180;
+  const parentWidth = parent ? (parent.clientWidth || parent.getBoundingClientRect().width) : 800;
+  const width = Math.max(parentWidth, 300);
+  const height = 240;
 
+  const dpr = window.devicePixelRatio || 1;
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
-  ctx.scale(dpr, dpr);
 
-  const padding = { top: 20, right: 30, bottom: 30, left: 45 };
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
 
-  const maxVal = Math.max(...data, 50);
+  // Use Chart.js if loaded
+  if (typeof Chart !== 'undefined') {
+    try {
+      if (adminRevenueChartInstance) {
+        adminRevenueChartInstance.destroy();
+      }
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, 'rgba(255, 37, 92, 0.45)');
+      gradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
+
+      adminRevenueChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Daily Revenue',
+            data: data,
+            borderColor: '#ff255c',
+            borderWidth: 3,
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#ff255c',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 4.5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#111214',
+              borderColor: 'rgba(255,255,255,0.15)',
+              borderWidth: 1,
+              titleFont: { family: 'Inter Tight', size: 12 },
+              bodyFont: { family: 'JetBrains Mono', size: 13, weight: 'bold' },
+              bodyColor: '#ff255c',
+              padding: 10,
+              displayColors: false,
+              callbacks: {
+                label: (context) => `Revenue: $${Number(context.raw || 0).toFixed(2)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#8a8d85', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: {
+                color: '#8a8d85',
+                font: { family: 'JetBrains Mono', size: 10 },
+                callback: (val) => '$' + val
+              },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      return;
+    } catch (e) {
+      console.warn('Chart.js init fallback to 2D Canvas:', e);
+    }
+  }
+
+  // Pure 2D Canvas Renderer (Guaranteed Fallback)
+  const padding = { top: 25, right: 25, bottom: 35, left: 55 };
   const graphW = width - padding.left - padding.right;
   const graphH = height - padding.top - padding.bottom;
+  const maxVal = Math.max(...data, 50);
 
-  // Grid Lines
+  // Background Grid Lines & Y Axis Labels
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
   ctx.lineWidth = 1;
-  for (let i = 0; i <= 3; i++) {
-    const y = padding.top + (graphH / 3) * i;
+  ctx.fillStyle = '#8a8d85';
+  ctx.font = '10px "JetBrains Mono"';
+  ctx.textAlign = 'right';
+
+  const steps = 4;
+  for (let i = 0; i <= steps; i++) {
+    const y = padding.top + (graphH / steps) * i;
     ctx.beginPath();
     ctx.moveTo(padding.left, y);
     ctx.lineTo(width - padding.right, y);
     ctx.stroke();
 
-    const val = maxVal - (maxVal / 3) * i;
-    ctx.fillStyle = '#6b6f66';
-    ctx.font = '10px "JetBrains Mono"';
-    ctx.fillText(`$${Math.round(val)}`, 8, y + 3);
+    const val = maxVal - (maxVal / steps) * i;
+    ctx.fillText(`$${Math.round(val)}`, padding.left - 8, y + 3);
   }
 
-  if (data.length === 0) return;
+  if (!data || data.length === 0) return;
 
-  // Draw Smooth Curve
+  // Calculate Points
   const points = data.map((val, idx) => {
-    const x = padding.left + (graphW / (data.length - 1 || 1)) * idx;
+    const x = padding.left + (graphW / Math.max(data.length - 1, 1)) * idx;
     const y = padding.top + graphH - (val / maxVal) * graphH;
-    return { x, y };
+    return { x, y, val, label: labels[idx] || '' };
   });
 
   // Gradient Area Fill
-  const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
-  gradient.addColorStop(0, 'rgba(255, 37, 92, 0.35)');
-  gradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
+  const areaGradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+  areaGradient.addColorStop(0, 'rgba(255, 37, 92, 0.4)');
+  areaGradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
 
   ctx.beginPath();
   ctx.moveTo(points[0].x, height - padding.bottom);
   points.forEach(p => ctx.lineTo(p.x, p.y));
   ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
   ctx.closePath();
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = areaGradient;
   ctx.fill();
 
-  // Stroke Line
+  // Smooth Bezier Curve Line
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    const xc = (points[i].x + points[i - 1].x) / 2;
-    const yc = (points[i].y + points[i - 1].y) / 2;
-    ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
+  for (let i = 0; i < points.length - 1; i++) {
+    const xc = (points[i].x + points[i + 1].x) / 2;
+    const yc = (points[i].y + points[i + 1].y) / 2;
+    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
   }
   ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
   ctx.strokeStyle = '#ff255c';
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 3;
   ctx.stroke();
 
-  // Draw Dots on Points
+  // Draw Data Dots & X Axis Labels
+  ctx.textAlign = 'center';
   points.forEach(p => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
     ctx.fillStyle = '#ff255c';
     ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
     ctx.stroke();
-  });
 
-  // X Axis Labels
-  ctx.fillStyle = '#8a8d85';
-  ctx.font = '10px "JetBrains Mono"';
-  labels.forEach((lbl, idx) => {
-    const x = points[idx].x;
-    ctx.fillText(lbl, x - 14, height - 8);
+    ctx.fillStyle = '#8a8d85';
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.fillText(p.label, p.x, height - 10);
   });
 }
 
