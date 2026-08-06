@@ -1,111 +1,726 @@
 [
   {
-    "id": "compact-1h",
+    "id": "hourly-1h",
     "category": "hourly",
-    "title": "OTP BOT COMPACT Pass: 1 - HOUR COMPACT Key",
-    "shortTitle": "1-Hour Compact Key",
-    "price": 17,
+    "title": "OTP BOT 1-HOUR Pass: 1-HOUR HOURLY Key",
+    "shortTitle": "1-Hour Hourly Key",
+    "price": 17.0,
     "hidden": false,
     "duration": "1-Hour",
-    "description": "Experience the power of Bulk OTP Bot with the MINI Pass: 1 - HOUR COMPACT Key. Instant telegram bot access.",
-    "prefix": "BOT-COMPACT",
-    "art": "assets/compact_pass_1h.jpg",
+    "description": "Experience the power of Bulk OTP Bot with the 1-Hour Hourly Pass. High-speed Telegram OTP bypass.",
+    "prefix": "BOT-1H",
+    "art": "assets/pass_1h.png",
     "stock": [
       {
-        "id": "stk_101",
-        "credentials": "BOT-COMPACT-9A8B-7C6D-KEY",
+        "id": "stk_1h_1",
+        "credentials": "BOT-1H-33HN-LXW3-KEY",
         "isSold": false
       },
       {
-        "id": "stk_102",
-        "credentials": "BOT-COMPACT-1E2F-3G4H-KEY",
+        "id": "stk_1h_2",
+        "credentials": "BOT-1H-2HTB-8FXH-KEY",
         "isSold": false
       },
       {
-        "id": "stk_103",
-        "credentials": "BOT-COMPACT-5I6J-7K8L-KEY",
+        "id": "stk_1h_3",
+        "credentials": "BOT-1H-EQ6F-QG3Z-KEY",
         "isSold": false
       },
       {
-        "id": "stk_104",
-        "credentials": "BOT-COMPACT-9M0N-1P2Q-KEY",
+        "id": "stk_1h_4",
+        "credentials": "BOT-1H-HHFE-9CDK-KEY",
         "isSold": false
       },
       {
-        "id": "stk_105",
-        "credentials": "BOT-COMPACT-3R4S-5T6U-KEY",
+        "id": "stk_1h_5",
+        "credentials": "BOT-1H-4VRU-NBPN-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_6",
+        "credentials": "BOT-1H-SQ3H-7TG2-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_7",
+        "credentials": "BOT-1H-3FEC-4YF3-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_8",
+        "credentials": "BOT-1H-A6YD-H5HT-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_9",
+        "credentials": "BOT-1H-5DQH-5NZW-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_10",
+        "credentials": "BOT-1H-VE65-HKMS-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_11",
+        "credentials": "BOT-1H-YR6E-YS6H-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_12",
+        "credentials": "BOT-1H-XERZ-Z3XH-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_13",
+        "credentials": "BOT-1H-ZPA9-3HZS-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_14",
+        "credentials": "BOT-1H-82PW-EF47-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_15",
+        "credentials": "BOT-1H-PSTX-XTPM-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_16",
+        "credentials": "BOT-1H-Y2QB-88D3-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_17",
+        "credentials": "BOT-1H-LQZP-63A5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_18",
+        "credentials": "BOT-1H-KGZ3-32R9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_19",
+        "credentials": "BOT-1H-UN7F-KAM9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_20",
+        "credentials": "BOT-1H-BK7X-63TW-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_21",
+        "credentials": "BOT-1H-VWNB-LJKQ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_22",
+        "credentials": "BOT-1H-GDV2-SVG5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_23",
+        "credentials": "BOT-1H-G2YV-5T4J-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_24",
+        "credentials": "BOT-1H-6XE8-F8TS-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_25",
+        "credentials": "BOT-1H-LPC3-RTUM-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_26",
+        "credentials": "BOT-1H-VYNA-2DZR-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_27",
+        "credentials": "BOT-1H-C8LY-3LH3-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_28",
+        "credentials": "BOT-1H-LJ63-LTJT-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_29",
+        "credentials": "BOT-1H-XSMP-G84R-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_30",
+        "credentials": "BOT-1H-6CF2-XA89-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_31",
+        "credentials": "BOT-1H-PT97-48LK-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_32",
+        "credentials": "BOT-1H-AZJJ-4GJU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_33",
+        "credentials": "BOT-1H-68YN-SJEZ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_34",
+        "credentials": "BOT-1H-TGNP-EP9F-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_35",
+        "credentials": "BOT-1H-MKUK-4BAM-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_36",
+        "credentials": "BOT-1H-64RE-UFAW-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_37",
+        "credentials": "BOT-1H-9E9W-UP7S-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_38",
+        "credentials": "BOT-1H-9JYW-XX6Z-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_39",
+        "credentials": "BOT-1H-45A3-CSPA-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_40",
+        "credentials": "BOT-1H-KMQN-L855-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_41",
+        "credentials": "BOT-1H-BQYH-XMEN-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_42",
+        "credentials": "BOT-1H-7QYG-JM6V-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_43",
+        "credentials": "BOT-1H-HCVW-F2EV-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1h_44",
+        "credentials": "BOT-1H-7GPA-XENV-KEY",
         "isSold": false
       }
     ]
   },
   {
-    "id": "extended-3h",
+    "id": "hourly-3h",
     "category": "hourly",
-    "title": "OTP BOT EXTENDED Pass: 3 - HOUR EXTENDED Key",
-    "shortTitle": "3-Hour Extended Key",
-    "price": 30,
+    "title": "OTP BOT 3-HOUR Pass: 3-HOUR HOURLY Key",
+    "shortTitle": "3-Hour Hourly Key",
+    "price": 30.0,
     "hidden": false,
     "duration": "3-Hour",
-    "description": "OTP BOT EXTENDED Pass: 3 - HOUR EXTENDED Key. High-speed session handling with zero interruption.",
-    "prefix": "BOT-EXTENDED",
-    "art": "assets/extended_pass_3h.jpg",
+    "description": "OTP BOT 3-Hour Hourly Pass. High-speed session handling with zero interruption.",
+    "prefix": "BOT-3H",
+    "art": "assets/pass_3h.png",
     "stock": [
       {
-        "id": "stk_201",
-        "credentials": "BOT-EXTENDED-AA11-BB22-KEY",
+        "id": "stk_3h_1",
+        "credentials": "BOT-3H-4VAF-2QAT-KEY",
         "isSold": false
       },
       {
-        "id": "stk_202",
-        "credentials": "BOT-EXTENDED-CC33-DD44-KEY",
+        "id": "stk_3h_2",
+        "credentials": "BOT-3H-7A6Q-5DSA-KEY",
         "isSold": false
       },
       {
-        "id": "stk_203",
-        "credentials": "BOT-EXTENDED-EE55-FF66-KEY",
+        "id": "stk_3h_3",
+        "credentials": "BOT-3H-5U6L-NEJU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_4",
+        "credentials": "BOT-3H-W8RX-N26W-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_5",
+        "credentials": "BOT-3H-7B98-GYK5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_6",
+        "credentials": "BOT-3H-L7G7-Y8EU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_7",
+        "credentials": "BOT-3H-FYCG-RP6X-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_8",
+        "credentials": "BOT-3H-BRMK-USV9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_9",
+        "credentials": "BOT-3H-AQ3U-958V-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_10",
+        "credentials": "BOT-3H-Q9XL-MAC2-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_11",
+        "credentials": "BOT-3H-UZKK-U84B-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_12",
+        "credentials": "BOT-3H-FVXR-DFJE-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_13",
+        "credentials": "BOT-3H-KGUE-79S9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_14",
+        "credentials": "BOT-3H-RQ9J-7PQF-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_15",
+        "credentials": "BOT-3H-ECEB-3ZP9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_16",
+        "credentials": "BOT-3H-PG98-AHGM-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_17",
+        "credentials": "BOT-3H-ZMGQ-6RCN-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_18",
+        "credentials": "BOT-3H-BLPX-PGKF-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_19",
+        "credentials": "BOT-3H-6EJZ-T9HH-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_20",
+        "credentials": "BOT-3H-2CS8-952W-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_21",
+        "credentials": "BOT-3H-HTCG-9D2F-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_22",
+        "credentials": "BOT-3H-MTES-DWEJ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_23",
+        "credentials": "BOT-3H-PUJ2-54KY-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_24",
+        "credentials": "BOT-3H-AU66-RWK8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_25",
+        "credentials": "BOT-3H-L76Y-SDHD-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_26",
+        "credentials": "BOT-3H-FT9P-24PK-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_27",
+        "credentials": "BOT-3H-BB7L-DSAC-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_28",
+        "credentials": "BOT-3H-MCZQ-F5QY-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_29",
+        "credentials": "BOT-3H-D7WD-8ZQ9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_30",
+        "credentials": "BOT-3H-CZ9K-BLRX-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_31",
+        "credentials": "BOT-3H-L9B5-K6YQ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_32",
+        "credentials": "BOT-3H-WU56-3YN6-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_33",
+        "credentials": "BOT-3H-DUVG-TBLB-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3h_34",
+        "credentials": "BOT-3H-VWG9-A6VX-KEY",
         "isSold": false
       }
     ]
   },
   {
-    "id": "daylong-24h",
+    "id": "daily-1d",
     "category": "daily",
-    "title": "OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key",
-    "shortTitle": "24-Hour Daylong Key",
-    "price": 60,
+    "title": "OTP BOT 1-DAY Pass: 1-DAY DAILY Key",
+    "shortTitle": "1-Day Daily Key",
+    "price": 60.0,
     "hidden": false,
-    "duration": "24-Hour",
-    "description": "OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key. Full day uninterrupted high-capacity OTP bypass operations.",
-    "prefix": "BOT-DAYLONG",
-    "art": "assets/daylong_pass_24h.jpg",
+    "duration": "1-Day",
+    "description": "OTP BOT 1-Day Daily Pass. Full 24-hour uninterrupted high-capacity OTP bypass operations.",
+    "prefix": "BOT-1D",
+    "art": "assets/pass_1d.png",
     "stock": [
       {
-        "id": "stk_301",
-        "credentials": "BOT-DAYLONG-7788-9900-KEY",
+        "id": "stk_1d_1",
+        "credentials": "BOT-1D-G4CL-36M2-KEY",
         "isSold": false
       },
       {
-        "id": "stk_302",
-        "credentials": "BOT-DAYLONG-1122-3344-KEY",
+        "id": "stk_1d_2",
+        "credentials": "BOT-1D-LLVH-M5V5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_3",
+        "credentials": "BOT-1D-DALN-NXBH-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_4",
+        "credentials": "BOT-1D-DEEC-ABBP-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_5",
+        "credentials": "BOT-1D-B7UF-5HRT-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_6",
+        "credentials": "BOT-1D-AZ7J-JLG4-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_7",
+        "credentials": "BOT-1D-PS5T-AP56-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_8",
+        "credentials": "BOT-1D-RTZU-6L3Y-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_9",
+        "credentials": "BOT-1D-FEF5-3D2S-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_10",
+        "credentials": "BOT-1D-D67B-EETR-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_11",
+        "credentials": "BOT-1D-7PPB-DK4R-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_12",
+        "credentials": "BOT-1D-59G2-U68P-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_13",
+        "credentials": "BOT-1D-CKPU-ETKG-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_14",
+        "credentials": "BOT-1D-W3WU-QFS3-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_15",
+        "credentials": "BOT-1D-B59Q-CNYY-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_16",
+        "credentials": "BOT-1D-C65H-XX4B-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_17",
+        "credentials": "BOT-1D-KP5Y-EBSD-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_18",
+        "credentials": "BOT-1D-XV9S-WBDL-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_19",
+        "credentials": "BOT-1D-FWUC-LHE8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_20",
+        "credentials": "BOT-1D-TE52-WNV4-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_21",
+        "credentials": "BOT-1D-MW24-Y5TQ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_22",
+        "credentials": "BOT-1D-2XBG-5F8G-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_23",
+        "credentials": "BOT-1D-V5Z6-V9Y8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_24",
+        "credentials": "BOT-1D-GBDR-48ZP-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_25",
+        "credentials": "BOT-1D-D5VN-P938-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_26",
+        "credentials": "BOT-1D-M6PQ-ZGRX-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_27",
+        "credentials": "BOT-1D-FQMQ-BY3E-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_28",
+        "credentials": "BOT-1D-LUKE-B6SP-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1d_29",
+        "credentials": "BOT-1D-79YJ-8HH2-KEY",
         "isSold": false
       }
     ]
   },
   {
-    "id": "multiday-3d",
+    "id": "daily-3d",
     "category": "daily",
-    "title": "OTP BOT MULTIDAY Pass: 3 - DAY MULTIDAY Key",
+    "title": "OTP BOT 3-DAY Pass: 3-DAY MULTIDAY Key",
     "shortTitle": "3-Day Multiday Key",
-    "price": 150,
+    "price": 150.0,
     "hidden": false,
     "duration": "3-Day",
-    "description": "OTP BOT MULTIDAY Pass: 3 - DAY MULTIDAY Key. Multi-day continuous access key for high-volume automated verification.",
-    "prefix": "BOT-MULTIDAY",
-    "art": "assets/multiday_pass_3d.jpg",
+    "description": "OTP BOT 3-Day Multiday Pass. Extended multi-day access key for ongoing operations.",
+    "prefix": "BOT-3D",
+    "art": "assets/pass_3d.png",
     "stock": [
       {
-        "id": "stk_401",
-        "credentials": "BOT-MULTIDAY-5566-7788-KEY",
+        "id": "stk_3d_1",
+        "credentials": "BOT-3D-36PZ-CNHX-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_2",
+        "credentials": "BOT-3D-FASL-8TH9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_3",
+        "credentials": "BOT-3D-XTC2-UYVU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_4",
+        "credentials": "BOT-3D-JGK4-FK6J-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_5",
+        "credentials": "BOT-3D-7K8G-J8SZ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_6",
+        "credentials": "BOT-3D-WLVT-EUPD-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_7",
+        "credentials": "BOT-3D-S362-2YKY-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_8",
+        "credentials": "BOT-3D-9GBT-9KY8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_9",
+        "credentials": "BOT-3D-ZXQV-HYC2-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_10",
+        "credentials": "BOT-3D-FXBY-RBPA-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_11",
+        "credentials": "BOT-3D-3RJH-ZE6T-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_12",
+        "credentials": "BOT-3D-D5RF-DLSL-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_13",
+        "credentials": "BOT-3D-84C2-WDTA-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_14",
+        "credentials": "BOT-3D-FN6W-FVXU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_15",
+        "credentials": "BOT-3D-3TE8-SY4K-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_16",
+        "credentials": "BOT-3D-KQKR-NJ2H-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_17",
+        "credentials": "BOT-3D-ZEPU-HMD7-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_18",
+        "credentials": "BOT-3D-DRBJ-MCQ8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_19",
+        "credentials": "BOT-3D-NFXC-S8V2-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_20",
+        "credentials": "BOT-3D-BGHB-287H-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_21",
+        "credentials": "BOT-3D-DEUP-3CGZ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_22",
+        "credentials": "BOT-3D-PTSA-UQE5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_23",
+        "credentials": "BOT-3D-RN3P-2F43-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_24",
+        "credentials": "BOT-3D-P95C-SCDU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_25",
+        "credentials": "BOT-3D-SW8M-3SQ8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_26",
+        "credentials": "BOT-3D-LQY3-PXVH-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3d_27",
+        "credentials": "BOT-3D-E5NK-TJHA-KEY",
         "isSold": false
       }
     ]
@@ -113,37 +728,553 @@
   {
     "id": "weekly-1w",
     "category": "weekly",
-    "title": "OTP BOT WEEKLY Pass: 1 - WEEK WEEKLY Key",
+    "title": "OTP BOT 1-WEEK Pass: 1-WEEK WEEKLY Key",
     "shortTitle": "1-Week Weekly Key",
-    "price": 250,
+    "price": 250.0,
     "hidden": false,
     "duration": "1-Week",
-    "description": "OTP BOT WEEKLY Pass: 1 - WEEK WEEKLY Key. Full week unlimited operations access pass.",
-    "prefix": "BOT-WEEKLY",
-    "art": "assets/weekly_pass_1w.jpg",
+    "description": "OTP BOT 1-Week Weekly Pass. Full 7-day unrestricted key access for power users.",
+    "prefix": "BOT-1W",
+    "art": "assets/pass_1w.png",
     "stock": [
       {
-        "id": "stk_501",
-        "credentials": "BOT-WEEKLY-9900-1122-KEY",
+        "id": "stk_1w_1",
+        "credentials": "BOT-1W-W3MF-B3CG-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_2",
+        "credentials": "BOT-1W-TR33-STDH-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_3",
+        "credentials": "BOT-1W-JVE2-8RQP-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_4",
+        "credentials": "BOT-1W-EW5N-HMWR-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_5",
+        "credentials": "BOT-1W-KV2H-Q9DC-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_6",
+        "credentials": "BOT-1W-57RZ-W7L9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_7",
+        "credentials": "BOT-1W-KRXH-WVG8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_8",
+        "credentials": "BOT-1W-PNSF-QVS8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_9",
+        "credentials": "BOT-1W-5XA2-AZRG-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_10",
+        "credentials": "BOT-1W-9N84-YC8E-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_11",
+        "credentials": "BOT-1W-GSYW-2KYW-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_12",
+        "credentials": "BOT-1W-H7CA-5R5F-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_13",
+        "credentials": "BOT-1W-7MH2-XFV8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_14",
+        "credentials": "BOT-1W-M8MR-FHVX-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_15",
+        "credentials": "BOT-1W-46Y8-BYQY-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_16",
+        "credentials": "BOT-1W-W33N-MV3H-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_17",
+        "credentials": "BOT-1W-P5V2-VL7D-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_18",
+        "credentials": "BOT-1W-SESS-YZ3J-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_19",
+        "credentials": "BOT-1W-TH7C-VPLH-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_20",
+        "credentials": "BOT-1W-HZMS-FZ68-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_21",
+        "credentials": "BOT-1W-XAU7-QS5Y-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_22",
+        "credentials": "BOT-1W-BKVM-KFAD-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_23",
+        "credentials": "BOT-1W-WNLA-JXWV-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1w_24",
+        "credentials": "BOT-1W-HX9H-ADZB-KEY",
         "isSold": false
       }
     ]
   },
   {
-    "id": "biweekly-2w",
+    "id": "weekly-2w",
     "category": "weekly",
-    "title": "OTP BOT BIWEEKLY Pass: 2 - WEEKS BIWEEKLY Key",
-    "shortTitle": "2-Weeks Biweekly Key",
-    "price": 350,
+    "title": "OTP BOT 2-WEEK Pass: 2-WEEK MULTIWEEK Key",
+    "shortTitle": "2-Week Multiweek Key",
+    "price": 350.0,
     "hidden": false,
-    "duration": "2-Weeks",
-    "description": "OTP BOT BIWEEKLY Pass: 2 - WEEKS BIWEEKLY Key. Maximum value 14-day dedicated pass key.",
-    "prefix": "BOT-BIWEEKLY",
-    "art": "assets/biweekly_pass_2w.jpg",
+    "duration": "2-Week",
+    "description": "OTP BOT 2-Week Multiweek Pass. High-capacity biweekly duration key.",
+    "prefix": "BOT-2W",
+    "art": "assets/pass_2w.png",
     "stock": [
       {
-        "id": "stk_601",
-        "credentials": "BOT-BIWEEKLY-3344-5566-KEY",
+        "id": "stk_2w_1",
+        "credentials": "BOT-2W-2QFJ-DX3D-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_2",
+        "credentials": "BOT-2W-WV4C-QRRQ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_3",
+        "credentials": "BOT-2W-6M7U-Z3Y7-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_4",
+        "credentials": "BOT-2W-Z4N2-U5SD-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_5",
+        "credentials": "BOT-2W-S29Z-87NB-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_6",
+        "credentials": "BOT-2W-QUA7-MRCE-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_7",
+        "credentials": "BOT-2W-EH24-HGT8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_8",
+        "credentials": "BOT-2W-TKBQ-RMD5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_9",
+        "credentials": "BOT-2W-FUYE-NF7J-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_10",
+        "credentials": "BOT-2W-A96J-46LX-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_11",
+        "credentials": "BOT-2W-5GDZ-HNDT-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_12",
+        "credentials": "BOT-2W-6ESA-4QCT-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_13",
+        "credentials": "BOT-2W-JG4X-UL6J-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_14",
+        "credentials": "BOT-2W-RTNV-YLSR-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_15",
+        "credentials": "BOT-2W-FPKA-3UX5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_16",
+        "credentials": "BOT-2W-4V2W-PNTL-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_17",
+        "credentials": "BOT-2W-X5DA-5HRE-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_18",
+        "credentials": "BOT-2W-Q6F3-EQ8B-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_2w_19",
+        "credentials": "BOT-2W-X495-KSDP-KEY",
+        "isSold": false
+      }
+    ]
+  },
+  {
+    "id": "monthly-1m",
+    "category": "monthly",
+    "title": "OTP BOT 1-MONTH Pass: 1-MONTH MONTHLY Key",
+    "shortTitle": "1-Month Monthly Key",
+    "price": 550.0,
+    "hidden": false,
+    "duration": "1-Month",
+    "description": "OTP BOT 1-Month Monthly Pass. Full 30-day VIP key access with dedicated priority routing.",
+    "prefix": "BOT-1M",
+    "art": "assets/pass_1m.png",
+    "stock": [
+      {
+        "id": "stk_1m_1",
+        "credentials": "BOT-1M-DSGP-XXYN-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_2",
+        "credentials": "BOT-1M-YMJF-R8EQ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_3",
+        "credentials": "BOT-1M-WB8T-YMKJ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_4",
+        "credentials": "BOT-1M-XL9S-LVQB-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_5",
+        "credentials": "BOT-1M-FCX7-GUZ6-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_6",
+        "credentials": "BOT-1M-XN34-RDRG-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_7",
+        "credentials": "BOT-1M-CJ73-2RJS-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_8",
+        "credentials": "BOT-1M-R92C-JWTC-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_9",
+        "credentials": "BOT-1M-3LFK-VM39-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_10",
+        "credentials": "BOT-1M-HWXZ-KYCJ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_11",
+        "credentials": "BOT-1M-JRWF-UZGJ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_12",
+        "credentials": "BOT-1M-QM2C-T4MU-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_13",
+        "credentials": "BOT-1M-3EFR-AYP5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_14",
+        "credentials": "BOT-1M-5W4G-JW6A-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_15",
+        "credentials": "BOT-1M-6YJP-Z8GF-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_16",
+        "credentials": "BOT-1M-YERW-AMXN-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1m_17",
+        "credentials": "BOT-1M-VNCY-RRQ7-KEY",
+        "isSold": false
+      }
+    ]
+  },
+  {
+    "id": "monthly-3m",
+    "category": "monthly",
+    "title": "OTP BOT 3-MONTH Pass: 3-MONTH MULTIMONTH Key",
+    "shortTitle": "3-Month Multimonth Key",
+    "price": 1200.0,
+    "hidden": false,
+    "duration": "3-Month",
+    "description": "OTP BOT 3-Month Multimonth Pass. 90-day quarterly pass for high-volume enterprises.",
+    "prefix": "BOT-3M",
+    "art": "assets/pass_3m.png",
+    "stock": [
+      {
+        "id": "stk_3m_1",
+        "credentials": "BOT-3M-8WNY-LAEC-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_2",
+        "credentials": "BOT-3M-8PRJ-FAFW-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_3",
+        "credentials": "BOT-3M-2ZXL-39KJ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_4",
+        "credentials": "BOT-3M-NJ4X-3UH8-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_5",
+        "credentials": "BOT-3M-L3QE-5M9L-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_6",
+        "credentials": "BOT-3M-CL8F-8KW3-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_7",
+        "credentials": "BOT-3M-8G32-XCP6-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_8",
+        "credentials": "BOT-3M-PFR3-LS9N-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_9",
+        "credentials": "BOT-3M-L33B-4ZEE-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_10",
+        "credentials": "BOT-3M-3MFG-AMK6-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_11",
+        "credentials": "BOT-3M-DP2T-9UN5-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_12",
+        "credentials": "BOT-3M-BFM2-2G6M-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_13",
+        "credentials": "BOT-3M-BURL-ENSE-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_3m_14",
+        "credentials": "BOT-3M-ZFU7-QWGU-KEY",
+        "isSold": false
+      }
+    ]
+  },
+  {
+    "id": "monthly-6m",
+    "category": "monthly",
+    "title": "OTP BOT 6-MONTH Pass: 6-MONTH MULTIMONTH Key",
+    "shortTitle": "6-Month Multimonth Key",
+    "price": 2000.0,
+    "hidden": false,
+    "duration": "6-Month",
+    "description": "OTP BOT 6-Month Multimonth Pass. Half-year VIP key with maximum rate limit limits.",
+    "prefix": "BOT-6M",
+    "art": "assets/pass_6m.png",
+    "stock": [
+      {
+        "id": "stk_6m_1",
+        "credentials": "BOT-6M-3UF9-GBYG-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_2",
+        "credentials": "BOT-6M-NGM3-SZXY-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_3",
+        "credentials": "BOT-6M-T3B4-5E3A-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_4",
+        "credentials": "BOT-6M-HXPK-VZ28-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_5",
+        "credentials": "BOT-6M-SNSP-QD39-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_6",
+        "credentials": "BOT-6M-KXAS-3K2V-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_7",
+        "credentials": "BOT-6M-4AU3-ZTWT-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_8",
+        "credentials": "BOT-6M-39E4-TQ6W-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_9",
+        "credentials": "BOT-6M-VLAH-34WL-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_10",
+        "credentials": "BOT-6M-U2WW-E5QZ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_6m_11",
+        "credentials": "BOT-6M-D9R6-ZULK-KEY",
+        "isSold": false
+      }
+    ]
+  },
+  {
+    "id": "yearly-1y",
+    "category": "monthly",
+    "title": "OTP BOT 1-YEAR Pass: 1-YEAR YEARLY Key",
+    "shortTitle": "1-Year Yearly Key",
+    "price": 3500.0,
+    "hidden": false,
+    "duration": "1-Year",
+    "description": "OTP BOT 1-Year Yearly Pass. Ultimate 365-day annual pass for permanent operations.",
+    "prefix": "BOT-1Y",
+    "art": "assets/pass_1y.png",
+    "stock": [
+      {
+        "id": "stk_1y_1",
+        "credentials": "BOT-1Y-H2YD-2AKQ-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_2",
+        "credentials": "BOT-1Y-8CXE-2WW6-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_3",
+        "credentials": "BOT-1Y-933Z-RCNK-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_4",
+        "credentials": "BOT-1Y-ZNHJ-YT43-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_5",
+        "credentials": "BOT-1Y-X77M-5H6U-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_6",
+        "credentials": "BOT-1Y-W8QN-UDB9-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_7",
+        "credentials": "BOT-1Y-H3FD-QV3D-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_8",
+        "credentials": "BOT-1Y-2LTV-Q8L4-KEY",
+        "isSold": false
+      },
+      {
+        "id": "stk_1y_9",
+        "credentials": "BOT-1Y-WB79-WMCV-KEY",
         "isSold": false
       }
     ]
