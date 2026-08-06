@@ -333,14 +333,16 @@
                     <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.65rem;">Select Payment Method</label>
                     <div class="pinks-payment-options-grid">
                         <div class="pinks-payment-card active" data-method="balance" onclick="selectPaymentMethod('balance', this)">
+                            <div class="payment-check-badge"><i class="fa-solid fa-circle-check"></i></div>
                             <div class="pinks-payment-icon"><i class="fa-solid fa-wallet"></i></div>
                             <span class="pinks-payment-title">Store Balance</span>
-                            <span class="pinks-payment-subtitle">Instant delivery</span>
+                            <span class="pinks-payment-subtitle">Instant key delivery</span>
                         </div>
                         <div class="pinks-payment-card" data-method="crypto" onclick="selectPaymentMethod('crypto', this)">
+                            <div class="payment-check-badge"><i class="fa-solid fa-circle-check"></i></div>
                             <div class="pinks-payment-icon"><i class="fa-brands fa-bitcoin"></i></div>
                             <span class="pinks-payment-title">Cryptocurrency</span>
-                            <span class="pinks-payment-subtitle" id="cryptoOptionStatus">NOWPayments / Instant crypto</span>
+                            <span class="pinks-payment-subtitle" id="cryptoOptionStatus">NOWPayments / Instant invoice</span>
                         </div>
                     </div>
                 </div>
