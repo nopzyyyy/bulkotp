@@ -262,6 +262,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => openMyOrdersModal(), 300);
   }
 
+  // Live real-time stock sync polling every 15 seconds
+  setInterval(() => {
+    fetchProductsFromBackend();
+  }, 15000);
+
   // Scroll navbar styling
   window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');

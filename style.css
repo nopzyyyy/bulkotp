@@ -3761,10 +3761,10 @@ button:disabled {
 }
 
 .pinks-payment-card {
-  background: #08090c !important;
+  background: #0d0e12 !important;
   border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 14px !important;
-  padding: 0.85rem 1rem !important;
+  padding: 0.9rem 1rem !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
@@ -3781,48 +3781,51 @@ button:disabled {
 }
 
 .pinks-payment-card:hover {
-  background: #111216 !important;
+  background: #14151b !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
   transform: translateY(-2px) !important;
 }
 
-.pinks-payment-card.active {
-  background: rgba(217, 70, 239, 0.08) !important;
-  border: 1.5px solid #d946ef !important;
-  box-shadow: 0 0 20px rgba(217, 70, 239, 0.25) !important;
-}
-
+/* Active State for Store Balance */
 .pinks-payment-card[data-method="balance"].active {
-  background: rgba(255, 37, 92, 0.1) !important;
+  background: rgba(255, 37, 92, 0.12) !important;
   border: 1.5px solid #ff255c !important;
-  box-shadow: 0 0 20px rgba(255, 37, 92, 0.25) !important;
+  box-shadow: 0 0 22px rgba(255, 37, 92, 0.25), inset 0 0 10px rgba(255, 37, 92, 0.05) !important;
 }
 
-.pinks-payment-icon.icon-box-balance {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: rgba(255, 37, 92, 0.15);
-  border: 1px solid rgba(255, 37, 92, 0.35);
-  color: #ff255c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
+/* Active State for Crypto */
+.pinks-payment-card[data-method="crypto"].active {
+  background: rgba(247, 147, 26, 0.12) !important;
+  border: 1.5px solid #f7931a !important;
+  box-shadow: 0 0 22px rgba(247, 147, 26, 0.25), inset 0 0 10px rgba(247, 147, 26, 0.05) !important;
 }
 
-.pinks-payment-icon.icon-circle-crypto {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #f7931a;
-  color: #ffffff;
+.pinks-payment-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(247, 147, 26, 0.3);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.pinks-payment-card:hover .pinks-payment-icon {
+  transform: scale(1.08);
+}
+
+.pinks-payment-icon.icon-box-balance {
+  background: rgba(255, 37, 92, 0.16);
+  border: 1px solid rgba(255, 37, 92, 0.35);
+  color: #ff255c;
+}
+
+.pinks-payment-icon.icon-circle-crypto {
+  background: rgba(247, 147, 26, 0.16);
+  border: 1px solid rgba(247, 147, 26, 0.35);
+  color: #f7931a;
 }
 
 .pinks-payment-title {
@@ -3831,6 +3834,181 @@ button:disabled {
   color: #ffffff !important;
   font-size: 1.05rem;
   letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   ENHANCED MOBILE RESPONSIVENESS & RELIABILITY
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Layout Padding & Headers */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  h1.page-title {
+    font-size: 2rem !important;
+    line-height: 1.15;
+  }
+
+  p.page-subtitle {
+    font-size: 0.9rem !important;
+  }
+
+  /* Universal Navigation Bar on Mobile */
+  .navbar {
+    padding: 0.65rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .nav-container {
+    gap: 0.5rem;
+  }
+
+  .brand-text {
+    font-size: 1.1rem !important;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  /* DJ Khaled Hero Mobile Layout */
+  .hero-khaled-wrap {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem 1rem !important;
+  }
+
+  .khaled-side {
+    width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center !important;
+  }
+
+  .khaled-center-img {
+    max-width: 240px !important;
+    height: auto !important;
+  }
+
+  .khaled-link-card {
+    width: 100% !important;
+    max-width: 320px;
+  }
+
+  /* Filter Bar & Tabs Touch Scrolling */
+  .filter-bar {
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .category-tabs {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cat-tab {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Product Catalog Grid 1-Column on Mobile Phones */
+  .product-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .product-card {
+    border-radius: 16px !important;
+  }
+
+  .card-banner {
+    aspect-ratio: 16/9;
+  }
+
+  /* Modals & Drawers Mobile Fit */
+  .modal-content {
+    width: 94vw !important;
+    max-width: 100% !important;
+    padding: 1.25rem 1rem !important;
+    border-radius: 18px !important;
+    margin: 1rem auto !important;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+
+  .modal-header h3 {
+    font-size: 1.15rem !important;
+  }
+
+  /* Payment Buttons 2-Column Mobile Grid */
+  .pinks-payment-options-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .pinks-payment-card {
+    padding: 0.75rem 0.5rem !important;
+    gap: 0.4rem !important;
+  }
+
+  .pinks-payment-title {
+    font-size: 0.925rem !important;
+  }
+
+  .pinks-payment-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Cart Page Mobile Stack */
+  .cart-page-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .cart-page-item-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.85rem !important;
+  }
+
+  .cart-page-item-img {
+    width: 100% !important;
+    height: 140px !important;
+    object-fit: cover !important;
+    border-radius: 10px !important;
+  }
+
+  /* Touch-Friendly Form Elements */
+  input, select, textarea, button {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+  }
+
+  .btn {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pinks-payment-options-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .nav-links {
+    display: none !important;
+  }
 }
 
 /* Crypto Invoice Ready Step (Screenshot 2 Style) */
