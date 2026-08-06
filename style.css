@@ -200,7 +200,7 @@ code {
   top: 1.25rem;
   left: 50%;
   transform: translateX(-50%);
-  width: min(1120px, calc(100% - 2.5rem));
+  width: min(1200px, calc(100% - 3rem));
   height: var(--nav-height);
   background: rgba(15, 16, 20, 0.65);
   backdrop-filter: blur(20px) saturate(160%);
@@ -218,7 +218,7 @@ code {
 
 .nav-container {
   width: 100%;
-  padding: 0 1.25rem;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1362,7 +1362,7 @@ details[open] .faq-icon {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
 }
 
 .section {
