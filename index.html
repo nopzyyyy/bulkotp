@@ -157,7 +157,7 @@
 
             <section class="product-grid-section">
                 <div id="productGrid" class="product-grid">
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('hourly-1h')">
                         <div class="card-banner">
                             <img src="assets/pass_1h.png" alt="OTP BOT 1-HOUR Pass: 1-HOUR HOURLY Key">
                             <span class="card-stock-tag">44 in stock</span>
@@ -168,18 +168,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$17.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('hourly-1h')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('hourly-1h')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('hourly-1h')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('hourly-1h')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('hourly-3h')">
                         <div class="card-banner">
                             <img src="assets/pass_3h.png" alt="OTP BOT 3-HOUR Pass: 3-HOUR HOURLY Key">
                             <span class="card-stock-tag">34 in stock</span>
@@ -190,18 +190,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$30.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('hourly-3h')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('hourly-3h')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('hourly-3h')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('hourly-3h')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('daily-1d')">
                         <div class="card-banner">
                             <img src="assets/pass_1d.png" alt="OTP BOT 1-DAY Pass: 1-DAY DAILY Key">
                             <span class="card-stock-tag">29 in stock</span>
@@ -212,18 +212,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$60.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('daily-1d')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('daily-1d')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('daily-1d')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('daily-1d')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('daily-3d')">
                         <div class="card-banner">
                             <img src="assets/pass_3d.png" alt="OTP BOT 3-DAY Pass: 3-DAY MULTIDAY Key">
                             <span class="card-stock-tag">27 in stock</span>
@@ -234,18 +234,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$150.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('daily-3d')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('daily-3d')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('daily-3d')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('daily-3d')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('weekly-1w')">
                         <div class="card-banner">
                             <img src="assets/pass_1w.png" alt="OTP BOT 1-WEEK Pass: 1-WEEK WEEKLY Key">
                             <span class="card-stock-tag">24 in stock</span>
@@ -256,18 +256,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$250.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('weekly-1w')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('weekly-1w')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('weekly-1w')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('weekly-1w')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('weekly-2w')">
                         <div class="card-banner">
                             <img src="assets/pass_2w.png" alt="OTP BOT 2-WEEK Pass: 2-WEEK MULTIWEEK Key">
                             <span class="card-stock-tag">19 in stock</span>
@@ -278,18 +278,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$350.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('weekly-2w')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('weekly-2w')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('weekly-2w')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('weekly-2w')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('monthly-1m')">
                         <div class="card-banner">
                             <img src="assets/pass_1m.png" alt="OTP BOT 1-MONTH Pass: 1-MONTH MONTHLY Key">
                             <span class="card-stock-tag">17 in stock</span>
@@ -300,18 +300,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$550.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('monthly-1m')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('monthly-1m')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('monthly-1m')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('monthly-1m')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('monthly-3m')">
                         <div class="card-banner">
                             <img src="assets/pass_3m.png" alt="OTP BOT 3-MONTH Pass: 3-MONTH MULTIMONTH Key">
                             <span class="card-stock-tag">14 in stock</span>
@@ -322,18 +322,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$1,200.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('monthly-3m')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('monthly-3m')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('monthly-3m')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('monthly-3m')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('monthly-6m')">
                         <div class="card-banner">
                             <img src="assets/pass_6m.png" alt="OTP BOT 6-MONTH Pass: 6-MONTH MULTIMONTH Key">
                             <span class="card-stock-tag">11 in stock</span>
@@ -344,18 +344,18 @@
                             <div class="card-footer">
                                 <span class="card-price">$2,000.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('monthly-6m')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('monthly-6m')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('monthly-6m')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('monthly-6m')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" onclick="if(!event.target.closest('.btn-icon')) openProductDetail('yearly-1y')">
                         <div class="card-banner">
                             <img src="assets/pass_1y.png" alt="OTP BOT 1-YEAR Pass: 1-YEAR YEARLY Key">
                             <span class="card-stock-tag">9 in stock</span>
@@ -366,12 +366,12 @@
                             <div class="card-footer">
                                 <span class="card-price">$3,500.00</span>
                                 <div class="card-actions">
-                                    <button class="btn-icon" onclick="addToCartDirect('yearly-1y')" title="Add to Cart">
+                                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('yearly-1y')" title="Add to Cart">
                                         <i class="fa-solid fa-cart-plus"></i>
                                     </button>
-                                    <span class="card-view-link" onclick="openProductDetail('yearly-1y')">
+                                    <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('yearly-1y')">
                                         View <i class="fa-solid fa-chevron-right"></i>
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -452,6 +452,11 @@ function updateCheckoutAccount() {
   if (balance) balance.textContent = `$${Number(currentUser?.balance || 0).toFixed(2)} balance`;
 }
 
+function formatPrice(val) {
+  const num = Number(val);
+  return isNaN(num) ? '0.00' : num.toFixed(2);
+}
+
 function renderCatalogGrid(items) {
   const grid = document.getElementById('productGrid');
   if (!grid) return;
@@ -470,8 +475,14 @@ function renderCatalogGrid(items) {
 
   items.forEach(product => {
     const stockCount = product.stock !== undefined ? product.stock : 10;
+    const priceStr = formatPrice(product.price);
     const card = document.createElement('div');
     card.className = 'product-card';
+    card.style.cursor = 'pointer';
+    card.onclick = (e) => {
+      if (e.target.closest('.btn-icon')) return;
+      openProductDetail(product.id);
+    };
     card.innerHTML = `
       <div class="card-banner">
         <img src="${product.art}" alt="${escapeHtml(product.title)}">
@@ -481,14 +492,14 @@ function renderCatalogGrid(items) {
         <h3 class="card-title">${escapeHtml(product.title)}</h3>
         <p class="card-desc">${escapeHtml(product.description)}</p>
         <div class="card-footer">
-          <span class="card-price">$${product.price.toFixed(2)}</span>
+          <span class="card-price">$${priceStr}</span>
           <div class="card-actions">
-            <button class="btn-icon" onclick="addToCartDirect('${product.id}')" title="Add to Cart">
+            <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('${product.id}')" title="Add to Cart">
               <i class="fa-solid fa-cart-plus"></i>
             </button>
-            <span class="card-view-link" onclick="openProductDetail('${product.id}')">
+            <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('${product.id}')">
               View <i class="fa-solid fa-chevron-right"></i>
-            </span>
+            </button>
           </div>
         </div>
       </div>
@@ -548,55 +559,60 @@ function openProductDetail(productId) {
   showGlobalLoading('Loading Product...');
   startTopProgress();
 
-  const legacyMap = {
-    'compact-1h': 'hourly-1h',
-    'extended-3h': 'hourly-3h',
-    'daylong-24h': 'daily-1d',
-    'multiday-3d': 'daily-3d',
-    'biweekly-2w': 'weekly-2w'
-  };
-  const targetId = legacyMap[productId] || productId;
+  try {
+    const legacyMap = {
+      'compact-1h': 'hourly-1h',
+      'extended-3h': 'hourly-3h',
+      'daylong-24h': 'daily-1d',
+      'multiday-3d': 'daily-3d',
+      'biweekly-2w': 'weekly-2w'
+    };
+    const targetId = legacyMap[productId] || productId;
 
-  activeProduct = PRODUCTS.find(p => p.id === targetId || p.id === productId);
-  if (!activeProduct && PRODUCTS.length > 0) {
-    activeProduct = PRODUCTS[0];
+    activeProduct = PRODUCTS.find(p => p.id === targetId || p.id === productId);
+    if (!activeProduct && PRODUCTS.length > 0) {
+      activeProduct = PRODUCTS[0];
+    }
+    if (!activeProduct) {
+      finishTopProgress();
+      hideGlobalLoading();
+      return;
+    }
+    
+    const el = (id) => document.getElementById(id);
+    const stockCount = activeProduct.stock !== undefined ? activeProduct.stock : 10;
+    
+    if (el('detailBreadcrumbTitle')) el('detailBreadcrumbTitle').textContent = activeProduct.shortTitle || activeProduct.title;
+    if (el('detailTitle')) el('detailTitle').textContent = activeProduct.title;
+    if (el('detailCardTitle')) el('detailCardTitle').textContent = activeProduct.title;
+    if (el('detailDescription')) el('detailDescription').textContent = activeProduct.description;
+    if (el('detailPrice')) el('detailPrice').textContent = '$' + formatPrice(activeProduct.price);
+    if (el('detailStockBadge')) el('detailStockBadge').textContent = stockCount + ' in stock';
+    if (el('detailStockPill')) el('detailStockPill').innerHTML = `<i class="fa-solid fa-check"></i> In stock (${stockCount})`;
+    if (el('detailArtImg')) el('detailArtImg').src = activeProduct.art;
+    if (el('detailQtyInput')) el('detailQtyInput').value = 1;
+    
+    const catalogView = document.getElementById('catalogView');
+    const productDetailView = document.getElementById('productDetailView');
+    
+    if (catalogView) {
+      catalogView.style.display = 'none';
+      catalogView.classList.remove('active');
+    }
+    if (productDetailView) {
+      productDetailView.style.display = 'block';
+      productDetailView.classList.add('active');
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.error('Error opening product detail:', err);
+  } finally {
+    setTimeout(() => {
+      finishTopProgress();
+      hideGlobalLoading();
+    }, 150);
   }
-  if (!activeProduct) {
-    finishTopProgress();
-    hideGlobalLoading();
-    return;
-  }
-  
-  const el = (id) => document.getElementById(id);
-  const stockCount = activeProduct.stock !== undefined ? activeProduct.stock : 10;
-  
-  if (el('detailBreadcrumbTitle')) el('detailBreadcrumbTitle').textContent = activeProduct.shortTitle || activeProduct.title;
-  if (el('detailTitle')) el('detailTitle').textContent = activeProduct.title;
-  if (el('detailCardTitle')) el('detailCardTitle').textContent = activeProduct.title;
-  if (el('detailDescription')) el('detailDescription').textContent = activeProduct.description;
-  if (el('detailPrice')) el('detailPrice').textContent = '$' + activeProduct.price.toFixed(2);
-  if (el('detailStockBadge')) el('detailStockBadge').textContent = stockCount + ' in stock';
-  if (el('detailStockPill')) el('detailStockPill').innerHTML = `<i class="fa-solid fa-check"></i> In stock (${stockCount})`;
-  if (el('detailArtImg')) el('detailArtImg').src = activeProduct.art;
-  if (el('detailQtyInput')) el('detailQtyInput').value = 1;
-  
-  const catalogView = document.getElementById('catalogView');
-  const productDetailView = document.getElementById('productDetailView');
-  
-  if (catalogView) {
-    catalogView.style.display = 'none';
-    catalogView.classList.remove('active');
-  }
-  if (productDetailView) {
-    productDetailView.style.display = 'block';
-    productDetailView.classList.add('active');
-  }
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  setTimeout(() => {
-    finishTopProgress();
-    hideGlobalLoading();
-  }, 250);
 }
 
 function adjustQty(change) {
@@ -1346,7 +1362,7 @@ function renderUserTicketsList(tickets) {
             <span class="pinks-status-pill ${statusClass}">${escapeHtml(t.status)}</span>
             ${t.status !== 'RESOLVED' ? `<button type="button" class="btn btn-glass btn-sm" onclick="closeTicketByUser('${t.id}')" title="Mark Resolved"><i class="fa-solid fa-check"></i> Close Ticket</button>` : ''}
           </div>
-        </div>`
+        </div>
 
         <div class="ticket-thread-messages">
           ${messages.map(m => `
