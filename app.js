@@ -1015,9 +1015,7 @@ async function processCheckout(event) {
 
         showToast('Crypto invoice created! Opening payment page...');
       } else {
-        // Store Balance Purchase Success with Animation & Auto-Redirect
-        renderSuccessKeys(data.keys || []);
-        
+        // Store Balance Purchase Success with SVG Tick Animation & Auto-Redirect
         const formStep = document.getElementById('checkoutStepForm');
         const successStep = document.getElementById('checkoutSuccessStep');
         
@@ -1030,7 +1028,7 @@ async function processCheckout(event) {
         currentCart = [];
         updateCartBadge();
         saveCartToStorage();
-        showToast('Payment Successful! Key delivered 🎉');
+        showToast('Payment Complete! 🎉');
         fetchProductsFromBackend();
         if (window.SiteShell?.refreshAuth) window.SiteShell.refreshAuth();
 
@@ -1040,11 +1038,15 @@ async function processCheckout(event) {
           if (barFill) barFill.style.width = '100%';
         }, 50);
 
-        // Smooth redirect to My Orders after 2.5s
+        // Smooth redirect to Orders Page after 1.8s
         setTimeout(() => {
           closeCheckoutModal();
-          openMyOrdersModal();
-        }, 2600);
+          if (window.location.pathname.endsWith('orders.html')) {
+            window.location.reload();
+          } else {
+            window.location.href = 'orders.html';
+          }
+        }, 1850);
       }
     } else {
       showToast(data.error || 'Checkout failed. Please try again.');

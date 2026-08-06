@@ -646,46 +646,26 @@
                 </p>
             </div>
 
-            <!-- Step 2: Key Generated Success Screen -->
-            <div id="checkoutSuccessStep" style="display: none; text-align: center;">
-                <div class="success-icon-ring">
-                    <i class="fa-solid fa-check"></i>
+            <!-- Step 2: Payment Complete Animation & Auto Redirect Screen -->
+            <div id="checkoutSuccessStep" style="display: none; text-align: center; padding: 1.5rem 1rem;">
+                <div class="checkmark-circle-anim">
+                    <svg class="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark-circle-path" cx="26" cy="26" r="23" fill="none"/>
+                        <path class="checkmark-check-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
                 </div>
-                <h2 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #ffffff;">Payment Successful! 🎉</h2>
-                <p class="text-muted" style="margin-bottom: 1.25rem; font-size: 0.9rem;">Your pass key has been allocated &amp; registered to your account.</p>
-                
-                <!-- Keys Dispensed Display Container -->
-                <div id="keysDispensedContainer" style="margin-bottom: 1.25rem; width: 100%;">
-                    <!-- Rendered by JS -->
-                </div>
+                <h2 style="font-size: 1.85rem; margin-bottom: 0.35rem; color: #ffffff; font-weight: 700;">Payment Complete!</h2>
+                <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.925rem;">Your order is confirmed. Redirecting to your Orders &amp; Keys page...</p>
 
-                <div class="telegram-instruction-box" style="margin-bottom: 1.25rem;">
-                    <p style="margin-bottom: 0.5rem; font-weight: 600; color: #fff;">How to Activate on Telegram:</p>
-                    <ol style="text-align: left; margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
-                        <li>Open Telegram and message <strong>@BULK_OTPBOT</strong></li>
-                        <li>Send command: <code id="activationCommand" style="color: #10b981; font-family: var(--font-mono); font-weight: 700;">/redeem KEY</code></li>
-                        <li>Your session timer begins at the exact moment of redemption.</li>
-                    </ol>
-                </div>
-
-                <div style="width: 100%;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.775rem; color: var(--text-muted);">
-                        <span>Redirecting to My Orders page...</span>
-                        <span style="color: #10b981; font-weight: 700;">Instant</span>
-                    </div>
+                <div style="width: 100%; margin-top: 1rem;">
                     <div class="success-redirect-bar-wrap">
                         <div id="successRedirectBarFill" class="success-redirect-bar-fill"></div>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 0.75rem; width: 100%; margin-top: 0.75rem;">
-                    <button type="button" class="btn btn-primary" style="flex: 1; padding: 0.85rem;" onclick="closeCheckoutModal(); openMyOrdersModal();">
-                        <i class="fa-solid fa-receipt"></i> Go to My Orders
-                    </button>
-                    <button type="button" class="btn btn-glass" style="flex: 1; padding: 0.85rem;" onclick="closeCheckoutModal()">
-                        Close
-                    </button>
-                </div>
+                <button type="button" class="btn btn-primary btn-block" style="width: 100%; margin-top: 1.25rem; padding: 0.9rem;" onclick="closeCheckoutModal(); openMyOrdersModal();">
+                    <i class="fa-solid fa-receipt"></i> Go to Orders Page
+                </button>
             </div>
         </div>
     </div>

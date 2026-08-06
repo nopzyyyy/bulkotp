@@ -162,32 +162,24 @@
         </div>
 
         <!-- Success Screen View -->
-        <div id="cartSuccessView" style="display: none; max-width: 640px; margin: 2rem auto 0; text-align: center;">
+        <div id="cartSuccessView" style="display: none; max-width: 580px; margin: 2rem auto 0; text-align: center;">
             <div class="admin-panel-card" style="padding: 3rem 2rem;">
-                <div class="success-icon-wrap">
-                    <i class="fa-solid fa-check"></i>
+                <div class="checkmark-circle-anim">
+                    <svg class="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                        <circle class="checkmark-circle-path" cx="26" cy="26" r="23" fill="none"/>
+                        <path class="checkmark-check-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
                 </div>
-                <h2>Payment Confirmed!</h2>
-                <p class="text-muted" style="margin-bottom: 2rem;">Your access key has been successfully generated.</p>
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem; color: #fff;">Payment Complete!</h2>
+                <p class="text-muted" style="margin-bottom: 1.75rem;">Your order is confirmed. Redirecting to your Orders &amp; Keys page...</p>
 
-                <div id="cartDispensedKeysList" style="margin-bottom: 2rem;">
-                    <!-- Dispensed Keys -->
-                </div>
-
-                <div class="telegram-instruction-box">
-                    <p style="margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">How to Activate in Telegram:</p>
-                    <ol style="text-align: left; margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--text-muted);">
-                        <li>Open Telegram and message <strong>@BULK_OTPBOT</strong></li>
-                        <li>Type and send: <code id="cartActivationCmd" style="color: var(--status-green); font-family: var(--font-mono);">/redeem KEY</code></li>
-                        <li>Your pass timer activates immediately upon redeeming.</li>
-                    </ol>
+                <div class="success-redirect-bar-wrap" style="margin-bottom: 1.5rem;">
+                    <div id="cartRedirectBarFill" class="success-redirect-bar-fill"></div>
                 </div>
 
-                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                    <a href="index.html" class="btn btn-primary" style="flex: 1;">
-                        <i class="fa-solid fa-store"></i> Return to Shop
-                    </a>
-                </div>
+                <a href="orders.html" class="btn btn-primary" style="width: 100%; padding: 0.9rem;">
+                    <i class="fa-solid fa-receipt"></i> Go to Orders Page
+                </a>
             </div>
         </div>
     </main>

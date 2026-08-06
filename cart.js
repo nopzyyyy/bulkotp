@@ -307,13 +307,27 @@ async function processCartPageCheckout(event) {
       return;
     }
     if (response.ok && data.success && !isCrypto) {
-      renderCartDispensedKeys(data.keys || []);
       document.getElementById('cartContentLayout').style.display = 'none';
-      document.getElementById('cartSuccessView').style.display = 'block';
+      const successView = document.getElementById('cartSuccessView');
+      if (successView) {
+        successView.style.display = 'block';
+        successView.classList.add('payment-success-card');
+      }
       pageCart = [];
       saveCartToLocalStorage();
-      showToast('Purchase complete. Your key is ready.');
-      window.SiteShell?.refreshAuth();
+      showToast('Payment Complete! 🎉');
+      if (window.SiteShell?.refreshAuth) window.SiteShell.refreshAuth();
+
+      // Animate progress bar fill
+      setTimeout(() => {
+        const barFill = document.getElementById('cartRedirectBarFill');
+        if (barFill) barFill.style.width = '100%';
+      }, 50);
+
+      // Smooth redirect to Orders Page after 1.8s
+      setTimeout(() => {
+        window.location.href = 'orders.html';
+      }, 1850);
       return;
     }
 
