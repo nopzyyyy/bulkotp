@@ -1137,6 +1137,23 @@ async function loadUserTickets() {
   }
 }
 
+async function closeTicketByUser(ticketId) {
+  if (!confirm('Are you sure you want to mark this support ticket as resolved/closed?')) return;
+
+  try {
+    const res = await fetch(`/api/tickets/${ticketId}/close`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('Support ticket marked as resolved.');
+      loadUserTickets();
+    } else {
+      showToast(data.error || 'Could not close ticket.');
+    }
+  } catch (err) {
+    showToast('Error closing ticket.');
+  }
+}
+
 function renderUserTicketsList(tickets) {
   const container = document.getElementById('userTicketsList');
   if (!container) return;
@@ -1164,8 +1181,11 @@ function renderUserTicketsList(tickets) {
             <strong style="color:#fff; font-size:1rem; margin-left:0.5rem;">${escapeHtml(t.subject)}</strong>
             <span style="font-size:0.75rem; color:var(--text-dim); margin-left:0.5rem;">(${escapeHtml(t.category)})</span>
           </div>
-          <span class="pinks-status-pill ${statusClass}">${escapeHtml(t.status)}</span>
-        </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <span class="pinks-status-pill ${statusClass}">${escapeHtml(t.status)}</span>
+            ${t.status !== 'RESOLVED' ? `<button type="button" class="btn btn-glass btn-sm" onclick="closeTicketByUser('${t.id}')" title="Mark Resolved"><i class="fa-solid fa-check"></i> Close Ticket</button>` : ''}
+          </div>
+        </div>`
 
         <div class="ticket-thread-messages">
           ${messages.map(m => `

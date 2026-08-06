@@ -1045,6 +1045,20 @@ app.post('/api/tickets/:id/reply', requireAuth, (req, res) => {
   res.json({ success: true, ticket });
 });
 
+// User Close Ticket (Mark Resolved)
+app.post('/api/tickets/:id/close', requireAuth, (req, res) => {
+  const tickets = readJson(FILES.tickets, []);
+  const ticket = tickets.find(t => t.id === req.params.id && (t.userId === req.currentUser.id || t.email === req.currentUser.email));
+
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found.' });
+
+  ticket.status = 'RESOLVED';
+  ticket.updatedAt = new Date().toISOString();
+
+  writeJson(FILES.tickets, tickets);
+  res.json({ success: true, ticket });
+});
+
 // Admin Get All Tickets
 app.get('/api/admin/tickets', requireAdmin, (req, res) => {
   const tickets = readJson(FILES.tickets, []);
