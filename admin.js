@@ -147,6 +147,8 @@ async function switchAdminTab(tabId, btn) {
     else if (tabId === 'users') await loadAdminUsers();
     else if (tabId === 'tickets') await loadAdminTickets();
     else if (tabId === 'audit') await loadAdminAuditLogs();
+  } catch (e) {
+    console.error('Error switching tab:', e);
   } finally {
     finishTopProgress();
     hideGlobalLoading();
