@@ -471,14 +471,22 @@ app.get('/api/auth/me', (req, res) => {
 
 // Logout (GET & POST)
 app.all('/api/auth/logout', (req, res) => {
-  const token = req.cookies ? req.cookies.market_session : null;
-  if (token) {
-    let sessions = readJson(FILES.sessions, []);
-    sessions = sessions.filter(s => s.token !== token);
+  const cookies = parseCookies(req);
+  const token = cookies.market_session || (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null);
+  
+  const sess = getSession(req);
+  const userId = sess ? sess.userId : null;
+
+  let sessions = readJson(FILES.sessions, []);
+  if (token || userId) {
+    sessions = sessions.filter(s => s.token !== token && (!userId || s.userId !== userId));
     writeJson(FILES.sessions, sessions);
   }
-  res.clearCookie('market_session', { path: '/', httpOnly: true, sameSite: 'lax' });
-  res.cookie('market_session', '', { path: '/', expires: new Date(0), httpOnly: true, sameSite: 'lax' });
+
+  res.setHeader('Set-Cookie', [
+    'market_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax',
+    'market_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax'
+  ]);
   res.json({ success: true });
 });
 

@@ -163,10 +163,15 @@
     state.user = null;
     if (typeof currentUser !== 'undefined') currentUser = null;
 
+    try {
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+    } catch (_) {}
+
     if (window.location.pathname.endsWith('/admin.html')) {
       window.location.href = 'login.html';
     } else {
-      window.location.reload();
+      window.location.href = 'index.html?logged_out=' + Date.now();
     }
   }
 

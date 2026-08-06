@@ -1021,7 +1021,7 @@ async function handleUserLogout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
   } catch (e) {}
   currentUser = null;
-  window.location.reload();
+  window.location.href = 'index.html?logged_out=' + Date.now();
 }
 
 async function openMyOrdersModal() {
