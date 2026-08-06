@@ -25,25 +25,7 @@
         <span class="spinner-loading-text">Loading...</span>
     </div>
 
-    <nav class="navbar admin-site-navbar">
-        <div class="nav-container">
-            <a href="index.html" class="brand" aria-label="BULK OTP home">
-                <div class="brand-logo-wrap"><img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img"></div>
-                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
-            </a>
-            <div class="nav-links">
-                <a href="index.html" class="nav-link" data-nav="passes">Passes</a>
-                <a href="index.html#features" class="nav-link" data-nav="features">Features</a>
-                <a href="orders.html" class="nav-link" data-nav="orders">Orders</a>
-            </div>
-            <div class="nav-right">
-                <a class="nav-cart-btn" href="cart.html" title="View cart" aria-label="View cart">
-                    <i class="fa-solid fa-cart-shopping"></i><span class="cart-badge">0</span>
-                </a>
-                <div data-user-header></div>
-            </div>
-        </div>
-    </nav>
+
 
     <div class="admin-sidebar-layout">
         <!-- Vertical Left Sidebar (Pinks.cc Style) -->
@@ -142,7 +124,7 @@
                     </div>
 
                     <!-- Payment Method Breakdown Cards -->
-                    <div class="pinks-payments-grid" style="margin-top: 1.25rem;">
+                    <div class="pinks-payments-grid" style="margin-top: 1.25rem; grid-template-columns: repeat(2, 1fr);">
                         <div class="pinks-payment-card">
                             <div class="pinks-payment-icon icon-crypto"><i class="fa-brands fa-bitcoin"></i></div>
                             <span class="pinks-payment-label">CRYPTO PAYMENTS</span>
@@ -154,18 +136,6 @@
                             <span class="pinks-payment-label">STORE BALANCE PAYMENTS</span>
                             <span id="statBalanceRev" class="pinks-payment-value">$0.00</span>
                             <span id="statBalanceCount" class="pinks-payment-sub">0 transactions</span>
-                        </div>
-                        <div class="pinks-payment-card">
-                            <div class="pinks-payment-icon icon-chime"><i class="fa-solid fa-credit-card"></i></div>
-                            <span class="pinks-payment-label">CARD &amp; OTHER PAYMENTS</span>
-                            <span id="statChimeRev" class="pinks-payment-value">$0.00</span>
-                            <span id="statChimeCount" class="pinks-payment-sub">0 transactions</span>
-                        </div>
-                        <div class="pinks-payment-card">
-                            <div class="pinks-payment-icon icon-stars"><i class="fa-brands fa-telegram"></i></div>
-                            <span class="pinks-payment-label">TELEGRAM STARS</span>
-                            <span id="statStarsRev" class="pinks-payment-value">$0.00</span>
-                            <span id="statStarsCount" class="pinks-payment-sub">0 transactions</span>
                         </div>
                     </div>
 

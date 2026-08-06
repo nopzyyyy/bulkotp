@@ -107,12 +107,14 @@
                     <!-- Payment Method Selector -->
                     <div class="form-group" style="margin-bottom: 1.5rem;">
                         <label class="form-label">Select Payment Method</label>
-                        <div class="payment-methods-grid payment-methods-grid-two">
-                            <button type="button" class="payment-option active" data-method="balance" onclick="selectCartPaymentMethod('balance', this)">
-                                <i class="fa-solid fa-wallet"></i><span>Store Balance</span><small>Instant delivery</small>
+                        <div class="pinks-payment-options-grid">
+                            <button type="button" class="pinks-payment-card active" data-method="balance" onclick="selectCartPaymentMethod('balance', this)">
+                                <div class="pinks-payment-icon icon-box-balance"><i class="fa-solid fa-wallet"></i></div>
+                                <span class="pinks-payment-title">Balance</span>
                             </button>
-                            <button type="button" id="cartCryptoPaymentOption" class="payment-option is-disabled" data-method="crypto" onclick="selectCartPaymentMethod('crypto', this)" disabled>
-                                <i class="fa-brands fa-bitcoin"></i><span>Cryptocurrency</span><small id="cartCryptoOptionStatus">NOWPayments setup pending</small>
+                            <button type="button" id="cartCryptoPaymentOption" class="pinks-payment-card" data-method="crypto" onclick="selectCartPaymentMethod('crypto', this)">
+                                <div class="pinks-payment-icon icon-circle-crypto"><i class="fa-brands fa-bitcoin"></i></div>
+                                <span class="pinks-payment-title">Crypto</span>
                             </button>
                         </div>
                     </div>
