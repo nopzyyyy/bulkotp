@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="View BULK OTP orders and copy delivered access keys.">
+    <title>Orders &amp; Keys — BULK OTP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter+Tight:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="orders">
+    <div id="topProgressBar"></div>
+    <div id="globalLoadingOverlay" class="global-loading-overlay">
+        <div class="spinner-ring-wrap"><div class="crimson-spinner-ring"></div><img src="assets/brand_logo.png" alt="" class="spinner-logo-img"></div>
+        <span class="spinner-loading-text">Loading orders…</span>
+    </div>
+    <div class="bg-grid"></div>
+    <div class="glow glow-1"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand" aria-label="BULK OTP home">
+                <div class="brand-logo-wrap"><img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img"></div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link" data-nav="passes">Passes</a>
+                <a href="index.html#features" class="nav-link" data-nav="features">Features</a>
+                <a href="orders.html" class="nav-link" data-nav="orders">Orders</a>
+            </div>
+            <div class="nav-right">
+                <a class="nav-cart-btn" href="cart.html" title="View cart" aria-label="View cart"><i class="fa-solid fa-cart-shopping"></i><span class="cart-badge">0</span></a>
+                <div data-user-header></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="orders-page container section">
+        <header class="orders-page-header">
+            <div>
+                <span class="subtitle">CUSTOMER PORTAL</span>
+                <h1>Your orders &amp; keys</h1>
+                <p>Track payment status and securely copy delivered access keys.</p>
+            </div>
+            <a class="btn btn-glass" href="index.html"><i class="fa-solid fa-plus"></i> Buy another pass</a>
+        </header>
+
+        <section class="orders-summary" aria-label="Order summary">
+            <div><span class="orders-summary-icon"><i class="fa-solid fa-receipt"></i></span><p><small>Total orders</small><strong id="ordersTotalCount">—</strong></p></div>
+            <div><span class="orders-summary-icon"><i class="fa-solid fa-key"></i></span><p><small>Delivered keys</small><strong id="ordersDeliveredCount">—</strong></p></div>
+            <div><span class="orders-summary-icon"><i class="fa-solid fa-clock"></i></span><p><small>Awaiting payment</small><strong id="ordersPendingCount">—</strong></p></div>
+        </section>
+
+        <section id="ordersPageList" class="orders-page-list" aria-live="polite">
+            <div class="orders-loading-card"><i class="fa-solid fa-spinner fa-spin"></i><span>Loading your orders…</span></div>
+        </section>
+
+        <section class="orders-help-card">
+            <div><span><i class="fa-regular fa-life-ring"></i></span><div><strong>Need help with an order?</strong><p>Open a support ticket and include the order number shown above.</p></div></div>
+            <a href="index.html?open=tickets" class="btn btn-glass">Open support tickets</a>
+        </section>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+    <script src="site-shell.js"></script>
+    <script src="orders.js"></script>
+</body>
+</html>

@@ -7,10 +7,34 @@ const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 5500;
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const NOWPAYMENTS_API_KEY = (process.env.NOWPAYMENTS_API_KEY || '').trim();
+const NOWPAYMENTS_IPN_SECRET = (process.env.NOWPAYMENTS_IPN_SECRET || '').trim();
+const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
+const NOWPAYMENTS_API_URL = 'https://api.nowpayments.io/v1';
 
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+app.use(cors({ origin: false }));
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+  });
+  next();
+});
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use('/api', (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method) || req.path === '/upload' || req.is('application/json')) return next();
+  return res.status(415).json({ error: 'API requests must use application/json.' });
+});
 
 // Helper: Cookie Parser
 function parseCookies(req) {
@@ -32,8 +56,8 @@ app.use((req, res, next) => {
 });
 
 // Ensure Directories Exist
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, 'data');
+const UPLOADS_DIR = process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.join(__dirname, 'uploads');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
@@ -84,6 +108,52 @@ function verifyPasswordScrypt(password, storedHash) {
   const originalBuffer = Buffer.from(originalHash, 'hex');
   if (hashedBuffer.length !== originalBuffer.length) return false;
   return crypto.timingSafeEqual(hashedBuffer, originalBuffer);
+}
+
+function nowPaymentsConfigured() {
+  const looksLikePlaceholder = /placeholder|replace|your[_-]?api/i.test(NOWPAYMENTS_API_KEY);
+  return Boolean(NOWPAYMENTS_API_KEY && NOWPAYMENTS_IPN_SECRET && !looksLikePlaceholder);
+}
+
+function secureCookieOptions(req) {
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: req.secure || req.get('x-forwarded-proto') === 'https',
+    path: '/',
+    maxAge: SESSION_TTL_MS
+  };
+}
+
+function createSession(userId) {
+  const now = Date.now();
+  const sessions = readJson(FILES.sessions, []).filter(session => session.expiresAt > now);
+  const session = {
+    token: crypto.randomBytes(32).toString('hex'),
+    userId,
+    expiresAt: now + SESSION_TTL_MS
+  };
+  sessions.push(session);
+  writeJson(FILES.sessions, sessions);
+  return session;
+}
+
+const authAttempts = new Map();
+function authRateLimit(req, res, next) {
+  const now = Date.now();
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const entry = authAttempts.get(key) || { count: 0, resetAt: now + (15 * 60 * 1000) };
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + (15 * 60 * 1000);
+  }
+  entry.count += 1;
+  authAttempts.set(key, entry);
+  if (entry.count > 20) {
+    res.set('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+    return res.status(429).json({ error: 'Too many sign-in attempts. Please wait and try again.' });
+  }
+  next();
 }
 
 // Default Seed Data Initialization
@@ -304,7 +374,14 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}_${name}${ext}`);
   }
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) return cb(new Error('Only JPEG, PNG, WebP, or GIF images are allowed.'));
+    cb(null, true);
+  }
+});
 
 // Audit Log Helper
 function logAudit(adminEmail, action, details, ip) {
@@ -325,10 +402,13 @@ function logAudit(adminEmail, action, details, ip) {
 // ==========================================
 
 // Register
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', authRateLimit, (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password || password.length < 6) {
-    return res.status(400).json({ error: 'Email and password (min 6 chars) required.' });
+  if (!email || !/^\S+@\S+\.\S+$/.test(String(email).trim())) {
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  }
+  if (!password || password.length < 8 || password.length > 128 || !/\d/.test(password)) {
+    return res.status(400).json({ error: 'Use 8–128 characters and include at least one number.' });
   }
 
   const cleanEmail = email.toLowerCase().trim();
@@ -343,34 +423,22 @@ app.post('/api/auth/register', (req, res) => {
     email: cleanEmail,
     passwordHash: hashPasswordScrypt(password),
     balance: 0.00,
-    role: cleanEmail === 'admin' || cleanEmail === 'admin@bulkotp.com' ? 'ADMIN' : 'USER',
+    role: 'USER',
     createdAt: new Date().toISOString()
   };
 
   users.push(newUser);
   writeJson(FILES.users, users);
 
-  // Generate Session Token
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = Date.now() + (43200 * 1000); // 12 Hours
-
-  const sessions = readJson(FILES.sessions, []);
-  sessions.push({ token, userId: newUser.id, expiresAt });
-  writeJson(FILES.sessions, sessions);
-
-  res.cookie('market_session', token, {
-    httpOnly: true,
-    sameSite: 'Lax',
-    path: '/',
-    maxAge: 43200 * 1000
-  });
+  const session = createSession(newUser.id);
+  res.cookie('market_session', session.token, secureCookieOptions(req));
 
   const { passwordHash, ...userWithoutPassword } = newUser;
-  res.json({ success: true, token, user: userWithoutPassword });
+  res.status(201).json({ success: true, user: userWithoutPassword });
 });
 
 // Login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authRateLimit, (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email/Username and password required.' });
@@ -381,26 +449,14 @@ app.post('/api/auth/login', (req, res) => {
   const user = users.find(u => u.email === cleanEmail);
 
   if (!user || !verifyPasswordScrypt(password, user.passwordHash)) {
-    return res.status(401).json({ error: 'Invalid admin credentials or password.' });
+    return res.status(401).json({ error: 'Invalid email/username or password.' });
   }
 
-  // Create Session Token
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = Date.now() + (43200 * 1000); // 12 Hours
-
-  const sessions = readJson(FILES.sessions, []);
-  sessions.push({ token, userId: user.id, expiresAt });
-  writeJson(FILES.sessions, sessions);
-
-  res.cookie('market_session', token, {
-    httpOnly: true,
-    sameSite: 'Lax',
-    path: '/',
-    maxAge: 43200 * 1000
-  });
+  const session = createSession(user.id);
+  res.cookie('market_session', session.token, secureCookieOptions(req));
 
   const { passwordHash, ...userWithoutPassword } = user;
-  res.json({ success: true, token, user: userWithoutPassword });
+  res.json({ success: true, user: userWithoutPassword });
 });
 
 // Current User Session
@@ -455,99 +511,225 @@ app.get('/api/products', (req, res) => {
 // ORDER CHECKOUT & REDEEM KEY DELIVERY
 // ==========================================
 
-// Checkout Endpoint (Placeholder Payments for Crypto/Card, Balance Checkout Supported)
-app.post('/api/orders/checkout', requireAuth, (req, res) => {
-  const { items, paymentMethod } = req.body;
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Cart is empty.' });
+function buildOrderQuote(items, products) {
+  if (!Array.isArray(items) || items.length === 0 || items.length > 20) {
+    throw new Error('Cart is empty or invalid.');
   }
 
-  const products = readJson(FILES.products, []);
-  let serverTotal = 0;
-  const orderItems = [];
+  let total = 0;
+  const orderItems = items.map(item => {
+    const product = products.find(candidate => candidate.id === item.productId || candidate.id === item.id);
+    if (!product || product.hidden) throw new Error('One of the selected products is no longer available.');
+
+    const qty = Number(item.qty || 1);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 25) throw new Error('Invalid product quantity.');
+    const price = Number(product.price);
+    if (!Number.isFinite(price) || price < 0) throw new Error('A product has an invalid price.');
+
+    const available = (product.stock || []).filter(stock => !stock.isSold).length;
+    if (available < qty) throw new Error(`Not enough stock for ${product.title}. Available: ${available}.`);
+
+    total += price * qty;
+    return { id: product.id, title: product.title, price, qty };
+  });
+
+  return { orderItems, total: Math.round(total * 100) / 100 };
+}
+
+function allocateOrderKeys(order, userId, products) {
   const purchasedItems = [];
-  const stockToMark = [];
-
-  // 1. Recalculate Prices Server-side & Assign Redeem Keys
-  for (const item of items) {
-    const prod = products.find(p => p.id === item.productId || p.id === item.id);
-    if (!prod) {
-      return res.status(400).json({ error: `Product ${item.title || item.productId} not found.` });
+  for (const item of order.items) {
+    const product = products.find(candidate => candidate.id === item.id);
+    const available = (product?.stock || []).filter(stock => !stock.isSold).slice(0, item.qty);
+    if (!product || available.length < item.qty) {
+      throw new Error(`Stock changed before delivery for ${item.title}.`);
     }
-
-    const qty = parseInt(item.qty || 1, 10);
-    const itemPrice = Number(prod.price);
-    serverTotal += itemPrice * qty;
-
-    orderItems.push({
-      id: prod.id,
-      title: prod.title,
-      price: itemPrice,
-      qty
+    available.forEach(stock => {
+      stock.isSold = true;
+      stock.soldTo = userId;
+      stock.orderId = order.id;
+      stock.soldAt = new Date().toISOString();
+      purchasedItems.push({ id: item.id, name: item.title, price: item.price, credentials: stock.credentials });
     });
+  }
+  order.purchasedItems = purchasedItems;
+  writeJson(FILES.products, products);
+  return purchasedItems;
+}
 
-    // Check available stock
-    const stockList = prod.stock || [];
-    const unsoldStock = stockList.filter(s => !s.isSold && !stockToMark.includes(s.id));
+function newOrderId() {
+  return `ORD-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+}
 
-    if (unsoldStock.length < qty) {
-      return res.status(400).json({ error: `Not enough stock keys for ${prod.title}. Available: ${unsoldStock.length}` });
+app.get('/api/payments/config', (req, res) => {
+  res.json({
+    balance: { enabled: true },
+    nowPayments: {
+      enabled: nowPaymentsConfigured(),
+      provider: 'NOWPayments',
+      currencies: ['usdt_trc20', 'btc', 'eth', 'sol']
     }
+  });
+});
 
-    for (let i = 0; i < qty; i++) {
-      const stockItem = unsoldStock[i];
-      stockToMark.push(stockItem.id);
-      stockItem.isSold = true;
-      stockItem.soldTo = req.currentUser.id;
+// Store-balance checkout is the only synchronous fulfillment path. External
+// payment methods must go through a verified provider callback below.
+app.post('/api/orders/checkout', requireAuth, (req, res) => {
+  const paymentMethod = String(req.body.paymentMethod || '').toLowerCase();
+  if (!paymentMethod.includes('balance')) {
+    return res.status(400).json({ error: 'Use the NOWPayments invoice endpoint for cryptocurrency checkout.' });
+  }
 
-      purchasedItems.push({
-        name: prod.title,
-        price: itemPrice,
-        credentials: stockItem.credentials
+  try {
+    const products = readJson(FILES.products, []);
+    const quote = buildOrderQuote(req.body.items, products);
+    const users = readJson(FILES.users, []);
+    const user = users.find(candidate => candidate.id === req.currentUser.id);
+    if (!user) return res.status(401).json({ error: 'Your account could not be loaded.' });
+    if (Number(user.balance || 0) < quote.total) {
+      return res.status(400).json({
+        error: `Insufficient store balance. Total: $${quote.total.toFixed(2)}, balance: $${Number(user.balance || 0).toFixed(2)}.`
       });
     }
-  }
 
-  // 2. Handle Balance Payment or Placeholder External Payment
-  const isBalance = (paymentMethod || '').toLowerCase().includes('balance');
-  const users = readJson(FILES.users, []);
-  const user = users.find(u => u.id === req.currentUser.id);
+    const order = {
+      id: newOrderId(),
+      orderNumber: null,
+      userId: user.id,
+      email: user.email,
+      items: quote.orderItems,
+      purchasedItems: [],
+      total: quote.total,
+      paymentMethod: 'Store Balance',
+      status: 'COMPLETED',
+      createdAt: new Date().toISOString()
+    };
+    order.orderNumber = order.id;
 
-  if (isBalance) {
-    if (!user || user.balance < serverTotal) {
-      return res.status(400).json({ error: `Insufficient store balance. Total: $${serverTotal.toFixed(2)}, Balance: $${(user ? user.balance : 0).toFixed(2)}` });
-    }
-    user.balance -= serverTotal;
+    allocateOrderKeys(order, user.id, products);
+    user.balance = Math.round((Number(user.balance || 0) - quote.total) * 100) / 100;
     writeJson(FILES.users, users);
+
+    const orders = readJson(FILES.orders, []);
+    orders.unshift(order);
+    writeJson(FILES.orders, orders);
+
+    res.json({ success: true, order, keys: order.purchasedItems.map(item => item.credentials), balance: user.balance });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Checkout could not be completed.' });
+  }
+});
+
+app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
+  if (!nowPaymentsConfigured()) {
+    return res.status(503).json({
+      code: 'PAYMENTS_NOT_CONFIGURED',
+      error: 'Cryptocurrency checkout is not active yet. Please use store balance for now.'
+    });
   }
 
-  // Save updated products stock
-  writeJson(FILES.products, products);
+  try {
+    const products = readJson(FILES.products, []);
+    const quote = buildOrderQuote(req.body.items, products);
+    const orderId = newOrderId();
+    const requestedCurrency = String(req.body.payCurrency || 'usdt_trc20').toLowerCase();
+    const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol' };
+    if (!currencyMap[requestedCurrency]) return res.status(400).json({ error: 'Unsupported cryptocurrency.' });
 
-  // 3. Create Order
-  const orderId = `ORD-${Date.now().toString().slice(-6)}`;
-  const newOrder = {
-    id: orderId,
-    orderNumber: orderId,
-    userId: req.currentUser.id,
-    email: req.currentUser.email,
-    items: orderItems,
-    purchasedItems,
-    total: serverTotal,
-    paymentMethod: paymentMethod || (isBalance ? 'Store Balance' : 'Crypto (USDT-TRC20)'),
-    status: 'COMPLETED',
-    createdAt: new Date().toISOString()
-  };
+    const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': NOWPAYMENTS_API_KEY },
+      body: JSON.stringify({
+        price_amount: quote.total,
+        price_currency: 'usd',
+        pay_currency: currencyMap[requestedCurrency],
+        order_id: orderId,
+        order_description: `BULK OTP order ${orderId}`,
+        ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
+        success_url: `${baseUrl}/orders.html?payment=success`,
+        cancel_url: `${baseUrl}/cart.html?payment=cancelled`
+      }),
+      signal: AbortSignal.timeout(15000)
+    });
+    const invoice = await providerResponse.json().catch(() => ({}));
+    if (!providerResponse.ok || !invoice.invoice_url) {
+      return res.status(502).json({ error: invoice.message || 'NOWPayments could not create an invoice.' });
+    }
+
+    const order = {
+      id: orderId,
+      orderNumber: orderId,
+      userId: req.currentUser.id,
+      email: req.currentUser.email,
+      items: quote.orderItems,
+      purchasedItems: [],
+      total: quote.total,
+      paymentMethod: `Crypto (${requestedCurrency.toUpperCase()})`,
+      paymentProvider: 'NOWPayments',
+      externalPaymentId: String(invoice.id),
+      status: 'AWAITING_PAYMENT',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const orders = readJson(FILES.orders, []);
+    orders.unshift(order);
+    writeJson(FILES.orders, orders);
+    res.status(201).json({ success: true, orderId, invoiceUrl: invoice.invoice_url });
+  } catch (error) {
+    const timeout = error.name === 'TimeoutError' || error.name === 'AbortError';
+    res.status(timeout ? 504 : 500).json({ error: timeout ? 'Payment provider timed out. Please try again.' : 'Could not create the payment invoice.' });
+  }
+});
+
+function sortObject(value) {
+  if (Array.isArray(value)) return value.map(sortObject);
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((result, key) => {
+      result[key] = sortObject(value[key]);
+      return result;
+    }, {});
+  }
+  return value;
+}
+
+app.post('/api/payments/nowpayments/ipn', (req, res) => {
+  if (!nowPaymentsConfigured()) return res.status(503).json({ error: 'Payment callbacks are not configured.' });
+  const signature = String(req.get('x-nowpayments-sig') || '');
+  const expected = crypto.createHmac('sha512', NOWPAYMENTS_IPN_SECRET).update(JSON.stringify(sortObject(req.body))).digest('hex');
+  const validSignature = signature.length === expected.length && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  if (!validSignature) return res.status(401).json({ error: 'Invalid payment signature.' });
 
   const orders = readJson(FILES.orders, []);
-  orders.unshift(newOrder);
-  writeJson(FILES.orders, orders);
+  const order = orders.find(candidate => candidate.id === req.body.order_id || candidate.externalPaymentId === String(req.body.payment_id || req.body.id));
+  if (!order) return res.status(404).json({ error: 'Order not found.' });
 
-  res.json({
-    success: true,
-    order: newOrder,
-    dispensedKey: purchasedItems.length > 0 ? purchasedItems[0].credentials : null
-  });
+  const paymentStatus = String(req.body.payment_status || '').toLowerCase();
+  order.providerStatus = paymentStatus;
+  order.updatedAt = new Date().toISOString();
+
+  if (['confirmed', 'finished'].includes(paymentStatus) && order.status !== 'COMPLETED') {
+    const reportedPrice = Number(req.body.price_amount);
+    if (Number.isFinite(reportedPrice) && reportedPrice + 0.01 < Number(order.total)) {
+      order.status = 'PAID_REVIEW_REQUIRED';
+      order.fulfillmentError = 'Provider reported a confirmed amount below the order total.';
+    } else {
+      try {
+        const products = readJson(FILES.products, []);
+        allocateOrderKeys(order, order.userId, products);
+        order.status = 'COMPLETED';
+        order.paidAt = new Date().toISOString();
+      } catch (error) {
+        order.status = 'PAID_REVIEW_REQUIRED';
+        order.fulfillmentError = error.message;
+      }
+    }
+  } else if (['failed', 'expired', 'refunded'].includes(paymentStatus)) {
+    order.status = paymentStatus.toUpperCase();
+  }
+
+  writeJson(FILES.orders, orders);
+  res.json({ success: true });
 });
 
 // GET User Orders (Delivered Keys)
@@ -565,27 +747,28 @@ app.get('/api/orders', requireAuth, (req, res) => {
 app.get('/api/admin/stats', requireAdmin, (req, res) => {
   const orders = readJson(FILES.orders, []);
   const products = readJson(FILES.products, []);
+  const completedOrders = orders.filter(order => order.status === 'COMPLETED');
 
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const totalOrders = orders.length;
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
   const monthStr = now.toISOString().slice(0, 7);
 
-  const todayRevenue = orders
+  const todayRevenue = completedOrders
     .filter(o => (o.createdAt || '').slice(0, 10) === todayStr)
     .reduce((sum, o) => sum + (o.total || 0), 0);
 
-  const monthRevenue = orders
+  const monthRevenue = completedOrders
     .filter(o => (o.createdAt || '').slice(0, 7) === monthStr)
     .reduce((sum, o) => sum + (o.total || 0), 0);
 
   // Payment Breakdown
-  const cryptoRevenue = orders.filter(o => (o.paymentMethod || '').toLowerCase().includes('crypto')).reduce((sum, o) => sum + (o.total || 0), 0);
-  const balanceRevenue = orders.filter(o => (o.paymentMethod || '').toLowerCase().includes('balance')).reduce((sum, o) => sum + (o.total || 0), 0);
-  const chimeRevenue = orders.filter(o => (o.paymentMethod || '').toLowerCase().includes('chime')).reduce((sum, o) => sum + (o.total || 0), 0);
-  const starsRevenue = orders.filter(o => (o.paymentMethod || '').toLowerCase().includes('stars')).reduce((sum, o) => sum + (o.total || 0), 0);
+  const cryptoRevenue = completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('crypto')).reduce((sum, o) => sum + (o.total || 0), 0);
+  const balanceRevenue = completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('balance')).reduce((sum, o) => sum + (o.total || 0), 0);
+  const chimeRevenue = completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('chime')).reduce((sum, o) => sum + (o.total || 0), 0);
+  const starsRevenue = completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('stars')).reduce((sum, o) => sum + (o.total || 0), 0);
 
   // Daily Revenue Line Chart Data (Last 14 days)
   const chartLabels = [];
@@ -594,7 +777,7 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
     const d = new Date(Date.now() - i * 86400000);
     const dateStr = d.toISOString().slice(0, 10);
     chartLabels.push(dateStr.slice(5)); // MM-DD
-    const dayRev = orders
+    const dayRev = completedOrders
       .filter(o => (o.createdAt || '').slice(0, 10) === dateStr)
       .reduce((sum, o) => sum + (o.total || 0), 0);
     chartData.push(dayRev);
@@ -610,6 +793,12 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
       balance: balanceRevenue,
       chime: chimeRevenue,
       stars: starsRevenue
+    },
+    breakdownCounts: {
+      crypto: completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('crypto')).length,
+      balance: completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('balance')).length,
+      chime: completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('chime')).length,
+      stars: completedOrders.filter(o => (o.paymentMethod || '').toLowerCase().includes('stars')).length
     },
     chart: {
       labels: chartLabels,
@@ -678,13 +867,15 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
   if (pData.keysText !== undefined) {
     const keysInput = (pData.keysText || '').split('\n').map(k => k.trim()).filter(k => k.length > 0);
     const existingStockMap = new Map((existing.stock || []).map(s => [s.credentials, s]));
-    
-    existing.stock = keysInput.map((k, i) => {
+    const soldStock = (existing.stock || []).filter(stockItem => stockItem.isSold);
+
+    const availableStock = keysInput.map((k, i) => {
       if (existingStockMap.has(k)) {
         return existingStockMap.get(k);
       }
       return { id: `stk_${Date.now()}_${i}`, credentials: k, isSold: false };
     });
+    existing.stock = [...soldStock, ...availableStock.filter(stockItem => !stockItem.isSold)];
   }
 
   if (pData.title !== undefined) existing.title = pData.title;

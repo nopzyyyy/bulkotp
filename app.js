@@ -3,15 +3,9 @@ let currentCart = [];
 let activeProduct = null;
 let activeCategoryFilter = 'all';
 
-let selectedPaymentMethod = 'crypto';
+let selectedPaymentMethod = 'balance';
 let selectedCryptoCoin = 'usdt_trc20';
-let cryptoWallets = {
-  btc: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-  usdt_trc20: 'T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f',
-  eth: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-  sol: '7v99fvB1iEe4aV8yK91qR9tL8mX7zP4qS5wE2r1tN8y',
-  ltc: 'LTC1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
-};
+let paymentConfig = { balance: { enabled: true }, nowPayments: { enabled: false } };
 
 // Smooth Mouse Interpolation (Lerp) Variables
 let mouseX = window.innerWidth / 2;
@@ -92,6 +86,39 @@ function resetButtonLoading(btn) {
   btn.disabled = false;
 }
 
+// Global Round Spinner Overlay Engine
+let loadingOverlayTimer = null;
+
+function showGlobalLoading(text = 'Loading...') {
+  let overlay = document.getElementById('globalLoadingOverlay');
+  if (!overlay) return;
+
+  const textEl = overlay.querySelector('.spinner-loading-text');
+  if (textEl) textEl.textContent = text;
+
+  overlay.classList.add('active');
+
+  if (loadingOverlayTimer) clearTimeout(loadingOverlayTimer);
+
+  // Safety Timeout: Auto-hide after 2.5s to prevent UI freezing
+  loadingOverlayTimer = setTimeout(() => {
+    hideGlobalLoading();
+  }, 2500);
+}
+
+function hideGlobalLoading() {
+  const overlay = document.getElementById('globalLoadingOverlay');
+  if (!overlay) return;
+
+  if (loadingOverlayTimer) clearTimeout(loadingOverlayTimer);
+  overlay.classList.remove('active');
+}
+
+// Page Transition Loading Trigger
+window.addEventListener('beforeunload', () => {
+  showGlobalLoading('Loading Page...');
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   fetchCurrentUser();
   fetchProductsFromBackend();
@@ -100,6 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   initNative3DModel();
   initBackgroundParticles();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('open') === 'orders') {
+    setTimeout(() => openMyOrdersModal(), 300);
+  }
 
   // Scroll navbar styling
   window.addEventListener('scroll', () => {
@@ -151,6 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (catalogSearch) {
     catalogSearch.addEventListener('input', filterProducts);
   }
+});
+
+document.addEventListener('site:auth', (event) => {
+  currentUser = event.detail.user;
+  updateCheckoutAccount();
 });
 
 function initNative3DModel() {
@@ -255,16 +292,30 @@ async function fetchProductsFromBackend() {
   renderCatalogGrid(PRODUCTS);
 }
 
-async function fetchWalletsFromBackend() {
+async function fetchPaymentConfig() {
   try {
-    const res = await fetch('/api/wallets');
+    const res = await fetch('/api/payments/config');
     if (res.ok) {
-      const data = await res.json();
-      cryptoWallets = { ...cryptoWallets, ...data };
+      paymentConfig = await res.json();
+      const option = document.getElementById('cryptoPaymentOption');
+      const status = document.getElementById('cryptoOptionStatus');
+      const enabled = Boolean(paymentConfig.nowPayments?.enabled);
+      if (option) {
+        option.disabled = !enabled;
+        option.classList.toggle('is-disabled', !enabled);
+      }
+      if (status) status.textContent = enabled ? 'Verified invoice checkout' : 'NOWPayments setup pending';
     }
   } catch (err) {
-    console.log('Using default wallet configurations.');
+    console.log('Payment configuration is unavailable.');
   }
+}
+
+function updateCheckoutAccount() {
+  const email = document.getElementById('checkoutAccountEmail');
+  const balance = document.getElementById('checkoutBalanceBadge');
+  if (email) email.textContent = currentUser?.email || 'Sign in required';
+  if (balance) balance.textContent = `$${Number(currentUser?.balance || 0).toFixed(2)} balance`;
 }
 
 function renderCatalogGrid(items) {
@@ -338,6 +389,8 @@ function filterCategory(cat, btn) {
 }
 
 function showCatalogView() {
+  showGlobalLoading('Loading Passes...');
+  startTopProgress();
   const catalogView = document.getElementById('catalogView');
   const productDetailView = document.getElementById('productDetailView');
   
@@ -351,11 +404,21 @@ function showCatalogView() {
   }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    finishTopProgress();
+    hideGlobalLoading();
+  }, 250);
 }
 
 function openProductDetail(productId) {
+  showGlobalLoading('Loading Product...');
+  startTopProgress();
   activeProduct = PRODUCTS.find(p => p.id === productId);
-  if (!activeProduct) return;
+  if (!activeProduct) {
+    finishTopProgress();
+    hideGlobalLoading();
+    return;
+  }
   
   const el = (id) => document.getElementById(id);
   const stockCount = activeProduct.stock !== undefined ? activeProduct.stock : 10;
@@ -383,6 +446,10 @@ function openProductDetail(productId) {
   }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    finishTopProgress();
+    hideGlobalLoading();
+  }, 250);
 }
 
 function adjustQty(change) {
@@ -446,6 +513,7 @@ function loadCartFromStorage() {
 
 function saveCartToStorage() {
   localStorage.setItem('bulk_otp_cart', JSON.stringify(currentCart));
+  window.SiteShell?.updateCartBadges();
 }
 
 function removeFromCart(productId) {
@@ -532,6 +600,7 @@ function handleDetailBuyNow() {
 }
 
 function selectPaymentMethod(method, element) {
+  if (element?.disabled) return;
   selectedPaymentMethod = method;
   const options = document.querySelectorAll('.payment-option');
   options.forEach(opt => opt.classList.remove('active'));
@@ -541,6 +610,12 @@ function selectPaymentMethod(method, element) {
   if (cryptoBox) {
     cryptoBox.style.display = method === 'crypto' ? 'block' : 'none';
   }
+  const button = document.getElementById('payBtn');
+  if (button) {
+    button.innerHTML = method === 'crypto'
+      ? '<i class="fa-brands fa-bitcoin"></i> Continue to Crypto Payment'
+      : '<i class="fa-solid fa-bolt"></i> Pay with Store Balance';
+  }
 }
 
 function selectCryptoCoin(coin, element) {
@@ -548,36 +623,20 @@ function selectCryptoCoin(coin, element) {
   const buttons = document.querySelectorAll('.crypto-coin-btn');
   buttons.forEach(b => b.classList.remove('active'));
   if (element) element.classList.add('active');
-
-  const addressEl = document.getElementById('activeCryptoAddress');
-  const networkLabel = document.getElementById('cryptoNetworkLabel');
-
-  const networkNames = {
-    usdt_trc20: 'USDT (TRC-20 Network)',
-    btc: 'Bitcoin Native Address',
-    eth: 'Ethereum (ERC-20 Network)',
-    sol: 'Solana Network',
-    ltc: 'Litecoin Network'
-  };
-
-  if (networkLabel) networkLabel.textContent = `Deposit Address (${networkNames[coin]}):`;
-  if (addressEl) addressEl.textContent = cryptoWallets[coin] || 'Wallet Address Not Set';
-}
-
-function copyCryptoAddress() {
-  const addressEl = document.getElementById('activeCryptoAddress');
-  if (addressEl && addressEl.textContent) {
-    navigator.clipboard.writeText(addressEl.textContent).then(() => {
-      showToast('Wallet address copied to clipboard!');
-    }).catch(() => {
-      showToast('Failed to copy address');
-    });
-  }
 }
 
 function openCheckoutModal() {
   if (currentCart.length === 0) {
     showToast('Your cart is empty!');
+    return;
+  }
+  currentUser = currentUser || window.SiteShell?.user || null;
+  if (!currentUser) {
+    showToast('Sign in before checking out.');
+    window.SiteShell?.showLoading('Opening secure sign in…');
+    window.setTimeout(() => {
+      window.location.href = 'login.html?redirect=/cart.html';
+    }, 120);
     return;
   }
   
@@ -600,7 +659,7 @@ function openCheckoutModal() {
     if (formStep) formStep.style.display = 'block';
     if (successStep) successStep.style.display = 'none';
 
-    selectCryptoCoin(selectedCryptoCoin, document.querySelector('.crypto-coin-btn.active'));
+    updateCheckoutAccount();
     
     modal.classList.add('active');
   }
@@ -613,37 +672,39 @@ function closeCheckoutModal() {
 
 async function processCheckout(event) {
   if (event) event.preventDefault();
-  
-  const emailInput = document.getElementById('userEmail');
-  const email = emailInput ? emailInput.value.trim() : '';
 
-  if (!email || !email.includes('@')) {
-    showToast('Please enter a valid email address.');
-    if (emailInput) emailInput.focus();
+  currentUser = currentUser || window.SiteShell?.user || null;
+  if (!currentUser) {
+    window.location.href = 'login.html?redirect=/cart.html';
     return;
   }
 
   const btn = document.getElementById('payBtn');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing & Generating Key...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Securing your order…';
   }
 
   try {
-    const response = await fetch('/api/checkout', {
+    const isCrypto = selectedPaymentMethod === 'crypto';
+    const endpoint = isCrypto ? '/api/payments/nowpayments/invoice' : '/api/orders/checkout';
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email,
-        cart: currentCart,
-        paymentMethod: selectedPaymentMethod === 'crypto' ? `Crypto (${selectedCryptoCoin.toUpperCase()})` : selectedPaymentMethod
+        items: currentCart.map(item => ({ productId: item.id, qty: item.qty })),
+        paymentMethod: selectedPaymentMethod,
+        payCurrency: selectedCryptoCoin
       })
     });
 
     const data = await response.json();
 
-    if (response.ok && data.success) {
-      renderSuccessKeys(data.keys || [data.dispensedKey]);
+    if (response.ok && data.success && isCrypto && data.invoiceUrl) {
+      window.SiteShell?.showLoading('Opening secure payment…');
+      window.location.href = data.invoiceUrl;
+    } else if (response.ok && data.success) {
+      renderSuccessKeys(data.keys || []);
       
       const formStep = document.getElementById('checkoutFormStep');
       const successStep = document.getElementById('checkoutSuccessStep');
@@ -653,32 +714,21 @@ async function processCheckout(event) {
       
       currentCart = [];
       updateCartBadge();
-      showToast('Payment successful! Key generated.');
+      showToast('Purchase complete. Your key is ready.');
       fetchProductsFromBackend(); // Refresh stock counts
+      window.SiteShell?.refreshAuth();
     } else {
       showToast(data.error || 'Payment failed. Please try again.');
     }
   } catch (err) {
     console.error('Checkout error:', err);
-    // Offline simulation fallback
-    const mainProduct = currentCart[0];
-    const prefix = mainProduct ? mainProduct.prefix : 'BOT';
-    const fallbackKey = generateKey(prefix);
-
-    renderSuccessKeys([fallbackKey]);
-
-    const formStep = document.getElementById('checkoutFormStep');
-    const successStep = document.getElementById('checkoutSuccessStep');
-    if (formStep) formStep.style.display = 'none';
-    if (successStep) successStep.style.display = 'block';
-
-    currentCart = [];
-    updateCartBadge();
-    showToast('Payment completed!');
+    showToast('Checkout could not connect. No payment was taken and no key was released.');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Complete Purchase & Get Key';
+      btn.innerHTML = selectedPaymentMethod === 'crypto'
+        ? '<i class="fa-brands fa-bitcoin"></i> Continue to Crypto Payment'
+        : '<i class="fa-solid fa-bolt"></i> Pay with Store Balance';
     }
   }
 }

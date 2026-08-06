@@ -1,19 +1,22 @@
 let pageCart = [];
-let selectedCartPaymentMethod = 'crypto';
+let selectedCartPaymentMethod = 'balance';
 let selectedCartCryptoCoin = 'usdt_trc20';
-let cartCryptoWallets = {
-  btc: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-  usdt_trc20: 'T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f',
-  eth: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-  sol: '7v99fvB1iEe4aV8yK91qR9tL8mX7zP4qS5wE2r1tN8y',
-  ltc: 'LTC1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
-};
+let cartCurrentUser = null;
+let cartPaymentConfig = { nowPayments: { enabled: false } };
 
 document.addEventListener('DOMContentLoaded', () => {
   loadCartFromLocalStorage();
-  fetchWalletsForCart();
+  fetchCartPaymentConfig();
   renderCartPage();
   if (typeof initBackgroundParticles === 'function') initBackgroundParticles();
+});
+
+document.addEventListener('site:auth', (event) => {
+  cartCurrentUser = event.detail.user;
+  const email = document.getElementById('cartAccountEmail');
+  const balance = document.getElementById('cartBalanceBadge');
+  if (email) email.textContent = cartCurrentUser?.email || 'Sign in required';
+  if (balance) balance.textContent = `$${Number(cartCurrentUser?.balance || 0).toFixed(2)} balance`;
 });
 
 function loadCartFromLocalStorage() {
@@ -27,18 +30,25 @@ function loadCartFromLocalStorage() {
 
 function saveCartToLocalStorage() {
   localStorage.setItem('bulk_otp_cart', JSON.stringify(pageCart));
+  window.SiteShell?.updateCartBadges();
 }
 
-async function fetchWalletsForCart() {
+async function fetchCartPaymentConfig() {
   try {
-    const res = await fetch('/api/wallets');
+    const res = await fetch('/api/payments/config');
     if (res.ok) {
-      const data = await res.json();
-      cartCryptoWallets = { ...cartCryptoWallets, ...data };
-      updateCartCryptoAddressDisplay();
+      cartPaymentConfig = await res.json();
+      const option = document.getElementById('cartCryptoPaymentOption');
+      const status = document.getElementById('cartCryptoOptionStatus');
+      const enabled = Boolean(cartPaymentConfig.nowPayments?.enabled);
+      if (option) {
+        option.disabled = !enabled;
+        option.classList.toggle('is-disabled', !enabled);
+      }
+      if (status) status.textContent = enabled ? 'Verified invoice checkout' : 'NOWPayments setup pending';
     }
   } catch (err) {
-    console.log('Using fallback wallets');
+    console.log('Payment configuration unavailable');
   }
 }
 
@@ -131,6 +141,7 @@ function removeCartPageItem(productId) {
 }
 
 function selectCartPaymentMethod(method, el) {
+  if (el?.disabled) return;
   selectedCartPaymentMethod = method;
   const options = document.querySelectorAll('.payment-option');
   options.forEach(o => o.classList.remove('active'));
@@ -140,6 +151,12 @@ function selectCartPaymentMethod(method, el) {
   if (cryptoBox) {
     cryptoBox.style.display = method === 'crypto' ? 'block' : 'none';
   }
+  const button = document.getElementById('cartCheckoutBtn');
+  if (button) {
+    button.innerHTML = method === 'crypto'
+      ? '<i class="fa-brands fa-bitcoin"></i> Continue to Crypto Payment'
+      : '<i class="fa-solid fa-bolt"></i> Pay with Store Balance';
+  }
 }
 
 function selectCartCryptoCoin(coin, el) {
@@ -147,35 +164,6 @@ function selectCartCryptoCoin(coin, el) {
   const buttons = document.querySelectorAll('.crypto-coin-btn');
   buttons.forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
-
-  updateCartCryptoAddressDisplay();
-}
-
-function updateCartCryptoAddressDisplay() {
-  const addressEl = document.getElementById('cartActiveCryptoAddress');
-  const networkLabel = document.getElementById('cartCryptoNetworkLabel');
-
-  const networkNames = {
-    usdt_trc20: 'USDT (TRC-20 Network)',
-    btc: 'Bitcoin Address',
-    eth: 'Ethereum Network',
-    sol: 'Solana Network',
-    ltc: 'Litecoin Network'
-  };
-
-  if (networkLabel) networkLabel.textContent = `Deposit Address (${networkNames[selectedCartCryptoCoin]}):`;
-  if (addressEl) addressEl.textContent = cartCryptoWallets[selectedCartCryptoCoin] || 'Wallet address not set';
-}
-
-function copyCartCryptoAddress() {
-  const addressEl = document.getElementById('cartActiveCryptoAddress');
-  if (addressEl && addressEl.textContent) {
-    navigator.clipboard.writeText(addressEl.textContent).then(() => {
-      showToast('Wallet address copied to clipboard!');
-    }).catch(() => {
-      showToast('Failed to copy wallet address');
-    });
-  }
 }
 
 async function processCartPageCheckout(event) {
@@ -186,42 +174,46 @@ async function processCartPageCheckout(event) {
     return;
   }
 
-  const emailInput = document.getElementById('cartUserEmail');
-  const email = emailInput ? emailInput.value.trim() : '';
-
-  if (!email || !email.includes('@')) {
-    showToast('Please enter a valid email address.');
-    if (emailInput) emailInput.focus();
+  cartCurrentUser = cartCurrentUser || window.SiteShell?.user || null;
+  if (!cartCurrentUser) {
+    showToast('Sign in before checking out.');
+    window.setTimeout(() => { window.location.href = 'login.html?redirect=/cart.html'; }, 250);
     return;
   }
 
   const btn = document.getElementById('cartCheckoutBtn');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing & Dispensing Key...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Securing your order…';
   }
 
   try {
-    const res = await fetch('/api/checkout', {
+    const isCrypto = selectedCartPaymentMethod === 'crypto';
+    const endpoint = isCrypto ? '/api/payments/nowpayments/invoice' : '/api/orders/checkout';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email,
-        cart: pageCart,
-        paymentMethod: selectedCartPaymentMethod === 'crypto' ? `Crypto (${selectedCartCryptoCoin.toUpperCase()})` : selectedCartPaymentMethod
+        items: pageCart.map(item => ({ productId: item.id, qty: item.qty })),
+        paymentMethod: selectedCartPaymentMethod,
+        payCurrency: selectedCartCryptoCoin
       })
     });
 
     const data = await res.json();
 
-    if (res.ok && data.success) {
-      renderCartDispensedKeys(data.keys || [data.dispensedKey]);
+    if (res.ok && data.success && isCrypto && data.invoiceUrl) {
+      window.SiteShell?.showLoading('Opening secure payment…');
+      window.location.href = data.invoiceUrl;
+    } else if (res.ok && data.success) {
+      renderCartDispensedKeys(data.keys || []);
       document.getElementById('cartContentLayout').style.display = 'none';
       document.getElementById('cartSuccessView').style.display = 'block';
 
       pageCart = [];
       saveCartToLocalStorage();
-      showToast('Payment successful! Key generated.');
+      showToast('Purchase complete. Your key is ready.');
+      window.SiteShell?.refreshAuth();
     } else {
       showToast(data.error || 'Payment failed.');
     }
@@ -231,7 +223,9 @@ async function processCartPageCheckout(event) {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Complete Purchase & Get Key';
+      btn.innerHTML = selectedCartPaymentMethod === 'crypto'
+        ? '<i class="fa-brands fa-bitcoin"></i> Continue to Crypto Payment'
+        : '<i class="fa-solid fa-bolt"></i> Pay with Store Balance';
     }
   }
 }

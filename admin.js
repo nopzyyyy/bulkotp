@@ -46,6 +46,32 @@ function finishTopProgress() {
   }, 250);
 }
 
+let loadingOverlayTimer = null;
+
+function showGlobalLoading(text = 'Loading...') {
+  let overlay = document.getElementById('globalLoadingOverlay');
+  if (!overlay) return;
+
+  const textEl = overlay.querySelector('.spinner-loading-text');
+  if (textEl) textEl.textContent = text;
+
+  overlay.classList.add('active');
+
+  if (loadingOverlayTimer) clearTimeout(loadingOverlayTimer);
+
+  loadingOverlayTimer = setTimeout(() => {
+    hideGlobalLoading();
+  }, 2500);
+}
+
+function hideGlobalLoading() {
+  const overlay = document.getElementById('globalLoadingOverlay');
+  if (!overlay) return;
+
+  if (loadingOverlayTimer) clearTimeout(loadingOverlayTimer);
+  overlay.classList.remove('active');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAdminAuth();
 });
@@ -82,8 +108,9 @@ function toggleMobileSidebar() {
   if (overlay) overlay.classList.toggle('active');
 }
 
-function switchAdminTab(tabId, btn) {
+async function switchAdminTab(tabId, btn) {
   startTopProgress();
+  showGlobalLoading('Loading section...');
   const tabs = document.querySelectorAll('.sidebar-link');
   tabs.forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
@@ -113,28 +140,17 @@ function switchAdminTab(tabId, btn) {
   if (sidebar && sidebar.classList.contains('mobile-open')) sidebar.classList.remove('mobile-open');
   if (overlay && overlay.classList.contains('active')) overlay.classList.remove('active');
 
-  if (tabId === 'overview') loadAdminDashboardData();
-  else if (tabId === 'products') loadAdminProducts();
-  else if (tabId === 'orders') loadAdminOrders();
-  else if (tabId === 'users') loadAdminUsers();
-  else if (tabId === 'tickets') loadAdminTickets();
-  else if (tabId === 'audit') loadAdminAuditLogs();
-
-  setTimeout(() => finishTopProgress(), 250);
-}
-
-  // Auto-close mobile sidebar
-  const sidebar = document.querySelector('.admin-sidebar');
-  const overlay = document.getElementById('adminSidebarOverlay');
-  if (sidebar && sidebar.classList.contains('mobile-open')) sidebar.classList.remove('mobile-open');
-  if (overlay && overlay.classList.contains('active')) overlay.classList.remove('active');
-
-  if (tabId === 'overview') loadAdminDashboardData();
-  else if (tabId === 'products') loadAdminProducts();
-  else if (tabId === 'orders') loadAdminOrders();
-  else if (tabId === 'users') loadAdminUsers();
-  else if (tabId === 'tickets') loadAdminTickets();
-  else if (tabId === 'audit') loadAdminAuditLogs();
+  try {
+    if (tabId === 'overview') await loadAdminDashboardData();
+    else if (tabId === 'products') await loadAdminProducts();
+    else if (tabId === 'orders') await loadAdminOrders();
+    else if (tabId === 'users') await loadAdminUsers();
+    else if (tabId === 'tickets') await loadAdminTickets();
+    else if (tabId === 'audit') await loadAdminAuditLogs();
+  } finally {
+    finishTopProgress();
+    hideGlobalLoading();
+  }
 }
 
 async function loadAdminDashboardData() {
@@ -155,6 +171,12 @@ async function loadAdminDashboardData() {
       document.getElementById('statBalanceRev').textContent = `$${(stats.breakdown.balance || 0).toFixed(2)}`;
       document.getElementById('statChimeRev').textContent = `$${(stats.breakdown.chime || 0).toFixed(2)}`;
       document.getElementById('statStarsRev').textContent = `$${(stats.breakdown.stars || 0).toFixed(2)}`;
+    }
+    if (stats.breakdownCounts) {
+      document.getElementById('statCryptoCount').textContent = `${stats.breakdownCounts.crypto || 0} transactions`;
+      document.getElementById('statBalanceCount').textContent = `${stats.breakdownCounts.balance || 0} transactions`;
+      document.getElementById('statChimeCount').textContent = `${stats.breakdownCounts.chime || 0} transactions`;
+      document.getElementById('statStarsCount').textContent = `${stats.breakdownCounts.stars || 0} transactions`;
     }
 
     // Recent Orders Table

@@ -13,8 +13,37 @@
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="admin-body">
+<body class="admin-body" data-page="admin">
     <div id="topProgressBar"></div>
+
+    <!-- Global Fullscreen Round Spinner Loading Overlay -->
+    <div id="globalLoadingOverlay" class="global-loading-overlay">
+        <div class="spinner-ring-wrap">
+            <div class="crimson-spinner-ring"></div>
+            <img src="assets/brand_logo.png" alt="Loading" class="spinner-logo-img">
+        </div>
+        <span class="spinner-loading-text">Loading...</span>
+    </div>
+
+    <nav class="navbar admin-site-navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand" aria-label="BULK OTP home">
+                <div class="brand-logo-wrap"><img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img"></div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link" data-nav="passes">Passes</a>
+                <a href="index.html#features" class="nav-link" data-nav="features">Features</a>
+                <a href="orders.html" class="nav-link" data-nav="orders">Orders</a>
+            </div>
+            <div class="nav-right">
+                <a class="nav-cart-btn" href="cart.html" title="View cart" aria-label="View cart">
+                    <i class="fa-solid fa-cart-shopping"></i><span class="cart-badge">0</span>
+                </a>
+                <div data-user-header></div>
+            </div>
+        </div>
+    </nav>
 
     <div class="admin-sidebar-layout">
         <!-- Vertical Left Sidebar (Pinks.cc Style) -->
@@ -460,6 +489,7 @@
 
     <div id="toastContainer"></div>
 
+    <script src="site-shell.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

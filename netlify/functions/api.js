@@ -124,16 +124,10 @@ const INITIAL_PRODUCTS = [
 // In-Memory Global Store state (for serverless environments)
 let memoryStore = {
   admin: {
-    username: 'admin',
-    passwordHash: hashPassword('BulkOTPSecretAdmin2026!')
+    username: process.env.NETLIFY_ADMIN_USERNAME || 'admin',
+    passwordHash: process.env.NETLIFY_ADMIN_PASSWORD ? hashPassword(process.env.NETLIFY_ADMIN_PASSWORD) : null
   },
-  wallets: {
-    btc: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    usdt_trc20: 'T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f',
-    eth: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    sol: '7v99fvB1iEe4aV8yK91qR9tL8mX7zP4qS5wE2r1tN8y',
-    ltc: 'LTC1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
-  },
+  wallets: {},
   products: INITIAL_PRODUCTS,
   orders: [
     {
@@ -240,74 +234,24 @@ router.get('/products', (req, res) => {
 
 // 2. Get Crypto Wallets
 router.get('/wallets', (req, res) => {
-  const store = loadStore();
-  res.json(store.wallets || {});
+  res.json({});
+});
+
+router.get('/payments/config', (req, res) => {
+  res.json({ balance: { enabled: false }, nowPayments: { enabled: false, provider: 'NOWPayments', currencies: [] } });
+});
+
+router.post('/payments/nowpayments/invoice', (req, res) => {
+  res.status(503).json({ code: 'PAYMENTS_NOT_CONFIGURED', error: 'Payments are available only on the primary storefront server.' });
+});
+
+router.post('/orders/checkout', (req, res) => {
+  res.status(503).json({ error: 'Checkout is available only on the primary storefront server.' });
 });
 
 // 3. Process Checkout
 router.post('/checkout', (req, res) => {
-  const { email, cart, paymentMethod } = req.body;
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ error: 'Please enter a valid email address.' });
-  }
-  if (!cart || !Array.isArray(cart) || cart.length === 0) {
-    return res.status(400).json({ error: 'Cart is empty.' });
-  }
-
-  const store = loadStore();
-  let totalAmount = 0;
-  const dispensedKeys = [];
-  const orderItemsSummary = [];
-
-  for (const cartItem of cart) {
-    const product = store.products.find(p => p.id === cartItem.id);
-    if (!product) {
-      return res.status(404).json({ error: `Product ${cartItem.id} not found.` });
-    }
-
-    const qty = Math.max(1, parseInt(cartItem.qty) || 1);
-    totalAmount += product.price * qty;
-    orderItemsSummary.push({
-      id: product.id,
-      title: product.shortTitle || product.title,
-      price: product.price,
-      qty: qty
-    });
-
-    for (let i = 0; i < qty; i++) {
-      if (product.stockKeys && product.stockKeys.length > 0) {
-        const key = product.stockKeys.shift();
-        dispensedKeys.push(key);
-      } else {
-        const fallback = generateFallbackKey(product.prefix);
-        dispensedKeys.push(fallback);
-      }
-    }
-  }
-
-  const orderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-  const newOrder = {
-    id: orderNumber,
-    orderNumber,
-    email: email.trim(),
-    items: orderItemsSummary,
-    total: parseFloat(totalAmount.toFixed(2)),
-    paymentMethod: paymentMethod || 'Crypto',
-    dispensedKeys,
-    createdAt: new Date().toISOString()
-  };
-
-  store.orders.unshift(newOrder);
-  saveStore(store);
-
-  res.json({
-    success: true,
-    orderNumber,
-    total: newOrder.total,
-    keys: dispensedKeys,
-    dispensedKey: dispensedKeys[0],
-    message: 'Purchase completed successfully!'
-  });
+  return res.status(410).json({ error: 'This legacy checkout endpoint is disabled.' });
 });
 
 // 4. Admin Login
@@ -320,7 +264,7 @@ router.post('/admin/login', (req, res) => {
   const store = loadStore();
   const hashedInput = hashPassword(password);
 
-  if (username === store.admin.username && hashedInput === store.admin.passwordHash) {
+  if (store.admin.passwordHash && username === store.admin.username && hashedInput === store.admin.passwordHash) {
     const token = crypto.randomBytes(32).toString('hex');
     activeAdminTokens.add(token);
     return res.json({ success: true, token, username: store.admin.username });

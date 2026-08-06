@@ -15,8 +15,18 @@
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="passes">
     <div id="topProgressBar"></div>
+
+    <!-- Global Fullscreen Round Spinner Loading Overlay -->
+    <div id="globalLoadingOverlay" class="global-loading-overlay">
+        <div class="spinner-ring-wrap">
+            <div class="crimson-spinner-ring"></div>
+            <img src="assets/brand_logo.png" alt="Loading" class="spinner-logo-img">
+        </div>
+        <span id="spinnerLoadingText" class="spinner-loading-text">Loading...</span>
+    </div>
+
     <!-- Background Layers -->
     <div class="bg-grid"></div>
     <div class="glow-cursor"></div>
@@ -28,7 +38,7 @@
     <!-- Floating Liquid Glass Navbar -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="#" class="brand" onclick="showCatalogView(); return false;">
+            <a href="index.html" class="brand" aria-label="BULK OTP home">
                 <div class="brand-logo-wrap">
                     <img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img">
                 </div>
@@ -36,18 +46,18 @@
             </a>
             
             <div class="nav-links">
-                <a href="#" class="nav-link active" onclick="showCatalogView(); return false;">Passes</a>
-                <a href="#features" class="nav-link">Features</a>
-                <a href="#faq" class="nav-link">FAQ</a>
+                <a href="index.html" class="nav-link" data-nav="passes">Passes</a>
+                <a href="index.html#features" class="nav-link" data-nav="features">Features</a>
+                <a href="orders.html" class="nav-link" data-nav="orders">Orders</a>
             </div>
             
             <div class="nav-right">
-                <button class="nav-cart-btn" onclick="toggleCartDrawer()" title="View Cart">
+                <a class="nav-cart-btn" href="cart.html" title="View cart" aria-label="View cart">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span class="cart-badge" id="cartBadge">0</span>
-                </button>
+                </a>
 
-                <div id="userHeaderArea" style="display: flex; align-items: center;">
+                <div id="userHeaderArea" data-user-header>
                     <!-- Profile Icon & Dropdown populated by app.js -->
                 </div>
             </div>
@@ -303,42 +313,36 @@
             
             <!-- Step 1: Form & Payment -->
             <div id="checkoutFormStep">
-                <!-- Customer Email Input -->
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
-                        Your Email Address <span style="color: var(--status-red);">*</span>
-                    </label>
-                    <div class="input-icon-wrap">
-                        <i class="fa-regular fa-envelope input-icon"></i>
-                        <input type="email" id="userEmail" class="form-input" placeholder="buyer@domain.com" required>
+                <div class="checkout-account-card">
+                    <div class="checkout-account-icon"><i class="fa-solid fa-user-shield"></i></div>
+                    <div>
+                        <span class="checkout-account-label">Purchasing as</span>
+                        <strong id="checkoutAccountEmail">Signed-in customer</strong>
                     </div>
-                    <span class="text-dim" style="font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                        No account or login required. Your key will be displayed immediately & saved to your email.
-                    </span>
+                    <span id="checkoutBalanceBadge" class="checkout-balance-badge">$0.00 balance</span>
                 </div>
                 
                 <!-- Payment Method Tabs -->
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Select Payment Method</label>
-                    <div class="payment-methods-grid">
-                        <div class="payment-option active" data-method="crypto" onclick="selectPaymentMethod('crypto', this)">
-                            <i class="fa-brands fa-bitcoin" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: #f7931a;"></i>
-                            <span style="font-size: 0.8125rem; font-weight: 600;">Cryptocurrency</span>
-                        </div>
-                        <div class="payment-option" data-method="card" onclick="selectPaymentMethod('card', this)">
-                            <i class="fa-brands fa-stripe" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: #635bff;"></i>
-                            <span style="font-size: 0.8125rem; font-weight: 600;">Credit / Debit</span>
-                        </div>
-                        <div class="payment-option" data-method="cashapp" onclick="selectPaymentMethod('cashapp', this)">
-                            <i class="fa-solid fa-dollar-sign" style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: #00d632;"></i>
-                            <span style="font-size: 0.8125rem; font-weight: 600;">CashApp</span>
-                        </div>
+                    <div class="payment-methods-grid payment-methods-grid-two">
+                        <button type="button" class="payment-option active" data-method="balance" onclick="selectPaymentMethod('balance', this)">
+                            <i class="fa-solid fa-wallet"></i>
+                            <span>Store Balance</span>
+                            <small>Instant delivery</small>
+                        </button>
+                        <button type="button" id="cryptoPaymentOption" class="payment-option is-disabled" data-method="crypto" onclick="selectPaymentMethod('crypto', this)" disabled>
+                            <i class="fa-brands fa-bitcoin"></i>
+                            <span>Cryptocurrency</span>
+                            <small id="cryptoOptionStatus">NOWPayments setup pending</small>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Dynamic Crypto Coin Selection Drawer (When Crypto Selected) -->
-                <div id="cryptoPaymentBox" class="crypto-payment-box" style="margin-bottom: 1.5rem;">
-                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem;">Select Crypto Asset:</div>
+                <div id="cryptoPaymentBox" class="crypto-payment-box" style="margin-bottom: 1.5rem; display:none;">
+                    <div class="payment-provider-row"><span><i class="fa-solid fa-shield-halved"></i> Secure checkout by NOWPayments</span><span class="status-chip status-cyan">Invoice checkout</span></div>
+                    <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem;">Choose a payment currency:</div>
                     <div class="crypto-selector">
                         <button class="crypto-coin-btn active" onclick="selectCryptoCoin('usdt_trc20', this)">
                             <i class="fa-solid fa-coins" style="color: #26a17b;"></i> USDT (TRC20)
@@ -354,20 +358,7 @@
                         </button>
                     </div>
 
-                    <!-- Crypto Wallet Address Box -->
-                    <div class="crypto-wallet-card">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-                            <span style="font-size: 0.8125rem; color: var(--text-muted);" id="cryptoNetworkLabel">Deposit Address (TRC-20 Network):</span>
-                            <span class="status-chip status-cyan" style="font-size: 0.75rem;">Instant Auto-Verify</span>
-                        </div>
-
-                        <div class="wallet-address-bar">
-                            <code id="activeCryptoAddress" class="font-mono">T9yD14Nj9j7xAB4dbGeiX9hA2A1bC3dE4f</code>
-                            <button class="btn-icon btn-sm" onclick="copyCryptoAddress()" title="Copy Wallet Address">
-                                <i class="fa-regular fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <p class="payment-security-note"><i class="fa-solid fa-circle-info"></i> Your key is released only after NOWPayments confirms the payment on-chain.</p>
                 </div>
 
                 <!-- Order Summary Breakdown -->
@@ -387,7 +378,7 @@
                 </div>
 
                 <button id="payBtn" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 1rem;" onclick="processCheckout(event)">
-                    <i class="fa-solid fa-bolt"></i> Complete Purchase & Get Key
+                    <i class="fa-solid fa-bolt"></i> Pay with Store Balance
                 </button>
             </div>
 
@@ -502,6 +493,7 @@
     </div>
 
     <!-- Script -->
+    <script src="site-shell.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
