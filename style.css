@@ -3621,11 +3621,9 @@ button:disabled {
 
 /* The admin retains its clean sidebar but shares the exact storefront header. */
 .admin-body { padding-top: 0 !important; }
-.admin-body .admin-site-navbar { position: fixed; }
-.admin-body .admin-sidebar-layout { min-height: calc(100vh - 92px); margin-top: 92px; }
-.admin-body .admin-sidebar { top: 92px; height: calc(100vh - 92px); }
-.admin-body .admin-main-panel { min-height: calc(100vh - 92px); }
-.admin-body .admin-main-panel { margin-left: 0 !important; }
+.admin-body .admin-sidebar-layout { min-height: 100vh; margin-top: 0 !important; }
+.admin-body .admin-sidebar { top: 0 !important; height: 100vh; }
+.admin-body .admin-main-panel { min-height: 100vh; margin-top: 0 !important; padding-top: 1.5rem !important; }
 .admin-body .sidebar-link.active { box-shadow: none; }
 .admin-body .admin-sidebar-menu { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
 .admin-body .admin-sidebar-menu::-webkit-scrollbar { width: 5px; }

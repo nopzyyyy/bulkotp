@@ -214,14 +214,82 @@ function renderRecentOrdersTable(orders) {
   `).join('');
 }
 
+let adminRevenueChartInstance = null;
+
 function drawDailyRevenueChart(labels, data) {
   const canvas = document.getElementById('dailyRevenueChart');
   if (!canvas) return;
 
+  const peakPill = document.getElementById('chartPeakPill');
+  const maxRevenue = data.length > 0 ? Math.max(...data, 0) : 0;
+  if (peakPill) peakPill.textContent = `$${maxRevenue.toFixed(2)}`;
+
+  // Use Chart.js if available for rich, interactive, animated rendering
+  if (typeof Chart !== 'undefined') {
+    if (adminRevenueChartInstance) {
+      adminRevenueChartInstance.destroy();
+    }
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+    gradient.addColorStop(0, 'rgba(255, 37, 92, 0.45)');
+    gradient.addColorStop(1, 'rgba(255, 37, 92, 0.0)');
+
+    adminRevenueChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Daily Revenue',
+          data: data,
+          borderColor: '#ff255c',
+          borderWidth: 3,
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#ff255c',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` Revenue: $${Number(context.raw || 0).toFixed(2)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#8a8d85', font: { family: 'JetBrains Mono', size: 10 } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: {
+              color: '#8a8d85',
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (val) => '$' + val
+            },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    return;
+  }
+
+  // 2D Canvas Fallback Renderer
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const parent = canvas.parentElement;
-  const width = parent ? parent.clientWidth : 800;
+  const computedW = parent ? (parent.clientWidth || parent.getBoundingClientRect().width) : 0;
+  const width = computedW > 100 ? computedW : 800;
   const height = 180;
 
   canvas.width = width * dpr;
@@ -233,13 +301,7 @@ function drawDailyRevenueChart(labels, data) {
   const padding = { top: 20, right: 30, bottom: 30, left: 45 };
   ctx.clearRect(0, 0, width, height);
 
-  if (data.length === 0) return;
-
   const maxVal = Math.max(...data, 50);
-
-  const peakPill = document.getElementById('chartPeakPill');
-  if (peakPill) peakPill.textContent = `$${Math.max(...data, 0).toFixed(2)}`;
-
   const graphW = width - padding.left - padding.right;
   const graphH = height - padding.top - padding.bottom;
 
@@ -258,6 +320,8 @@ function drawDailyRevenueChart(labels, data) {
     ctx.font = '10px "JetBrains Mono"';
     ctx.fillText(`$${Math.round(val)}`, 8, y + 3);
   }
+
+  if (data.length === 0) return;
 
   // Draw Smooth Curve
   const points = data.map((val, idx) => {
