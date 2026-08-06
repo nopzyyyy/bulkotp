@@ -1012,10 +1012,16 @@ document.addEventListener('click', (e) => {
 });
 
 async function handleUserLogout() {
-  await fetch('/api/auth/logout', { method: 'POST' });
+  if (window.SiteShell && typeof window.SiteShell.logout === 'function') {
+    await window.SiteShell.logout();
+    return;
+  }
+  showGlobalLoading('Signing out...');
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  } catch (e) {}
   currentUser = null;
-  renderHeaderUserArea();
-  showToast('Logged out');
+  window.location.reload();
 }
 
 async function openMyOrdersModal() {

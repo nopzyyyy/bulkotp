@@ -469,15 +469,16 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ authenticated: true, user: userWithoutPassword });
 });
 
-// Logout
-app.post('/api/auth/logout', (req, res) => {
-  const token = req.cookies.market_session;
+// Logout (GET & POST)
+app.all('/api/auth/logout', (req, res) => {
+  const token = req.cookies ? req.cookies.market_session : null;
   if (token) {
     let sessions = readJson(FILES.sessions, []);
     sessions = sessions.filter(s => s.token !== token);
     writeJson(FILES.sessions, sessions);
   }
-  res.clearCookie('market_session', { path: '/' });
+  res.clearCookie('market_session', { path: '/', httpOnly: true, sameSite: 'lax' });
+  res.cookie('market_session', '', { path: '/', expires: new Date(0), httpOnly: true, sameSite: 'lax' });
   res.json({ success: true });
 });
 

@@ -153,14 +153,20 @@
   }
 
   async function logout() {
-    showLoading('Signing out…');
+    if (typeof showGlobalLoading === 'function') showGlobalLoading('Signing out...');
+    else showLoading('Signing out…');
+
     try {
       await originalFetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-      state.user = null;
-      renderProfile();
-      window.location.assign('index.html');
-    } catch (_) {
-      hideLoading(true);
+    } catch (_) {}
+
+    state.user = null;
+    if (typeof currentUser !== 'undefined') currentUser = null;
+
+    if (window.location.pathname.endsWith('/admin.html')) {
+      window.location.href = 'login.html';
+    } else {
+      window.location.reload();
     }
   }
 
