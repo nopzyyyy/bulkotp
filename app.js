@@ -1070,7 +1070,7 @@ function renderSuccessKeys(keys) {
           <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Access Pass Key #${idx + 1}</span>
           <code id="keyDispensed-${idx}" class="font-mono text-accent" style="font-size: 1.125rem; font-weight: 700; word-break: break-all;">${key}</code>
         </div>
-        <button class="btn-icon" onclick="copySingleKey('${key}')" title="Copy Key">
+        <button type="button" class="btn-icon" onclick="copySingleKey('${key}', this)" title="Copy Key">
           <i class="fa-regular fa-copy"></i>
         </button>
       </div>
@@ -1083,12 +1083,64 @@ function renderSuccessKeys(keys) {
   }
 }
 
-function copySingleKey(key) {
-  navigator.clipboard.writeText(key).then(() => {
-    showToast('Key copied to clipboard!');
-  }).catch(() => {
-    showToast('Failed to copy key');
-  });
+function copySingleKey(key, btnEl = null) {
+  if (!key) return;
+
+  const performFeedback = () => {
+    showToast('Key copied to clipboard! 🎉');
+    if (btnEl) {
+      const origHtml = btnEl.innerHTML;
+      btnEl.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      btnEl.style.background = '#10b981';
+      btnEl.style.borderColor = '#10b981';
+      btnEl.style.color = '#ffffff';
+
+      setTimeout(() => {
+        btnEl.innerHTML = origHtml;
+        btnEl.style.background = '';
+        btnEl.style.borderColor = '';
+        btnEl.style.color = '';
+      }, 1800);
+    }
+  };
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(key).then(() => {
+      performFeedback();
+    }).catch(() => {
+      fallbackCopyKey(key, performFeedback);
+    });
+  } else {
+    fallbackCopyKey(key, performFeedback);
+  }
+}
+
+function fallbackCopyKey(key, onSuccess) {
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = key;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-9999px';
+    textArea.style.left = '-9999px';
+    textArea.style.opacity = '0';
+    textArea.setAttribute('readonly', '');
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, 99999);
+
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+
+    if (successful) {
+      if (typeof onSuccess === 'function') onSuccess();
+      else showToast('Key copied to clipboard! 🎉');
+    } else {
+      window.prompt('Copy your pass key:', key);
+    }
+  } catch (err) {
+    window.prompt('Copy your pass key:', key);
+  }
 }
 
 function generateKey(prefix) {
@@ -1346,8 +1398,8 @@ async function openMyOrdersModal() {
               ${item.credentials ? `
                 <div class="delivered-key-box">
                   <code class="font-mono text-accent">${escapeHtml(item.credentials)}</code>
-                  <button class="btn btn-primary btn-sm" onclick="copySingleKey('${escapeHtml(item.credentials)}')">
-                    <i class="fa-regular fa-copy"></i> Copy Key
+                  <button type="button" class="btn btn-primary btn-sm" onclick="copySingleKey('${escapeHtml(item.credentials)}', this)">
+                    <i class="fa-regular fa-copy"></i> Copy key
                   </button>
                 </div>
               ` : ''}

@@ -3,11 +3,21 @@ let selectedCartPaymentMethod = 'balance';
 let selectedCartCryptoCoin = 'usdt_trc20';
 let cartCurrentUser = null;
 let cartPaymentConfig = { nowPayments: { enabled: false } };
+let cartCatalog = new Map();
+let cartStockConfirmed = false;
+let cartStockRequestInFlight = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadCartFromLocalStorage();
-  fetchCartPaymentConfig();
   renderCartPage();
+  fetchCartPaymentConfig();
+  syncCartWithBackend();
+  window.setInterval(() => syncCartWithBackend({ quiet: true }), 12000);
+  window.addEventListener('focus', () => syncCartWithBackend({ quiet: true }));
+  window.addEventListener('pageshow', () => syncCartWithBackend({ quiet: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') syncCartWithBackend({ quiet: true });
+  });
   if (typeof initBackgroundParticles === 'function') initBackgroundParticles();
 });
 
@@ -22,8 +32,9 @@ document.addEventListener('site:auth', (event) => {
 function loadCartFromLocalStorage() {
   try {
     const raw = localStorage.getItem('bulk_otp_cart');
-    pageCart = raw ? JSON.parse(raw) : [];
-  } catch (err) {
+    const parsed = raw ? JSON.parse(raw) : [];
+    pageCart = Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
     pageCart = [];
   }
 }
@@ -33,144 +44,232 @@ function saveCartToLocalStorage() {
   window.SiteShell?.updateCartBadges();
 }
 
+function formatMoney(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
+}
+
+function cartItemHasIssue(item) {
+  if (!cartStockConfirmed) return false;
+  return Boolean(item.unavailable) || Number(item.stock || 0) < Number(item.qty || 0);
+}
+
+function getCartStockIssues() {
+  return pageCart.filter(cartItemHasIssue);
+}
+
+function setCartStockStatus(kind, message) {
+  const status = document.getElementById('cartStockSyncStatus');
+  if (!status) return;
+  const icons = {
+    checking: 'fa-solid fa-rotate fa-spin',
+    ready: 'fa-solid fa-circle-check',
+    warning: 'fa-solid fa-triangle-exclamation'
+  };
+  status.className = `cart-stock-sync ${kind}`;
+  status.innerHTML = `<i class="${icons[kind] || icons.ready}"></i><span>${escapeHtml(message)}</span>`;
+}
+
+async function syncCartWithBackend({ quiet = false } = {}) {
+  if (cartStockRequestInFlight) return cartStockConfirmed;
+  cartStockRequestInFlight = true;
+  if (!quiet) setCartStockStatus('checking', 'Checking live stock…');
+
+  try {
+    const response = await fetch('/api/products', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Stock request failed (${response.status})`);
+    const products = await response.json();
+    if (!Array.isArray(products)) throw new Error('Invalid catalog response');
+
+    cartCatalog = new Map(products.map(product => [product.id, product]));
+    cartStockConfirmed = true;
+    const previous = JSON.stringify(pageCart);
+    pageCart = pageCart.map(item => {
+      const live = cartCatalog.get(item.id);
+      if (!live) return { ...item, stock: 0, unavailable: true };
+      return {
+        ...item,
+        title: live.title,
+        shortTitle: live.shortTitle,
+        duration: live.duration,
+        price: live.price,
+        art: live.art,
+        stock: live.stock,
+        unavailable: false
+      };
+    });
+    if (JSON.stringify(pageCart) !== previous) saveCartToLocalStorage();
+    renderCartPage();
+
+    const issues = getCartStockIssues();
+    setCartStockStatus(
+      issues.length ? 'warning' : 'ready',
+      issues.length
+        ? `${issues.length} cart item${issues.length === 1 ? '' : 's'} need attention before checkout.`
+        : 'Prices and stock are synced with the store.'
+    );
+    return true;
+  } catch (error) {
+    cartStockConfirmed = false;
+    setCartStockStatus('warning', 'Live stock could not refresh. Availability will be checked securely at payment.');
+    if (!quiet) console.warn('Cart stock sync unavailable.', error);
+    updateCheckoutButtonState();
+    return false;
+  } finally {
+    cartStockRequestInFlight = false;
+  }
+}
+
 async function fetchCartPaymentConfig() {
   try {
-    const res = await fetch('/api/payments/config');
-    if (res.ok) {
-      cartPaymentConfig = await res.json();
-      const option = document.getElementById('cartCryptoPaymentOption');
-      const status = document.getElementById('cartCryptoOptionStatus');
-      const enabled = Boolean(cartPaymentConfig.nowPayments?.enabled);
-      if (option) {
-        option.disabled = !enabled;
-        option.classList.toggle('is-disabled', !enabled);
-      }
-      if (status) status.textContent = enabled ? 'Verified invoice checkout' : 'NOWPayments setup pending';
-    }
-  } catch (err) {
-    console.log('Payment configuration unavailable');
+    const response = await fetch('/api/payments/config', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Payment configuration unavailable');
+    cartPaymentConfig = await response.json();
+  } catch (_) {
+    cartPaymentConfig = { nowPayments: { enabled: false } };
+  }
+
+  const option = document.getElementById('cartCryptoPaymentOption');
+  const status = document.getElementById('cartCryptoOptionStatus');
+  const enabled = Boolean(cartPaymentConfig.nowPayments?.enabled);
+  if (option) {
+    option.disabled = !enabled;
+    option.classList.toggle('is-disabled', !enabled);
+    option.setAttribute('aria-disabled', String(!enabled));
+  }
+  if (status) status.textContent = enabled ? 'Secure NOWPayments invoice' : 'Coming soon';
+  if (!enabled && selectedCartPaymentMethod === 'crypto') {
+    const balanceOption = document.querySelector('.checkout-payment-method[data-method="balance"]');
+    selectCartPaymentMethod('balance', balanceOption);
   }
 }
 
 function renderCartPage() {
   const container = document.getElementById('cartPageItemsList');
   const badge = document.getElementById('cartItemCountBadge');
-  const subtotalEl = document.getElementById('cartSubtotalText');
-  const totalEl = document.getElementById('cartTotalText');
-
+  const subtotal = document.getElementById('cartSubtotalText');
+  const total = document.getElementById('cartTotalText');
   if (!container) return;
 
-  if (!pageCart || pageCart.length === 0) {
+  if (!pageCart.length) {
     container.innerHTML = `
-      <div style="text-align: center; padding: 4rem 1rem; color: var(--text-dim);">
-        <i class="fa-solid fa-cart-shopping" style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-        <h3 style="margin-bottom: 0.5rem;">Your Cart is Empty</h3>
-        <p style="margin-bottom: 1.5rem; font-size: 0.9375rem;">Explore our high-speed OTP bot passes and add them to your cart.</p>
-        <a href="index.html" class="btn btn-primary">
-          <i class="fa-solid fa-store"></i> Browse Passes
-        </a>
-      </div>
-    `;
+      <div class="cart-empty-state">
+        <span><i class="fa-solid fa-cart-shopping"></i></span>
+        <h3>Your cart is empty</h3>
+        <p>Choose an access pass to start your order.</p>
+        <a href="index.html" class="btn btn-primary"><i class="fa-solid fa-store"></i> Browse passes</a>
+      </div>`;
     if (badge) badge.textContent = '0 Items';
-    if (subtotalEl) subtotalEl.textContent = '$0.00';
-    if (totalEl) totalEl.textContent = '$0.00';
+    if (subtotal) subtotal.textContent = '$0.00';
+    if (total) total.textContent = '$0.00';
+    setCartStockStatus('ready', 'Add a pass to begin checkout.');
+    updateCheckoutButtonState();
     return;
   }
 
-  let html = '';
-  let total = 0;
-  let totalCount = 0;
+  let totalAmount = 0;
+  let itemCount = 0;
+  container.innerHTML = pageCart.map(item => {
+    const quantity = Math.max(1, Number(item.qty || 1));
+    const stock = Math.max(0, Number(item.stock || 0));
+    const issue = cartItemHasIssue(item);
+    const unavailable = cartStockConfirmed && item.unavailable;
+    const lineTotal = Number(item.price || 0) * quantity;
+    totalAmount += lineTotal;
+    itemCount += quantity;
+    const stockLabel = unavailable
+      ? 'No longer available'
+      : (cartStockConfirmed ? `${stock} available` : 'Stock check pending');
 
-  pageCart.forEach(item => {
-    const itemTotal = item.price * item.qty;
-    total += itemTotal;
-    totalCount += item.qty;
-
-    html += `
-      <div class="cart-page-item-card">
-        <img src="${item.art}" alt="${escapeHtml(item.title)}" class="cart-page-item-img">
-        <div style="flex: 1;">
-          <span class="subtitle" style="font-size: 0.65rem; margin-bottom: 0.15rem;">${escapeHtml(item.duration || 'PASS')}</span>
-          <h4 style="margin: 0 0 0.35rem 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">${escapeHtml(item.shortTitle || item.title)}</h4>
-          <span style="color: var(--text-muted); font-size: 0.875rem;">$${item.price.toFixed(2)} USD per key</span>
+    return `
+      <article class="cart-page-item-card${issue ? ' has-stock-issue' : ''}">
+        <img src="${escapeHtml(item.art || 'assets/brand_logo.png')}" alt="${escapeHtml(item.title)}" class="cart-page-item-img">
+        <div class="cart-item-copy">
+          <span class="subtitle">${escapeHtml(item.duration || 'PASS')}</span>
+          <h4>${escapeHtml(item.shortTitle || item.title)}</h4>
+          <span class="cart-item-unit-price">$${formatMoney(item.price)} per key</span>
+          <span class="cart-item-stock${issue ? ' issue' : ''}"><i class="fa-solid ${issue ? 'fa-triangle-exclamation' : 'fa-box'}"></i>${escapeHtml(stockLabel)}</span>
         </div>
-
-        <div style="display:flex; align-items:center; gap: 1.5rem;">
-          <div class="quantity-input" style="height: 38px;">
-            <button class="quantity-btn" onclick="updateCartItemQty('${item.id}', -1)"><i class="fa-solid fa-minus"></i></button>
-            <input type="number" value="${item.qty}" class="quantity-val" readonly style="background:none; border:none; text-align:center;">
-            <button class="quantity-btn" onclick="updateCartItemQty('${item.id}', 1)"><i class="fa-solid fa-plus"></i></button>
+        <div class="cart-item-controls">
+          <div class="quantity-input cart-quantity-control">
+            <button type="button" class="quantity-btn" onclick="updateCartItemQty('${item.id}', -1)" aria-label="Decrease quantity"><i class="fa-solid fa-minus"></i></button>
+            <span class="quantity-val" aria-label="Quantity">${quantity}</span>
+            <button type="button" class="quantity-btn" onclick="updateCartItemQty('${item.id}', 1)" aria-label="Increase quantity" ${unavailable || (cartStockConfirmed && quantity >= stock) ? 'disabled' : ''}><i class="fa-solid fa-plus"></i></button>
           </div>
-
-          <div style="text-align: right; min-width: 90px;">
-            <strong style="font-size: 1.125rem; color: var(--text-primary); font-family: var(--font-heading);">$${itemTotal.toFixed(2)}</strong>
-          </div>
-
-          <button class="btn-icon" onclick="removeCartPageItem('${item.id}')" title="Remove Pass" style="color: var(--accent);">
-            <i class="fa-solid fa-trash"></i>
-          </button>
+          <strong class="cart-line-total">$${formatMoney(lineTotal)}</strong>
+          <button type="button" class="btn-icon cart-remove-button" onclick="removeCartPageItem('${item.id}')" title="Remove pass" aria-label="Remove pass"><i class="fa-solid fa-trash-can"></i></button>
         </div>
-      </div>
-    `;
-  });
+      </article>`;
+  }).join('');
 
-  container.innerHTML = html;
-  if (badge) badge.textContent = `${totalCount} Item${totalCount > 1 ? 's' : ''}`;
-  if (subtotalEl) subtotalEl.textContent = '$' + total.toFixed(2);
-  if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
+  if (badge) badge.textContent = `${itemCount} Item${itemCount === 1 ? '' : 's'}`;
+  if (subtotal) subtotal.textContent = `$${formatMoney(totalAmount)}`;
+  if (total) total.textContent = `$${formatMoney(totalAmount)}`;
+  updateCheckoutButtonState();
 }
 
-function updateCartItemQty(productId, change) {
-  const item = pageCart.find(i => i.id === productId);
-  if (item) {
-    item.qty += change;
-    if (item.qty <= 0) {
-      removeCartPageItem(productId);
-      return;
-    }
-    saveCartToLocalStorage();
-    renderCartPage();
-  }
-}
-
-function removeCartPageItem(productId) {
-  pageCart = pageCart.filter(i => i.id !== productId);
-  saveCartToLocalStorage();
-  renderCartPage();
-  showToast('Pass removed from cart');
-}
-
-function selectCartPaymentMethod(method, el) {
-  if (el?.disabled) return;
-  selectedCartPaymentMethod = method;
-  const options = document.querySelectorAll('.payment-option');
-  options.forEach(o => o.classList.remove('active'));
-  if (el) el.classList.add('active');
-
-  const cryptoBox = document.getElementById('cartCryptoBox');
-  if (cryptoBox) {
-    cryptoBox.style.display = method === 'crypto' ? 'block' : 'none';
-  }
+function updateCheckoutButtonState() {
   const button = document.getElementById('cartCheckoutBtn');
-  if (button) {
-    button.innerHTML = method === 'crypto'
+  if (!button || button.classList.contains('is-loading')) return;
+  const hasIssues = getCartStockIssues().length > 0;
+  button.disabled = !pageCart.length || hasIssues;
+  if (hasIssues) {
+    button.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Fix stock issues to continue';
+  } else {
+    button.innerHTML = selectedCartPaymentMethod === 'crypto'
       ? '<i class="fa-brands fa-bitcoin"></i> Continue to Crypto Payment'
       : '<i class="fa-solid fa-bolt"></i> Pay with Store Balance';
   }
 }
 
-function selectCartCryptoCoin(coin, el) {
+function updateCartItemQty(productId, change) {
+  const item = pageCart.find(candidate => candidate.id === productId);
+  if (!item) return;
+  const nextQuantity = Number(item.qty || 1) + change;
+  if (nextQuantity <= 0) return removeCartPageItem(productId);
+  if (cartStockConfirmed && (item.unavailable || nextQuantity > Number(item.stock || 0))) {
+    showToast(`Only ${Math.max(0, Number(item.stock || 0))} key${Number(item.stock || 0) === 1 ? '' : 's'} available.`);
+    return;
+  }
+  item.qty = Math.min(25, nextQuantity);
+  saveCartToLocalStorage();
+  renderCartPage();
+}
+
+function removeCartPageItem(productId) {
+  pageCart = pageCart.filter(item => item.id !== productId);
+  saveCartToLocalStorage();
+  renderCartPage();
+  showToast('Pass removed from cart.');
+}
+
+function selectCartPaymentMethod(method, element) {
+  if (!element || element.disabled || element.classList.contains('is-disabled')) return;
+  selectedCartPaymentMethod = method;
+  document.querySelectorAll('.checkout-payment-method').forEach(option => {
+    const active = option === element;
+    option.classList.toggle('active', active);
+    option.setAttribute('aria-pressed', String(active));
+  });
+  const cryptoBox = document.getElementById('cartCryptoBox');
+  if (cryptoBox) cryptoBox.style.display = method === 'crypto' ? 'block' : 'none';
+  updateCheckoutButtonState();
+}
+
+function selectCartCryptoCoin(coin, element) {
   selectedCartCryptoCoin = coin;
-  const buttons = document.querySelectorAll('.crypto-coin-btn');
-  buttons.forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
+  document.querySelectorAll('.crypto-coin-btn').forEach(button => button.classList.remove('active'));
+  element?.classList.add('active');
 }
 
 async function processCartPageCheckout(event) {
   event.preventDefault();
+  if (!pageCart.length) return showToast('Your cart is empty.');
 
-  if (!pageCart || pageCart.length === 0) {
-    showToast('Your cart is empty!');
+  await syncCartWithBackend({ quiet: true });
+  if (getCartStockIssues().length) {
+    renderCartPage();
+    showToast('Please fix the stock issues in your cart.');
     return;
   }
 
@@ -181,16 +280,17 @@ async function processCartPageCheckout(event) {
     return;
   }
 
-  const btn = document.getElementById('cartCheckoutBtn');
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Securing your order…';
+  const button = document.getElementById('cartCheckoutBtn');
+  if (button) {
+    button.disabled = true;
+    button.classList.add('is-loading');
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Securing your order…';
   }
 
   try {
     const isCrypto = selectedCartPaymentMethod === 'crypto';
     const endpoint = isCrypto ? '/api/payments/nowpayments/invoice' : '/api/orders/checkout';
-    const res = await fetch(endpoint, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -199,78 +299,103 @@ async function processCartPageCheckout(event) {
         payCurrency: selectedCartCryptoCoin
       })
     });
+    const data = await response.json().catch(() => ({}));
 
-    const data = await res.json();
-
-    if (res.ok && data.success && isCrypto && data.invoiceUrl) {
+    if (response.ok && data.success && isCrypto && data.invoiceUrl) {
       window.SiteShell?.showLoading('Opening secure payment…');
-      window.location.href = data.invoiceUrl;
-    } else if (res.ok && data.success) {
+      window.location.assign(data.invoiceUrl);
+      return;
+    }
+    if (response.ok && data.success && !isCrypto) {
       renderCartDispensedKeys(data.keys || []);
-      const successView = document.getElementById('cartSuccessView');
       document.getElementById('cartContentLayout').style.display = 'none';
-      if (successView) {
-        successView.style.display = 'block';
-        successView.classList.add('payment-success-card');
-      }
-
+      document.getElementById('cartSuccessView').style.display = 'block';
       pageCart = [];
       saveCartToLocalStorage();
-      showToast('Payment Successful! Key delivered 🎉');
-      if (window.SiteShell?.refreshAuth) window.SiteShell.refreshAuth();
+      showToast('Purchase complete. Your key is ready.');
+      window.SiteShell?.refreshAuth();
+      return;
+    }
 
-      // Automated redirect to orders after 2.8 seconds
-      setTimeout(() => {
-        window.location.href = 'index.html?open=orders';
-      }, 2800);
-    } else {
-      showToast(data.error || 'Payment failed.');
-    }
-  } catch (err) {
-    console.error('Checkout error:', err);
-    showToast('Error connecting to backend server.');
+    showToast(data.error || 'Payment could not be completed.');
+    if (response.status === 400) await syncCartWithBackend({ quiet: true });
+  } catch (error) {
+    console.error('Checkout error:', error);
+    showToast('Could not connect to checkout. Please try again.');
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = selectedCartPaymentMethod === 'crypto'
-        ? '<i class="fa-brands fa-bitcoin"></i> Continue to Crypto Payment'
-        : '<i class="fa-solid fa-bolt"></i> Pay with Store Balance';
-    }
+    if (button) button.classList.remove('is-loading');
+    updateCheckoutButtonState();
   }
 }
 
 function renderCartDispensedKeys(keys) {
   const container = document.getElementById('cartDispensedKeysList');
-  const cmd = document.getElementById('cartActivationCmd');
+  const command = document.getElementById('cartActivationCmd');
   if (!container) return;
+  container.innerHTML = keys.map((key, index) => `
+    <div class="dispensed-key-card">
+      <div><span>Access Pass Key #${index + 1}</span><code class="font-mono text-accent">${escapeHtml(key)}</code></div>
+      <button type="button" class="btn-icon" onclick="copySingleCartKey('${escapeHtml(key)}', this)" title="Copy key"><i class="fa-regular fa-copy"></i></button>
+    </div>`).join('');
+  if (command && keys.length) command.textContent = `/redeem ${keys[0]}`;
+}
 
-  let html = '';
-  keys.forEach((key, idx) => {
-    html += `
-      <div class="dispensed-key-card">
-        <div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Access Pass Key #${idx + 1}</span>
-          <code class="font-mono text-accent" style="font-size: 1.125rem; font-weight: 700; word-break: break-all;">${key}</code>
-        </div>
-        <button class="btn-icon" onclick="copySingleCartKey('${key}')" title="Copy Key">
-          <i class="fa-regular fa-copy"></i>
-        </button>
-      </div>
-    `;
-  });
+function copySingleCartKey(key, btnEl = null) {
+  if (!key) return;
 
-  container.innerHTML = html;
-  if (cmd && keys.length > 0) {
-    cmd.textContent = '/redeem ' + keys[0];
+  const performFeedback = () => {
+    showToast('Key copied to clipboard! 🎉');
+    if (btnEl) {
+      const origHtml = btnEl.innerHTML;
+      btnEl.innerHTML = '<i class="fa-solid fa-check"></i>';
+      btnEl.style.background = '#10b981';
+      btnEl.style.color = '#ffffff';
+
+      setTimeout(() => {
+        btnEl.innerHTML = origHtml;
+        btnEl.style.background = '';
+        btnEl.style.color = '';
+      }, 1800);
+    }
+  };
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(key).then(() => {
+      performFeedback();
+    }).catch(() => {
+      fallbackCopyCartKey(key, performFeedback);
+    });
+  } else {
+    fallbackCopyCartKey(key, performFeedback);
   }
 }
 
-function copySingleCartKey(key) {
-  navigator.clipboard.writeText(key).then(() => {
-    showToast('Key copied to clipboard!');
-  }).catch(() => {
-    showToast('Failed to copy key');
-  });
+function fallbackCopyCartKey(key, onSuccess) {
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = key;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-9999px';
+    textArea.style.left = '-9999px';
+    textArea.style.opacity = '0';
+    textArea.setAttribute('readonly', '');
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, 99999);
+
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+
+    if (successful) {
+      if (typeof onSuccess === 'function') onSuccess();
+      else showToast('Key copied to clipboard! 🎉');
+    } else {
+      window.prompt('Copy your pass key:', key);
+    }
+  } catch (err) {
+    window.prompt('Copy your pass key:', key);
+  }
 }
 
 function showToast(message) {
@@ -281,32 +406,18 @@ function showToast(message) {
     container.className = 'toast-container';
     document.body.appendChild(container);
   }
-
   const toast = document.createElement('div');
   toast.className = 'toast-notification';
-  toast.style.padding = '0.875rem 1.25rem';
-  toast.style.display = 'flex';
-  toast.style.alignItems = 'center';
-  toast.style.gap = '0.75rem';
-  toast.style.fontSize = '0.875rem';
-  toast.style.fontWeight = '500';
-  toast.style.color = '#fff';
-
-  toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--status-green); font-size: 1rem;"></i> <span>${escapeHtml(message)}</span>`;
+  toast.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${escapeHtml(message)}</span>`;
   container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    setTimeout(() => {
-      if (toast.parentNode) toast.parentNode.removeChild(toast);
-    }, 300);
-  }, 2500);
+  window.setTimeout(() => {
+    toast.classList.add('is-hiding');
+    window.setTimeout(() => toast.remove(), 250);
+  }, 2800);
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
+function escapeHtml(value) {
+  return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

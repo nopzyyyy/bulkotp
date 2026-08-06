@@ -412,19 +412,34 @@ async function handleProductFormSubmit(e) {
 
   const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
   const method = id ? 'PUT' : 'POST';
+  const button = document.getElementById('saveProductBtn');
+  const originalHtml = button?.innerHTML;
+  if (button) {
+    button.disabled = true;
+    button.classList.add('is-loading');
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing stock…';
+  }
 
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
 
-  if (res.ok) {
-    showToast(id ? 'Product updated!' : 'Product created!');
+    if (!res.ok) throw new Error(data.error || 'Product and stock could not be saved.');
+    showToast(id ? 'Product and stock updated.' : 'Product and stock created.');
     closeProductModal();
-    loadAdminProducts();
-  } else {
-    showToast('Failed to save product.');
+    await loadAdminProducts();
+  } catch (error) {
+    showToast(error.message || 'Product and stock could not be saved.');
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.classList.remove('is-loading');
+      button.innerHTML = originalHtml;
+    }
   }
 }
 

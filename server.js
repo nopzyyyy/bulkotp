@@ -513,6 +513,9 @@ app.get('/api/products', (req, res) => {
       stock: unsoldStock.length
     };
   });
+  const revision = crypto.createHash('sha1').update(JSON.stringify(visibleProducts)).digest('hex').slice(0, 16);
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+  res.setHeader('X-Catalog-Revision', revision);
   res.json(visibleProducts);
 });
 
@@ -571,6 +574,7 @@ function newOrderId() {
 }
 
 app.get('/api/payments/config', (req, res) => {
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   res.json({
     balance: { enabled: true },
     nowPayments: {
@@ -591,34 +595,8 @@ app.post('/api/orders/checkout', requireAuth, async (req, res) => {
     const user = users.find(candidate => candidate.id === req.currentUser.id);
     if (!user) return res.status(401).json({ error: 'Your account could not be loaded.' });
 
-    if (paymentMethod === 'crypto') {
-      const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-      const order = {
-        id: orderId,
-        orderNumber: orderId,
-        userId: user.id,
-        email: user.email,
-        items: quote.orderItems,
-        purchasedItems: [],
-        total: quote.total,
-        paymentMethod: 'Cryptocurrency',
-        status: 'AWAITING_PAYMENT',
-        createdAt: new Date().toISOString()
-      };
-
-      const orders = readJson(FILES.orders, []);
-      orders.unshift(order);
-      writeJson(FILES.orders, orders);
-
-      const invoiceUrl = `https://nowpayments.io/payment/?iid=${orderId}`;
-
-      return res.json({
-        success: true,
-        orderId: order.id,
-        total: quote.total,
-        invoiceUrl: invoiceUrl,
-        order
-      });
+    if (paymentMethod !== 'balance') {
+      return res.status(400).json({ error: 'Use the secure crypto invoice checkout for cryptocurrency payments.' });
     }
 
     // Store Balance Checkout
@@ -711,7 +689,7 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     const orders = readJson(FILES.orders, []);
     orders.unshift(order);
     writeJson(FILES.orders, orders);
-    res.status(201).json({ success: true, orderId, invoiceUrl: invoice.invoice_url });
+    res.status(201).json({ success: true, orderId, total: quote.total, invoiceUrl: invoice.invoice_url });
   } catch (error) {
     const timeout = error.name === 'TimeoutError' || error.name === 'AbortError';
     res.status(timeout ? 504 : 500).json({ error: timeout ? 'Payment provider timed out. Please try again.' : 'Could not create the payment invoice.' });
@@ -856,15 +834,35 @@ app.get('/api/admin/products', requireAdmin, (req, res) => {
       stockKeys: unsoldKeys
     };
   });
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   res.json(result);
 });
+
+function normalizeStockKeys(keysText) {
+  const keys = String(keysText || '')
+    .split(/\r?\n/)
+    .map(key => key.trim())
+    .filter(Boolean);
+  if (keys.length > 5000) throw new Error('A product can contain at most 5,000 available keys.');
+  if (keys.some(key => key.length > 500)) throw new Error('Stock keys must be 500 characters or fewer.');
+  return [...new Set(keys)];
+}
 
 // Create/Update Product
 app.post('/api/admin/products', requireAdmin, (req, res) => {
   const products = readJson(FILES.products, []);
   const pData = req.body;
+  const title = String(pData.title || '').trim();
+  const price = Number(pData.price);
+  if (!title) return res.status(400).json({ error: 'Product title is required.' });
+  if (!Number.isFinite(price) || price < 0) return res.status(400).json({ error: 'Enter a valid product price.' });
 
-  const keysInput = (pData.keysText || '').split('\n').map(k => k.trim()).filter(k => k.length > 0);
+  let keysInput;
+  try {
+    keysInput = normalizeStockKeys(pData.keysText);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
   const stock = keysInput.map((k, idx) => ({
     id: `stk_${Date.now()}_${idx}`,
     credentials: k,
@@ -874,22 +872,24 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
   const newProd = {
     id: pData.id || `prod_${Date.now()}`,
     category: pData.category || 'hourly',
-    title: pData.title || 'Untitled Pass',
-    shortTitle: pData.shortTitle || pData.title,
-    price: parseFloat(pData.price) || 0,
+    title,
+    shortTitle: String(pData.shortTitle || title).trim(),
+    price,
     hidden: Boolean(pData.hidden),
     duration: pData.duration || '1-Hour',
     description: pData.description || '',
     prefix: pData.prefix || 'BOT-KEY',
     art: pData.art || 'assets/compact_pass_1h.jpg',
-    stock
+    stock,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   products.push(newProd);
   writeJson(FILES.products, products);
 
   logAudit(req.currentUser.email, 'CREATE_PRODUCT', `Created product ${newProd.title}`, req.ip);
-  res.json({ success: true, product: newProd });
+  res.status(201).json({ success: true, product: newProd, stockCount: stock.length });
 });
 
 app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
@@ -900,8 +900,20 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
   const pData = req.body;
   const existing = products[idx];
 
+  if (pData.title !== undefined && !String(pData.title).trim()) {
+    return res.status(400).json({ error: 'Product title is required.' });
+  }
+  if (pData.price !== undefined && (!Number.isFinite(Number(pData.price)) || Number(pData.price) < 0)) {
+    return res.status(400).json({ error: 'Enter a valid product price.' });
+  }
+
   if (pData.keysText !== undefined) {
-    const keysInput = (pData.keysText || '').split('\n').map(k => k.trim()).filter(k => k.length > 0);
+    let keysInput;
+    try {
+      keysInput = normalizeStockKeys(pData.keysText);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
     const existingStockMap = new Map((existing.stock || []).map(s => [s.credentials, s]));
     const soldStock = (existing.stock || []).filter(stockItem => stockItem.isSold);
 
@@ -914,13 +926,14 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
     existing.stock = [...soldStock, ...availableStock.filter(stockItem => !stockItem.isSold)];
   }
 
-  if (pData.title !== undefined) existing.title = pData.title;
-  if (pData.price !== undefined) existing.price = parseFloat(pData.price);
+  if (pData.title !== undefined) existing.title = String(pData.title).trim();
+  if (pData.price !== undefined) existing.price = Number(pData.price);
   if (pData.category !== undefined) existing.category = pData.category;
   if (pData.hidden !== undefined) existing.hidden = Boolean(pData.hidden);
   if (pData.description !== undefined) existing.description = pData.description;
   if (pData.art !== undefined) existing.art = pData.art;
   if (pData.prefix !== undefined) existing.prefix = pData.prefix;
+  existing.updatedAt = new Date().toISOString();
 
   products[idx] = existing;
   writeJson(FILES.products, products);
@@ -932,6 +945,7 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
 app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {
   let products = readJson(FILES.products, []);
   const prod = products.find(p => p.id === req.params.id);
+  if (!prod) return res.status(404).json({ error: 'Product not found.' });
   products = products.filter(p => p.id !== req.params.id);
   writeJson(FILES.products, products);
 
