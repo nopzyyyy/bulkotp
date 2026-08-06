@@ -3480,17 +3480,6 @@ button:disabled {
 
 .payment-methods-grid-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-.payment-option {
-  font-family: inherit;
-  color: inherit;
-}
-
-.payment-option i { display: block; margin-bottom: 0.38rem; font-size: 1.25rem; color: var(--accent); }
-.payment-option span { display: block; font-size: 0.82rem; font-weight: 700; }
-.payment-option small { display: block; margin-top: 0.25rem; color: var(--text-dim); font-size: 0.67rem; font-weight: 500; }
-.payment-option.is-disabled { opacity: 0.48; filter: saturate(0.3); }
-.payment-option.is-disabled::after { content: 'SOON'; position: absolute; top: 0.4rem; right: 0.45rem; color: var(--text-dim); font: 700 0.55rem var(--font-mono); letter-spacing: 0.08em; }
-
 .payment-provider-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 700; }
 .payment-security-note { display: flex; gap: 0.55rem; margin: 1rem 0 0; color: var(--text-muted); font-size: 0.77rem; line-height: 1.55; }
 
@@ -3767,48 +3756,55 @@ button:disabled {
 .pinks-payment-options-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
+  gap: 1rem;
   margin-bottom: 1.25rem;
 }
 
 .pinks-payment-card {
-  background: #111216;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  padding: 1.15rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 0.35rem;
-  cursor: pointer;
-  transition: all 0.25s var(--ease-ideck);
-  position: relative;
-  overflow: hidden;
+  background: #111216 !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 14px !important;
+  padding: 1.25rem 1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 0.35rem !important;
+  cursor: pointer !important;
+  transition: all 0.25s var(--ease-ideck) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  opacity: 1 !important;
+  filter: none !important;
+  user-select: none;
+}
+
+.pinks-payment-card::after {
+  display: none !important; /* Prevent legacy SOON badge */
 }
 
 .pinks-payment-card:hover {
-  background: #16171d;
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px);
+  background: #181920 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) !important;
 }
 
 .pinks-payment-card.active {
-  background: rgba(255, 37, 92, 0.1);
-  border: 1px solid rgba(255, 37, 92, 0.55);
-  box-shadow: 0 0 24px rgba(255, 37, 92, 0.18), inset 0 0 15px rgba(255, 37, 92, 0.05);
+  background: rgba(255, 37, 92, 0.12) !important;
+  border: 1.5px solid rgba(255, 37, 92, 0.65) !important;
+  box-shadow: 0 0 25px rgba(255, 37, 92, 0.2), inset 0 0 15px rgba(255, 37, 92, 0.08) !important;
 }
 
 .payment-check-badge {
   position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
+  top: 0.75rem;
+  right: 0.75rem;
   color: var(--accent);
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   opacity: 0;
-  transform: scale(0.6);
-  transition: all 0.2s var(--ease-ideck);
+  transform: scale(0.5);
+  transition: all 0.25s var(--ease-ideck);
 }
 
 .pinks-payment-card.active .payment-check-badge {
@@ -3817,36 +3813,41 @@ button:disabled {
 }
 
 .pinks-payment-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: rgba(255, 37, 92, 0.14);
-  border: 1px solid rgba(255, 37, 92, 0.25);
+  border: 1px solid rgba(255, 37, 92, 0.3);
   color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  margin-bottom: 0.25rem;
+  font-size: 1.3rem;
+  margin-bottom: 0.35rem;
+  transition: transform 0.25s ease;
+}
+
+.pinks-payment-card:hover .pinks-payment-icon {
+  transform: scale(1.08);
 }
 
 .pinks-payment-card[data-method="crypto"] .pinks-payment-icon {
-  background: rgba(247, 147, 26, 0.12);
-  border: 1px solid rgba(247, 147, 26, 0.25);
+  background: rgba(247, 147, 26, 0.14);
+  border: 1px solid rgba(247, 147, 26, 0.3);
   color: #f7931a;
 }
 
 .pinks-payment-title {
   font-family: var(--font-heading);
   font-weight: 700;
-  color: #ffffff;
+  color: #ffffff !important;
   font-size: 0.95rem;
   letter-spacing: -0.01em;
 }
 
 .pinks-payment-subtitle {
   font-size: 0.775rem;
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
   font-weight: 500;
 }
 
