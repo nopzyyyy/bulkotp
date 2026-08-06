@@ -547,7 +547,20 @@ function showCatalogView() {
 function openProductDetail(productId) {
   showGlobalLoading('Loading Product...');
   startTopProgress();
-  activeProduct = PRODUCTS.find(p => p.id === productId);
+
+  const legacyMap = {
+    'compact-1h': 'hourly-1h',
+    'extended-3h': 'hourly-3h',
+    'daylong-24h': 'daily-1d',
+    'multiday-3d': 'daily-3d',
+    'biweekly-2w': 'weekly-2w'
+  };
+  const targetId = legacyMap[productId] || productId;
+
+  activeProduct = PRODUCTS.find(p => p.id === targetId || p.id === productId);
+  if (!activeProduct && PRODUCTS.length > 0) {
+    activeProduct = PRODUCTS[0];
+  }
   if (!activeProduct) {
     finishTopProgress();
     hideGlobalLoading();
@@ -610,7 +623,15 @@ function adjustCartItemQty(productId, change) {
 }
 
 function addToCartDirect(productId) {
-  const product = PRODUCTS.find(p => p.id === productId);
+  const legacyMap = {
+    'compact-1h': 'hourly-1h',
+    'extended-3h': 'hourly-3h',
+    'daylong-24h': 'daily-1d',
+    'multiday-3d': 'daily-3d',
+    'biweekly-2w': 'weekly-2w'
+  };
+  const targetId = legacyMap[productId] || productId;
+  const product = PRODUCTS.find(p => p.id === targetId || p.id === productId) || PRODUCTS[0];
   if (product) {
     addToCart(product, 1);
   }
