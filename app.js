@@ -1082,3 +1082,180 @@ function formatDate(isoStr) {
   const d = new Date(isoStr);
   return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+// User Support Tickets System
+function openUserTicketsModal() {
+  currentUser = currentUser || window.SiteShell?.user || null;
+  if (!currentUser) {
+    showToast('Sign in required to view or create support tickets.');
+    showGlobalLoading('Redirecting to Sign In...');
+    setTimeout(() => {
+      window.location.href = 'login.html?redirect=index.html';
+    }, 400);
+    return;
+  }
+
+  const modal = document.getElementById('userTicketsModal');
+  if (modal) {
+    modal.classList.add('active');
+    loadUserTickets();
+  }
+}
+
+function closeUserTicketsModal() {
+  const modal = document.getElementById('userTicketsModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function showCreateTicketForm() {
+  const form = document.getElementById('createTicketForm');
+  if (form) form.style.display = 'block';
+}
+
+function hideCreateTicketForm() {
+  const form = document.getElementById('createTicketForm');
+  if (form) form.style.display = 'none';
+}
+
+async function loadUserTickets() {
+  const container = document.getElementById('userTicketsList');
+  if (!container) return;
+
+  container.innerHTML = '<div style="text-align:center; padding: 2rem; color: var(--text-dim);"><i class="fa-solid fa-spinner fa-spin"></i> Loading support tickets...</div>';
+
+  try {
+    const res = await fetch('/api/tickets');
+    if (!res.ok) {
+      container.innerHTML = '<p class="text-muted text-center">Unable to load tickets.</p>';
+      return;
+    }
+    const tickets = await res.json();
+    renderUserTicketsList(tickets);
+  } catch (err) {
+    console.error('Failed to load tickets:', err);
+    container.innerHTML = '<p class="text-muted text-center">Failed to fetch support tickets.</p>';
+  }
+}
+
+function renderUserTicketsList(tickets) {
+  const container = document.getElementById('userTicketsList');
+  if (!container) return;
+
+  if (tickets.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding: 2.5rem 1rem; background: var(--bg-surface-deep); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle);">
+        <i class="fa-solid fa-headset" style="font-size: 2.5rem; color: var(--text-dim); margin-bottom: 1rem;"></i>
+        <h4 style="color:#fff; margin:0 0 0.5rem;">No Active Support Tickets</h4>
+        <p style="color:var(--text-muted); font-size:0.875rem; margin:0;">Need help with a key or order? Click "Open New Ticket" above.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = tickets.map(t => {
+    const statusClass = t.status === 'REPLIED' ? 'status-completed' : (t.status === 'RESOLVED' ? 'status-completed' : 'status-open');
+    const messages = t.messages || [];
+
+    return `
+      <div class="user-ticket-card">
+        <div class="user-ticket-header">
+          <div>
+            <span style="font-family:var(--font-mono); color:var(--accent); font-weight:700; font-size:0.85rem;">#${escapeHtml(t.ticketNumber || t.id)}</span>
+            <strong style="color:#fff; font-size:1rem; margin-left:0.5rem;">${escapeHtml(t.subject)}</strong>
+            <span style="font-size:0.75rem; color:var(--text-dim); margin-left:0.5rem;">(${escapeHtml(t.category)})</span>
+          </div>
+          <span class="pinks-status-pill ${statusClass}">${escapeHtml(t.status)}</span>
+        </div>
+
+        <div class="ticket-thread-messages">
+          ${messages.map(m => `
+            <div class="ticket-msg-bubble ${m.senderRole === 'ADMIN' ? 'admin' : 'user'}">
+              <div class="ticket-msg-meta">
+                <span class="ticket-msg-author">${escapeHtml(m.sender)} ${m.senderRole === 'ADMIN' ? '<span class="role-badge admin">STAFF</span>' : ''}</span>
+                <span class="ticket-msg-time">${formatDate(m.createdAt)}</span>
+              </div>
+              <div class="ticket-msg-text">${escapeHtml(m.text)}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        ${t.status !== 'RESOLVED' ? `
+          <form onsubmit="handleUserTicketReply('${t.id}', event)" class="ticket-reply-box">
+            <input type="text" id="replyInput-${t.id}" class="form-input" placeholder="Type your reply..." required style="flex:1;">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane"></i> Reply</button>
+          </form>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleCreateTicketSubmit(e) {
+  e.preventDefault();
+  const subject = document.getElementById('ticketSubject').value.trim();
+  const category = document.getElementById('ticketCategory').value;
+  const message = document.getElementById('ticketMessage').value.trim();
+
+  if (!subject || !message) {
+    showToast('Subject and message required');
+    return;
+  }
+
+  const btn = e.target.querySelector('button[type="submit"]');
+  const originalHtml = setButtonLoading(btn, 'Creating Ticket...');
+
+  try {
+    const res = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, category, message })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('Support ticket opened!');
+      hideCreateTicketForm();
+      document.getElementById('createTicketForm').reset();
+      loadUserTickets();
+    } else {
+      showToast(data.error || 'Failed to create ticket');
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('Network error submitting ticket.');
+  } finally {
+    resetButtonLoading(btn);
+  }
+}
+
+async function handleUserTicketReply(ticketId, e) {
+  e.preventDefault();
+  const input = document.getElementById(`replyInput-${ticketId}`);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = e.target.querySelector('button[type="submit"]');
+  const originalHtml = setButtonLoading(btn, 'Sending...');
+
+  try {
+    const res = await fetch(`/api/tickets/${ticketId}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast('Reply sent!');
+      loadUserTickets();
+    } else {
+      showToast(data.error || 'Failed to send reply');
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('Network error sending reply.');
+  } finally {
+    resetButtonLoading(btn);
+  }
+}
