@@ -311,31 +311,37 @@
                 <button class="btn-icon" onclick="closeCheckoutModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <!-- Step 1: Form & Payment -->
-            <div id="checkoutFormStep">
-                <div class="checkout-account-card">
-                    <div class="checkout-account-icon"><i class="fa-solid fa-user-shield"></i></div>
-                    <div>
-                        <span class="checkout-account-label">Purchasing as</span>
-                        <strong id="checkoutAccountEmail">Signed-in customer</strong>
+            <!-- Step 1: Order Form & Payment Selection -->
+            <div id="checkoutStepForm">
+                <!-- Purchasing As Status Pill Box (Pinks.cc Style) -->
+                <div class="user-checkout-pill-box">
+                    <div class="user-checkout-pill-left">
+                        <div class="checkout-user-avatar-icon"><i class="fa-solid fa-user-shield"></i></div>
+                        <div class="checkout-user-info-text">
+                            <span class="checkout-user-sublabel">PURCHASING AS</span>
+                            <strong id="checkoutAccountEmail" class="checkout-user-name">Sign in required</strong>
+                        </div>
                     </div>
-                    <span id="checkoutBalanceBadge" class="checkout-balance-badge">$0.00 balance</span>
+                    <div id="checkoutUserRightAction">
+                        <a href="login.html" id="checkoutSignInBtn" class="btn btn-primary btn-sm">Sign In</a>
+                        <span id="checkoutBalanceBadge" class="checkout-user-balance-pill" style="display:none;">$0.00 balance</span>
+                    </div>
                 </div>
                 
-                <!-- Payment Method Tabs -->
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Select Payment Method</label>
-                    <div class="payment-methods-grid payment-methods-grid-two">
-                        <button type="button" class="payment-option active" data-method="balance" onclick="selectPaymentMethod('balance', this)">
-                            <i class="fa-solid fa-wallet"></i>
-                            <span>Store Balance</span>
-                            <small>Instant delivery</small>
-                        </button>
-                        <button type="button" id="cryptoPaymentOption" class="payment-option is-disabled" data-method="crypto" onclick="selectPaymentMethod('crypto', this)" disabled>
-                            <i class="fa-brands fa-bitcoin"></i>
-                            <span>Cryptocurrency</span>
-                            <small id="cryptoOptionStatus">NOWPayments setup pending</small>
-                        </button>
+                <!-- Payment Method Cards -->
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display:block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.65rem;">Select Payment Method</label>
+                    <div class="pinks-payment-options-grid">
+                        <div class="pinks-payment-card active" data-method="balance" onclick="selectPaymentMethod('balance', this)">
+                            <div class="pinks-payment-icon"><i class="fa-solid fa-wallet"></i></div>
+                            <span class="pinks-payment-title">Store Balance</span>
+                            <span class="pinks-payment-subtitle">Instant delivery</span>
+                        </div>
+                        <div class="pinks-payment-card" data-method="crypto" onclick="selectPaymentMethod('crypto', this)">
+                            <div class="pinks-payment-icon"><i class="fa-brands fa-bitcoin"></i></div>
+                            <span class="pinks-payment-title">Cryptocurrency</span>
+                            <span class="pinks-payment-subtitle" id="cryptoOptionStatus">NOWPayments / Instant crypto</span>
+                        </div>
                     </div>
                 </div>
 
@@ -344,16 +350,16 @@
                     <div class="payment-provider-row"><span><i class="fa-solid fa-shield-halved"></i> Secure checkout by NOWPayments</span><span class="status-chip status-cyan">Invoice checkout</span></div>
                     <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem;">Choose a payment currency:</div>
                     <div class="crypto-selector">
-                        <button class="crypto-coin-btn active" onclick="selectCryptoCoin('usdt_trc20', this)">
+                        <button type="button" class="crypto-coin-btn active" onclick="selectCryptoCoin('usdt_trc20', this)">
                             <i class="fa-solid fa-coins" style="color: #26a17b;"></i> USDT (TRC20)
                         </button>
-                        <button class="crypto-coin-btn" onclick="selectCryptoCoin('btc', this)">
+                        <button type="button" class="crypto-coin-btn" onclick="selectCryptoCoin('btc', this)">
                             <i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> Bitcoin (BTC)
                         </button>
-                        <button class="crypto-coin-btn" onclick="selectCryptoCoin('eth', this)">
+                        <button type="button" class="crypto-coin-btn" onclick="selectCryptoCoin('eth', this)">
                             <i class="fa-brands fa-ethereum" style="color: #627eea;"></i> Ethereum (ETH)
                         </button>
-                        <button class="crypto-coin-btn" onclick="selectCryptoCoin('sol', this)">
+                        <button type="button" class="crypto-coin-btn" onclick="selectCryptoCoin('sol', this)">
                             <i class="fa-solid fa-sun" style="color: #14f195;"></i> Solana (SOL)
                         </button>
                     </div>
@@ -380,6 +386,45 @@
                 <button id="payBtn" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 1rem;" onclick="processCheckout(event)">
                     <i class="fa-solid fa-bolt"></i> Pay with Store Balance
                 </button>
+            </div>
+
+            <!-- Crypto Invoice Ready Step (Screenshot 2 Style) -->
+            <div id="checkoutStepInvoiceReady" class="invoice-ready-card" style="display: none;">
+                <div class="invoice-check-circle"><i class="fa-solid fa-check"></i></div>
+                <h2 class="invoice-ready-title">Invoice Ready</h2>
+                <p class="invoice-ready-subtitle">Order registered. Complete your crypto payment to finalize delivery.</p>
+
+                <div class="invoice-summary-box">
+                    <div class="invoice-summary-row">
+                        <span class="invoice-summary-label">Order ID</span>
+                        <span id="invoiceOrderId" class="invoice-summary-val">ORD-D514C377</span>
+                    </div>
+                    <div class="invoice-summary-row">
+                        <span class="invoice-summary-label">Total</span>
+                        <span id="invoiceTotalVal" class="invoice-summary-val" style="color: var(--accent);">$0.00</span>
+                    </div>
+                    <div class="invoice-summary-row">
+                        <span class="invoice-summary-label">Status</span>
+                        <span class="invoice-status-pill">● AWAITING PAYMENT</span>
+                    </div>
+                </div>
+
+                <a id="invoicePayLink" href="#" target="_blank" class="btn btn-primary btn-block" style="font-size: 1.05rem; padding: 1.1rem; width: 100%;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Pay with Crypto Now
+                </a>
+
+                <span class="popup-blocked-notice">
+                    <i class="fa-solid fa-circle-info"></i> Popup blocked — click the button above to open payment.
+                </span>
+
+                <div class="invoice-actions-row">
+                    <button type="button" class="btn btn-glass" style="flex:1;" onclick="openMyOrdersModal(); closeCheckoutModal();">View My Orders</button>
+                    <button type="button" class="btn btn-glass" style="flex:1;" onclick="closeCheckoutModal();">Continue Shopping</button>
+                </div>
+
+                <p class="invoice-footer-note">
+                    Once the blockchain confirms your payment (typically 5–20 minutes), your order is delivered automatically. Track progress on the Orders page.
+                </p>
             </div>
 
             <!-- Step 2: Key Generated Success Screen -->

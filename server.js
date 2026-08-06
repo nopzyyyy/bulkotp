@@ -572,29 +572,57 @@ app.get('/api/payments/config', (req, res) => {
   });
 });
 
-// Store-balance checkout is the only synchronous fulfillment path. External
-// payment methods must go through a verified provider callback below.
-app.post('/api/orders/checkout', requireAuth, (req, res) => {
+app.post('/api/orders/checkout', requireAuth, async (req, res) => {
   const paymentMethod = String(req.body.paymentMethod || '').toLowerCase();
-  if (!paymentMethod.includes('balance')) {
-    return res.status(400).json({ error: 'Use the NOWPayments invoice endpoint for cryptocurrency checkout.' });
-  }
-
+  
   try {
     const products = readJson(FILES.products, []);
     const quote = buildOrderQuote(req.body.items, products);
     const users = readJson(FILES.users, []);
     const user = users.find(candidate => candidate.id === req.currentUser.id);
     if (!user) return res.status(401).json({ error: 'Your account could not be loaded.' });
+
+    if (paymentMethod === 'crypto') {
+      const orderId = 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      const order = {
+        id: orderId,
+        orderNumber: orderId,
+        userId: user.id,
+        email: user.email,
+        items: quote.orderItems,
+        purchasedItems: [],
+        total: quote.total,
+        paymentMethod: 'Cryptocurrency',
+        status: 'AWAITING_PAYMENT',
+        createdAt: new Date().toISOString()
+      };
+
+      const orders = readJson(FILES.orders, []);
+      orders.unshift(order);
+      writeJson(FILES.orders, orders);
+
+      const invoiceUrl = `https://nowpayments.io/payment/?iid=${orderId}`;
+
+      return res.json({
+        success: true,
+        orderId: order.id,
+        total: quote.total,
+        invoiceUrl: invoiceUrl,
+        order
+      });
+    }
+
+    // Store Balance Checkout
     if (Number(user.balance || 0) < quote.total) {
       return res.status(400).json({
         error: `Insufficient store balance. Total: $${quote.total.toFixed(2)}, balance: $${Number(user.balance || 0).toFixed(2)}.`
       });
     }
 
+    const orderId = newOrderId();
     const order = {
-      id: newOrderId(),
-      orderNumber: null,
+      id: orderId,
+      orderNumber: orderId,
       userId: user.id,
       email: user.email,
       items: quote.orderItems,
@@ -604,7 +632,6 @@ app.post('/api/orders/checkout', requireAuth, (req, res) => {
       status: 'COMPLETED',
       createdAt: new Date().toISOString()
     };
-    order.orderNumber = order.id;
 
     allocateOrderKeys(order, user.id, products);
     user.balance = Math.round((Number(user.balance || 0) - quote.total) * 100) / 100;
@@ -614,7 +641,7 @@ app.post('/api/orders/checkout', requireAuth, (req, res) => {
     orders.unshift(order);
     writeJson(FILES.orders, orders);
 
-    res.json({ success: true, order, keys: order.purchasedItems.map(item => item.credentials), balance: user.balance });
+    res.json({ success: true, orderId: order.id, order, keys: order.purchasedItems.map(item => item.credentials), balance: user.balance });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Checkout could not be completed.' });
   }
