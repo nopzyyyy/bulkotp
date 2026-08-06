@@ -45,17 +45,23 @@
   }
 
   window.fetch = async (...args) => {
-    state.pendingRequests += 1;
-    if (state.pendingRequests === 1) {
-      // Fast requests do not flash the full-screen loader. Slow ones do.
-      state.requestShowTimer = window.setTimeout(() => showLoading('Loading…'), 180);
+    const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+    const isBackgroundApi = url.includes('/api/auth/me') || url.includes('/api/products') || url.includes('/api/wallets');
+
+    if (!isBackgroundApi) {
+      state.pendingRequests += 1;
+      if (state.pendingRequests === 1) {
+        state.requestShowTimer = window.setTimeout(() => showLoading('Loading…'), 250);
+      }
     }
 
     try {
       return await originalFetch(...args);
     } finally {
-      state.pendingRequests = Math.max(0, state.pendingRequests - 1);
-      if (state.pendingRequests === 0) hideLoading();
+      if (!isBackgroundApi) {
+        state.pendingRequests = Math.max(0, state.pendingRequests - 1);
+        if (state.pendingRequests === 0) hideLoading();
+      }
     }
   };
 

@@ -1,4 +1,79 @@
-let PRODUCTS = [];
+const DEFAULT_PRODUCTS = [
+  {
+    id: 'compact-1h',
+    category: 'hourly',
+    title: 'OTP BOT COMPACT Pass: 1 - HOUR COMPACT Key',
+    shortTitle: '1-Hour Compact Key',
+    price: 17.00,
+    stock: 97,
+    duration: '1-Hour',
+    description: 'Experience the power of Bulk OTP Bot with the MINI Pass: 1 - HOUR COMPACT Key. Instant telegram bot access.',
+    prefix: 'BOT-COMPACT',
+    art: 'assets/compact_pass_1h.jpg'
+  },
+  {
+    id: 'extended-3h',
+    category: 'hourly',
+    title: 'OTP BOT EXTENDED Pass: 3 - HOUR EXTENDED Key',
+    shortTitle: '3-Hour Extended Key',
+    price: 30.00,
+    stock: 29,
+    duration: '3-Hour',
+    description: 'OTP BOT EXTENDED Pass: 3 - HOUR EXTENDED Key. High-speed session handling with zero interruption.',
+    prefix: 'BOT-EXTENDED',
+    art: 'assets/extended_pass_3h.jpg'
+  },
+  {
+    id: 'daylong-24h',
+    category: 'daily',
+    title: 'OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key',
+    shortTitle: '24-Hour Daylong Key',
+    price: 60.00,
+    stock: 29,
+    duration: '24-Hour',
+    description: 'OTP BOT DAYLONG Pass: 24 - HOUR DAYLONG Key. Full day uninterrupted high-capacity OTP bypass operations.',
+    prefix: 'BOT-DAYLONG',
+    art: 'assets/daylong_pass_24h.jpg'
+  },
+  {
+    id: 'multiday-3d',
+    category: 'daily',
+    title: 'OTP BOT MULTIDAY Pass: 3 - DAY MULTIDAY Key',
+    shortTitle: '3-Day Multiday Key',
+    price: 150.00,
+    stock: 30,
+    duration: '3-Day',
+    description: 'OTP BOT MULTIDAY Pass: 3 - DAY MULTIDAY Key. Multi-day key for ongoing operations.',
+    prefix: 'BOT-MULTIDAY',
+    art: 'assets/multiday_pass_3d.jpg'
+  },
+  {
+    id: 'weekly-1w',
+    category: 'weekly',
+    title: 'OTP BOT WEEKLY Pass: 1 - WEEK WEEKLY Key',
+    shortTitle: '1-Week Weekly Key',
+    price: 250.00,
+    stock: 30,
+    duration: '1-Week',
+    description: 'OTP BOT WEEKLY Pass: 1 - WEEK WEEKLY Key. Full week unrestricted key access.',
+    prefix: 'BOT-WEEKLY',
+    art: 'assets/weekly_pass_1w.jpg'
+  },
+  {
+    id: 'biweekly-2w',
+    category: 'weekly',
+    title: 'OTP BOT BIWEEKLY Pass: 2 - WEEKS BIWEEKLY Key',
+    shortTitle: '2-Weeks Biweekly Key',
+    price: 350.00,
+    stock: 29,
+    duration: '2-Weeks',
+    description: 'OTP BOT BIWEEKLY Pass: 2 - WEEKS BIWEEKLY Key. Maximum duration biweekly key pass.',
+    prefix: 'BOT-BIWEEKLY',
+    art: 'assets/biweekly_pass_2w.jpg'
+  }
+];
+
+let PRODUCTS = [...DEFAULT_PRODUCTS];
 let currentCart = [];
 let activeProduct = null;
 let activeCategoryFilter = 'all';
@@ -120,6 +195,12 @@ window.addEventListener('beforeunload', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Hide global overlay immediately
+  hideGlobalLoading();
+
+  // Render catalog grid instantly from DEFAULT_PRODUCTS
+  renderCatalogGrid(PRODUCTS);
+
   fetchCurrentUser();
   fetchProductsFromBackend();
   fetchWalletsFromBackend();
