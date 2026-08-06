@@ -4095,27 +4095,58 @@ button:disabled {
   letter-spacing: 0.05em;
 }
 
-.popup-blocked-notice {
+/* Animated Payment Success Card */
+.payment-success-card {
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes successPop {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.success-icon-ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  border: 2px solid #10b981;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  font-size: 0.775rem;
-  color: #fbbf24;
-  margin-top: 0.65rem;
-  margin-bottom: 1.25rem;
+  font-size: 2.25rem;
+  color: #10b981;
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.2);
+  margin: 0 auto 0.75rem auto;
+  animation: checkPulse 1.8s infinite ease-in-out;
 }
 
-.invoice-actions-row {
-  display: flex;
-  gap: 0.75rem;
+@keyframes checkPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
+  50% { transform: scale(1.08); box-shadow: 0 0 40px rgba(16, 185, 129, 0.65); }
+}
+
+.success-redirect-bar-wrap {
   width: 100%;
-  margin-bottom: 1.25rem;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.invoice-footer-note {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  line-height: 1.45;
-  max-width: 90%;
+.success-redirect-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 4px;
+  transition: width 2.5s linear;
 }

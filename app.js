@@ -129,6 +129,9 @@ let activeCategoryFilter = 'all';
 let selectedPaymentMethod = 'balance';
 let selectedCryptoCoin = 'usdt_trc20';
 let paymentConfig = { balance: { enabled: true }, nowPayments: { enabled: false } };
+let catalogFingerprint = '';
+let catalogRequestInFlight = false;
+let catalogBackendReady = false;
 
 // Smooth Mouse Interpolation (Lerp) Variables
 let mouseX = window.innerWidth / 2;
@@ -251,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fetchCurrentUser();
   fetchProductsFromBackend();
+  fetchPaymentConfig();
   fetchWalletsFromBackend();
 
   updateCartBadge();
@@ -262,10 +266,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => openMyOrdersModal(), 300);
   }
 
-  // Live real-time stock sync polling every 15 seconds
-  setInterval(() => {
-    fetchProductsFromBackend();
-  }, 15000);
+  // Keep availability fresh without interrupting checkout or customer input.
+  setInterval(() => fetchProductsFromBackend({ quiet: true }), 12000);
+  window.addEventListener('focus', () => fetchProductsFromBackend({ quiet: true }));
+  window.addEventListener('pageshow', () => fetchProductsFromBackend({ quiet: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') fetchProductsFromBackend({ quiet: true });
+  });
 
   // Scroll navbar styling
   window.addEventListener('scroll', () => {
@@ -333,7 +340,7 @@ function initNative3DModel() {
   }
 }
 
-async function fetchProductsFromBackend() {
+async function fetchProductsFromBackendLegacy() {
   try {
     const res = await fetch('/api/products');
     if (res.ok) {
@@ -426,6 +433,82 @@ async function fetchProductsFromBackend() {
   renderCatalogGrid(PRODUCTS);
 }
 
+function productCatalogFingerprint(products, revision = '') {
+  if (revision) return revision;
+  return JSON.stringify(products.map(product => [
+    product.id,
+    product.title,
+    product.price,
+    product.stock,
+    product.hidden,
+    product.art
+  ]));
+}
+
+function syncStoredCartWithCatalog() {
+  loadCartFromStorage();
+  let changed = false;
+  const catalogById = new Map(PRODUCTS.map(product => [product.id, product]));
+
+  currentCart = currentCart.map(item => {
+    const live = catalogById.get(item.id);
+    if (!live) {
+      if (!item.unavailable) changed = true;
+      return { ...item, unavailable: true, stock: 0 };
+    }
+
+    const updated = {
+      ...item,
+      title: live.title,
+      shortTitle: live.shortTitle,
+      price: live.price,
+      art: live.art,
+      duration: live.duration,
+      stock: live.stock,
+      unavailable: false
+    };
+    if (JSON.stringify(updated) !== JSON.stringify(item)) changed = true;
+    return updated;
+  });
+
+  if (changed) saveCartToStorage();
+}
+
+async function fetchProductsFromBackend({ quiet = false } = {}) {
+  if (catalogRequestInFlight) return false;
+  catalogRequestInFlight = true;
+
+  try {
+    const res = await fetch('/api/products', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Catalog request failed (${res.status})`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Catalog response was invalid');
+
+    const revision = res.headers.get('x-catalog-revision') || '';
+    const nextFingerprint = productCatalogFingerprint(data, revision);
+    const hasChanged = nextFingerprint !== catalogFingerprint;
+    catalogBackendReady = true;
+
+    if (hasChanged) {
+      PRODUCTS = data;
+      catalogFingerprint = nextFingerprint;
+      syncStoredCartWithCatalog();
+      filterProducts();
+
+      if (activeProduct) {
+        const refreshedProduct = PRODUCTS.find(product => product.id === activeProduct.id);
+        if (refreshedProduct) activeProduct = refreshedProduct;
+      }
+    }
+    return true;
+  } catch (err) {
+    if (!quiet && !catalogBackendReady) console.warn('Using the local catalog until live stock is available.', err);
+    return false;
+  } finally {
+    catalogRequestInFlight = false;
+  }
+}
+
 async function fetchPaymentConfig() {
   try {
     const res = await fetch('/api/payments/config');
@@ -437,8 +520,9 @@ async function fetchPaymentConfig() {
       if (option) {
         option.disabled = !enabled;
         option.classList.toggle('is-disabled', !enabled);
+        option.setAttribute('aria-disabled', String(!enabled));
       }
-      if (status) status.textContent = enabled ? 'Verified invoice checkout' : 'NOWPayments setup pending';
+      if (status) status.textContent = enabled ? 'Secure NOWPayments invoice' : 'Coming soon';
     }
   } catch (err) {
     console.log('Payment configuration is unavailable.');
@@ -494,7 +578,7 @@ function renderCatalogGrid(items) {
         <div class="card-footer">
           <span class="card-price">$${priceStr}</span>
           <div class="card-actions">
-            <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('${product.id}')" title="Add to Cart">
+            <button type="button" class="btn-icon" onclick="event.stopPropagation(); addToCartDirect('${product.id}')" title="${stockCount > 0 ? 'Add to cart' : 'Out of stock'}" aria-label="${stockCount > 0 ? 'Add to cart' : 'Out of stock'}" ${stockCount > 0 ? '' : 'disabled'}>
               <i class="fa-solid fa-cart-plus"></i>
             </button>
             <button type="button" class="card-view-link" onclick="event.stopPropagation(); openProductDetail('${product.id}')">
@@ -570,12 +654,10 @@ function openProductDetail(productId) {
     const targetId = legacyMap[productId] || productId;
 
     activeProduct = PRODUCTS.find(p => p.id === targetId || p.id === productId);
-    if (!activeProduct && PRODUCTS.length > 0) {
-      activeProduct = PRODUCTS[0];
-    }
     if (!activeProduct) {
       finishTopProgress();
       hideGlobalLoading();
+      showToast('That pass is no longer available.');
       return;
     }
     
@@ -587,10 +669,16 @@ function openProductDetail(productId) {
     if (el('detailCardTitle')) el('detailCardTitle').textContent = activeProduct.title;
     if (el('detailDescription')) el('detailDescription').textContent = activeProduct.description;
     if (el('detailPrice')) el('detailPrice').textContent = '$' + formatPrice(activeProduct.price);
-    if (el('detailStockBadge')) el('detailStockBadge').textContent = stockCount + ' in stock';
-    if (el('detailStockPill')) el('detailStockPill').innerHTML = `<i class="fa-solid fa-check"></i> In stock (${stockCount})`;
+    if (el('detailStockBadge')) el('detailStockBadge').textContent = stockCount > 0 ? `${stockCount} in stock` : 'Out of stock';
+    if (el('detailStockPill')) el('detailStockPill').innerHTML = stockCount > 0
+      ? `<i class="fa-solid fa-check"></i> In stock (${stockCount})`
+      : '<i class="fa-solid fa-circle-xmark"></i> Out of stock';
     if (el('detailArtImg')) el('detailArtImg').src = activeProduct.art;
     if (el('detailQtyInput')) el('detailQtyInput').value = 1;
+    if (el('detailQtyInput')) el('detailQtyInput').max = Math.max(1, stockCount);
+    ['detailAddToCartBtn', 'detailBuyNowBtn'].forEach(id => {
+      if (el(id)) el(id).disabled = stockCount < 1;
+    });
     
     const catalogView = document.getElementById('catalogView');
     const productDetailView = document.getElementById('productDetailView');
@@ -621,7 +709,8 @@ function adjustQty(change) {
   let val = parseInt(input.value) || 1;
   val += change;
   if (val < 1) val = 1;
-  if (val > 99) val = 99;
+  const maxQty = Math.max(1, Math.min(25, Number(activeProduct?.stock || 1)));
+  if (val > maxQty) val = maxQty;
   input.value = val;
 }
 
@@ -647,9 +736,11 @@ function addToCartDirect(productId) {
     'biweekly-2w': 'weekly-2w'
   };
   const targetId = legacyMap[productId] || productId;
-  const product = PRODUCTS.find(p => p.id === targetId || p.id === productId) || PRODUCTS[0];
+  const product = PRODUCTS.find(p => p.id === targetId || p.id === productId);
   if (product) {
     addToCart(product, 1);
+  } else {
+    showToast('That pass is no longer available.');
   }
 }
 
@@ -662,15 +753,26 @@ function handleDetailAddToCart() {
 
 function addToCart(product, qty) {
   loadCartFromStorage();
+  const stock = Math.max(0, Number(product.stock || 0));
   const existing = currentCart.find(item => item.id === product.id);
+  const nextQty = (existing?.qty || 0) + qty;
+  if (stock < 1) {
+    showToast('This pass is currently out of stock.');
+    return false;
+  }
+  if (nextQty > stock) {
+    showToast(`Only ${stock} key${stock === 1 ? '' : 's'} available for this pass.`);
+    return false;
+  }
   if (existing) {
-    existing.qty += qty;
+    Object.assign(existing, product, { qty: nextQty, unavailable: false });
   } else {
-    currentCart.push({ ...product, qty });
+    currentCart.push({ ...product, qty, unavailable: false });
   }
   saveCartToStorage();
   updateCartBadge();
   showToast('Added ' + qty + 'x ' + (product.shortTitle || product.title) + ' to cart');
+  return true;
 }
 
 function loadCartFromStorage() {
@@ -759,23 +861,18 @@ function handleDetailBuyNow() {
   if (!activeProduct) return;
   const input = document.getElementById('detailQtyInput');
   const qty = input ? (parseInt(input.value) || 1) : 1;
-  loadCartFromStorage();
-  const existing = currentCart.find(i => i.id === activeProduct.id);
-  if (existing) {
-    existing.qty += qty;
-  } else {
-    currentCart.push({ ...activeProduct, qty });
-  }
-  saveCartToStorage();
-  window.location.href = 'cart.html';
+  if (addToCart(activeProduct, qty)) window.location.href = 'cart.html';
 }
 
 function selectPaymentMethod(method, element) {
-  if (element?.classList.contains('is-disabled')) return;
+  if (element?.disabled || element?.classList.contains('is-disabled')) return;
   selectedPaymentMethod = method;
-  const cards = document.querySelectorAll('.pinks-payment-card');
-  cards.forEach(card => card.classList.remove('active'));
-  if (element) element.classList.add('active');
+  const cards = document.querySelectorAll('.checkout-payment-method');
+  cards.forEach(card => {
+    const active = card === element;
+    card.classList.toggle('active', active);
+    card.setAttribute('aria-pressed', String(active));
+  });
 
   const cryptoBox = document.getElementById('cryptoPaymentBox');
   if (cryptoBox) {
@@ -875,7 +972,8 @@ async function processCheckout(event) {
   try {
     const isCrypto = selectedPaymentMethod === 'crypto';
 
-    const response = await fetch('/api/orders/checkout', {
+    const endpoint = isCrypto ? '/api/payments/nowpayments/invoice' : '/api/orders/checkout';
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -889,10 +987,11 @@ async function processCheckout(event) {
 
     if (response.ok && data.success) {
       if (isCrypto) {
+        if (!data.invoiceUrl) throw new Error('The payment provider did not return a secure invoice URL.');
         // Crypto Invoice Ready Step
-        const orderId = data.orderId || 'ORD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        const total = data.total || currentCart.reduce((sum, i) => sum + i.price * i.qty, 0);
-        const invoiceUrl = data.invoiceUrl || `https://nowpayments.io/payment/?iid=${orderId}`;
+        const orderId = data.orderId;
+        const total = Number(data.total || currentCart.reduce((sum, i) => sum + i.price * i.qty, 0));
+        const invoiceUrl = data.invoiceUrl;
 
         // Attempt opening in new tab
         try {
@@ -914,25 +1013,38 @@ async function processCheckout(event) {
         if (formStep) formStep.style.display = 'none';
         if (invoiceStep) invoiceStep.style.display = 'block';
 
-        currentCart = [];
-        updateCartBadge();
-        saveCartToStorage();
         showToast('Crypto invoice created! Opening payment page...');
       } else {
-        // Store Balance Purchase Success
+        // Store Balance Purchase Success with Animation & Auto-Redirect
         renderSuccessKeys(data.keys || []);
         
         const formStep = document.getElementById('checkoutStepForm');
         const successStep = document.getElementById('checkoutSuccessStep');
         
         if (formStep) formStep.style.display = 'none';
-        if (successStep) successStep.style.display = 'block';
+        if (successStep) {
+          successStep.style.display = 'block';
+          successStep.classList.add('payment-success-card');
+        }
         
         currentCart = [];
         updateCartBadge();
         saveCartToStorage();
-        showToast('Purchase complete! Your key is delivered.');
+        showToast('Payment Successful! Key delivered 🎉');
         fetchProductsFromBackend();
+        if (window.SiteShell?.refreshAuth) window.SiteShell.refreshAuth();
+
+        // Animate redirect progress bar fill
+        setTimeout(() => {
+          const barFill = document.getElementById('successRedirectBarFill');
+          if (barFill) barFill.style.width = '100%';
+        }, 50);
+
+        // Smooth redirect to My Orders after 2.5s
+        setTimeout(() => {
+          closeCheckoutModal();
+          openMyOrdersModal();
+        }, 2600);
       }
     } else {
       showToast(data.error || 'Checkout failed. Please try again.');

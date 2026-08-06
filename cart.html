@@ -82,6 +82,9 @@
                     <div id="cartPageItemsList">
                         <!-- Dynamic items rendered by cart.js -->
                     </div>
+                    <div id="cartStockSyncStatus" class="cart-stock-sync" role="status" aria-live="polite">
+                        <i class="fa-solid fa-rotate fa-spin"></i><span>Checking live stock…</span>
+                    </div>
                 </div>
 
                 <div style="margin-top: 1.5rem;">
@@ -107,14 +110,16 @@
                     <!-- Payment Method Selector -->
                     <div class="form-group" style="margin-bottom: 1.5rem;">
                         <label class="form-label">Select Payment Method</label>
-                        <div class="pinks-payment-options-grid">
-                            <button type="button" class="pinks-payment-card active" data-method="balance" onclick="selectCartPaymentMethod('balance', this)">
-                                <div class="pinks-payment-icon icon-box-balance"><i class="fa-solid fa-wallet"></i></div>
-                                <span class="pinks-payment-title">Balance</span>
+                        <div class="checkout-payment-grid">
+                            <button type="button" class="checkout-payment-method active" data-method="balance" aria-pressed="true" onclick="selectCartPaymentMethod('balance', this)">
+                                <span class="checkout-method-icon balance"><i class="fa-solid fa-wallet"></i></span>
+                                <span class="checkout-method-copy"><strong>Store balance</strong><small>Instant key delivery</small></span>
+                                <span class="checkout-method-check"><i class="fa-solid fa-check"></i></span>
                             </button>
-                            <button type="button" id="cartCryptoPaymentOption" class="pinks-payment-card" data-method="crypto" onclick="selectCartPaymentMethod('crypto', this)">
-                                <div class="pinks-payment-icon icon-circle-crypto"><i class="fa-brands fa-bitcoin"></i></div>
-                                <span class="pinks-payment-title">Crypto</span>
+                            <button type="button" id="cartCryptoPaymentOption" class="checkout-payment-method" data-method="crypto" aria-pressed="false" onclick="selectCartPaymentMethod('crypto', this)">
+                                <span class="checkout-method-icon crypto"><i class="fa-brands fa-bitcoin"></i></span>
+                                <span class="checkout-method-copy"><strong>Crypto</strong><small id="cartCryptoOptionStatus">Checking availability</small></span>
+                                <span class="checkout-method-check"><i class="fa-solid fa-check"></i></span>
                             </button>
                         </div>
                     </div>

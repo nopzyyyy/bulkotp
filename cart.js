@@ -207,13 +207,22 @@ async function processCartPageCheckout(event) {
       window.location.href = data.invoiceUrl;
     } else if (res.ok && data.success) {
       renderCartDispensedKeys(data.keys || []);
+      const successView = document.getElementById('cartSuccessView');
       document.getElementById('cartContentLayout').style.display = 'none';
-      document.getElementById('cartSuccessView').style.display = 'block';
+      if (successView) {
+        successView.style.display = 'block';
+        successView.classList.add('payment-success-card');
+      }
 
       pageCart = [];
       saveCartToLocalStorage();
-      showToast('Purchase complete. Your key is ready.');
-      window.SiteShell?.refreshAuth();
+      showToast('Payment Successful! Key delivered 🎉');
+      if (window.SiteShell?.refreshAuth) window.SiteShell.refreshAuth();
+
+      // Automated redirect to orders after 2.8 seconds
+      setTimeout(() => {
+        window.location.href = 'index.html?open=orders';
+      }, 2800);
     } else {
       showToast(data.error || 'Payment failed.');
     }
