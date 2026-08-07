@@ -134,6 +134,7 @@ async function switchAdminTab(tabId, btn) {
       products: 'Products & Stock Management',
       orders: 'Customer Orders & History',
       users: 'Users & Balances Manager',
+      vouchers: 'Vouchers & Gift Codes Manager',
       tickets: 'Customer Support Tickets',
       audit: 'Security Audit Logs'
     };
@@ -151,6 +152,7 @@ async function switchAdminTab(tabId, btn) {
     else if (tabId === 'products') await loadAdminProducts();
     else if (tabId === 'orders') await loadAdminOrders();
     else if (tabId === 'users') await loadAdminUsers();
+    else if (tabId === 'vouchers') await loadAdminVouchers();
     else if (tabId === 'tickets') await loadAdminTickets();
     else if (tabId === 'audit') await loadAdminAuditLogs();
   } catch (e) {
@@ -822,4 +824,149 @@ function showToast(msg) {
     toast.style.opacity = '0';
     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
   }, 2500);
+}
+
+// ==========================================
+// VOUCHERS & GIFT CODE MANAGEMENT
+// ==========================================
+
+let allAdminVouchers = [];
+let voucherFilter = 'all';
+
+async function loadAdminVouchers() {
+  try {
+    const res = await fetch('/api/admin/vouchers', { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load vouchers.');
+
+    allAdminVouchers = data.vouchers || [];
+    renderVouchersSection();
+  } catch (err) {
+    showToast(err.message || 'Error loading vouchers.');
+  }
+}
+
+function renderVouchersSection() {
+  const totalEl = document.getElementById('statTotalVouchers');
+  const activeEl = document.getElementById('statActiveVouchers');
+  const redeemedEl = document.getElementById('statRedeemedVouchers');
+  const valueEl = document.getElementById('statTotalVoucherValue');
+
+  const total = allAdminVouchers.length;
+  const active = allAdminVouchers.filter(v => !v.isUsed).length;
+  const redeemed = allAdminVouchers.filter(v => v.isUsed).length;
+  const totalVal = allAdminVouchers.reduce((acc, v) => acc + Number(v.amount || 0), 0);
+
+  if (totalEl) totalEl.textContent = total;
+  if (activeEl) activeEl.textContent = active;
+  if (redeemedEl) redeemedEl.textContent = redeemed;
+  if (valueEl) valueEl.textContent = `$${totalVal.toFixed(2)}`;
+
+  renderVouchersTable();
+}
+
+function filterVouchersTable(filter, btn) {
+  voucherFilter = filter;
+  if (btn && btn.parentElement) {
+    const buttons = btn.parentElement.querySelectorAll('button');
+    buttons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderVouchersTable();
+}
+
+function renderVouchersTable() {
+  const tbody = document.getElementById('adminVouchersTable');
+  if (!tbody) return;
+
+  let list = allAdminVouchers;
+  if (voucherFilter === 'active') {
+    list = list.filter(v => !v.isUsed);
+  } else if (voucherFilter === 'redeemed') {
+    list = list.filter(v => v.isUsed);
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-dim);">No voucher codes found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(v => `
+    <tr>
+      <td>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <strong style="font-family: 'JetBrains Mono', Consolas, monospace; font-size:0.95rem; color:#fff;">${escapeHtml(v.code)}</strong>
+          <button class="btn btn-xs btn-glass" onclick="copyToClipboard('${escapeHtml(v.code)}')" title="Copy code"><i class="fa-regular fa-copy"></i></button>
+        </div>
+      </td>
+      <td style="font-weight:700; color:var(--accent);">$${Number(v.amount || 0).toFixed(2)} USD</td>
+      <td>
+        ${v.isUsed
+          ? `<span class="badge badge-secondary" style="background:rgba(255,255,255,0.1); color:#a0a0b0;">REDEEMED</span>`
+          : `<span class="badge badge-success" style="background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3);">ACTIVE</span>`
+        }
+      </td>
+      <td>${v.usedBy ? `<span style="color:#fff; font-weight:600;">${escapeHtml(v.usedBy)}</span>` : '<span style="color:var(--text-dim);">&mdash;</span>'}</td>
+      <td style="font-size:0.8rem; color:var(--text-dim);">${v.createdAt ? new Date(v.createdAt).toLocaleDateString() : '&mdash;'}</td>
+      <td>
+        <button class="btn btn-xs btn-danger" onclick="handleDeleteVoucher('${escapeHtml(v.code)}')" title="Delete voucher"><i class="fa-solid fa-trash"></i> Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function handleCreateVouchers(event) {
+  event.preventDefault();
+  const amount = Number(document.getElementById('voucherAmount').value);
+  const prefix = document.getElementById('voucherPrefix').value.trim();
+  const count = parseInt(document.getElementById('voucherCount').value || '1', 10);
+
+  if (isNaN(amount) || amount <= 0) return showToast('Enter a valid voucher amount.');
+  if (count < 1 || count > 50) return showToast('Count must be between 1 and 50.');
+
+  startTopProgress();
+  showGlobalLoading('Generating vouchers...');
+
+  try {
+    const res = await fetch('/api/admin/vouchers/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ amount, prefix, count })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create vouchers.');
+
+    showToast(`Generated ${data.vouchers.length} voucher code(s)!`);
+    document.getElementById('createVoucherForm').reset();
+    document.getElementById('voucherCount').value = '1';
+    await loadAdminVouchers();
+  } catch (err) {
+    showToast(err.message || 'Error generating vouchers.');
+  } finally {
+    finishTopProgress();
+    hideGlobalLoading();
+  }
+}
+
+async function handleDeleteVoucher(code) {
+  if (!confirm(`Are you sure you want to delete voucher code ${code}?`)) return;
+
+  startTopProgress();
+  try {
+    const res = await fetch(`/api/admin/vouchers/${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete voucher.');
+
+    showToast(`Voucher ${code} deleted.`);
+    await loadAdminVouchers();
+  } catch (err) {
+    showToast(err.message || 'Error deleting voucher.');
+  } finally {
+    finishTopProgress();
+  }
 }

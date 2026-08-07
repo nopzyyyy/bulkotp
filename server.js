@@ -1157,6 +1157,62 @@ app.post('/api/balance/redeem', requireAuth, (req, res) => {
   res.json({ success: true, newBalance: user.balance, amountRedeemed: redeemAmt });
 });
 
+// Admin: Fetch all vouchers
+app.get('/api/admin/vouchers', requireAdmin, (req, res) => {
+  const vouchers = readJson(FILES.vouchers, []);
+  res.json({ success: true, vouchers });
+});
+
+// Admin: Create / Generate Vouchers
+app.post('/api/admin/vouchers/create', requireAdmin, (req, res) => {
+  const amount = Math.round(Number(req.body.amount || 0) * 100) / 100;
+  if (isNaN(amount) || amount <= 0 || amount > 10000) {
+    return res.status(400).json({ error: 'Voucher amount must be between $0.01 and $10,000.00 USD.' });
+  }
+
+  const count = Math.min(Math.max(parseInt(req.body.count || 1, 10), 1), 50);
+  const rawPrefix = String(req.body.prefix || 'BULK-TOPUP').replace(/[^A-Z0-9\-]/gi, '').toUpperCase().slice(0, 20);
+  const prefix = rawPrefix ? `${rawPrefix}-` : '';
+
+  const vouchers = readJson(FILES.vouchers, []);
+  const created = [];
+
+  for (let i = 0; i < count; i++) {
+    const randomCode = `${prefix}${crypto.randomBytes(2).toString('hex').toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    const newVoucher = {
+      code: randomCode,
+      amount: amount,
+      isUsed: false,
+      createdBy: req.currentUser.email,
+      createdAt: new Date().toISOString()
+    };
+    vouchers.unshift(newVoucher);
+    created.push(newVoucher);
+  }
+
+  writeJson(FILES.vouchers, vouchers);
+  logAudit(req.currentUser.email, 'CREATE_VOUCHERS', `Generated ${count} voucher(s) worth $${amount.toFixed(2)} USD each (${prefix}*)`, req.ip);
+
+  res.status(201).json({ success: true, vouchers: created });
+});
+
+// Admin: Delete Voucher
+app.delete('/api/admin/vouchers/:code', requireAdmin, (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  let vouchers = readJson(FILES.vouchers, []);
+  const voucher = vouchers.find(v => v.code === code);
+
+  if (!voucher) {
+    return res.status(404).json({ error: 'Voucher code not found.' });
+  }
+
+  vouchers = vouchers.filter(v => v.code !== code);
+  writeJson(FILES.vouchers, vouchers);
+  logAudit(req.currentUser.email, 'DELETE_VOUCHER', `Deleted voucher code ${code}`, req.ip);
+
+  res.json({ success: true, message: `Voucher ${code} deleted.` });
+});
+
 // ==========================================
 // STOREFRONT PRODUCTS & CATALOG ROUTES
 // ==========================================

@@ -60,6 +60,9 @@
                 <button class="sidebar-link" onclick="switchAdminTab('users', this)">
                     <i class="fa-solid fa-users"></i> <span>Users &amp; Balances</span>
                 </button>
+                <button class="sidebar-link" onclick="switchAdminTab('vouchers', this)">
+                    <i class="fa-solid fa-gift"></i> <span>Vouchers &amp; Codes</span>
+                </button>
                 <button class="sidebar-link" onclick="switchAdminTab('tickets', this)">
                     <i class="fa-solid fa-headset"></i> <span>Support Tickets</span>
                 </button>
@@ -302,6 +305,81 @@
                                     </tr>
                                 </thead>
                                 <tbody id="adminAuditTable">
+                                    <!-- Populated by admin.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. VOUCHERS & GIFT CODES MANAGER -->
+                <div id="tab-vouchers" class="admin-tab-content">
+                    <div class="pinks-stats-grid" style="margin-bottom: 1.5rem;">
+                        <div class="pinks-stat-card">
+                            <span class="pinks-stat-label">TOTAL VOUCHERS</span>
+                            <span id="statTotalVouchers" class="pinks-stat-value">0</span>
+                        </div>
+                        <div class="pinks-stat-card">
+                            <span class="pinks-stat-label">ACTIVE CODES</span>
+                            <span id="statActiveVouchers" class="pinks-stat-value">0</span>
+                        </div>
+                        <div class="pinks-stat-card">
+                            <span class="pinks-stat-label">REDEEMED CODES</span>
+                            <span id="statRedeemedVouchers" class="pinks-stat-value">0</span>
+                        </div>
+                        <div class="pinks-stat-card">
+                            <span class="pinks-stat-label">TOTAL VALUE</span>
+                            <span id="statTotalVoucherValue" class="pinks-stat-value">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Generate Voucher Form Card -->
+                    <div class="pinks-table-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+                        <h3 style="margin: 0 0 1rem; font-size: 1.1rem; font-weight: 700; color: #fff;"><i class="fa-solid fa-wand-magic-sparkles text-accent"></i> Generate New Balance Vouchers</h3>
+                        <form id="createVoucherForm" onsubmit="handleCreateVouchers(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
+                            <div>
+                                <label class="form-label" for="voucherAmount">Amount ($ USD)</label>
+                                <input type="number" id="voucherAmount" class="form-input" min="0.01" step="0.01" max="10000" placeholder="e.g. 25.00" required>
+                            </div>
+                            <div>
+                                <label class="form-label" for="voucherPrefix">Code Prefix (Optional)</label>
+                                <input type="text" id="voucherPrefix" class="form-input" placeholder="BULK-TOPUP" maxlength="20">
+                            </div>
+                            <div>
+                                <label class="form-label" for="voucherCount">Quantity</label>
+                                <input type="number" id="voucherCount" class="form-input" min="1" max="50" value="1" required>
+                            </div>
+                            <div>
+                                <button type="submit" id="btnGenVouchers" class="btn btn-primary btn-block" style="padding: 0.75rem;">
+                                    <i class="fa-solid fa-gift"></i> Generate Vouchers
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Vouchers Table -->
+                    <div class="pinks-table-card">
+                        <div class="pinks-table-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Vouchers &amp; Gift Code Inventory</h3>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-xs btn-glass active" onclick="filterVouchersTable('all', this)">All</button>
+                                <button class="btn btn-xs btn-glass" onclick="filterVouchersTable('active', this)">Active</button>
+                                <button class="btn btn-xs btn-glass" onclick="filterVouchersTable('redeemed', this)">Redeemed</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="pinks-table">
+                                <thead>
+                                    <tr>
+                                        <th>VOUCHER CODE</th>
+                                        <th>VALUE</th>
+                                        <th>STATUS</th>
+                                        <th>REDEEMED BY</th>
+                                        <th>CREATED AT</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminVouchersTable">
                                     <!-- Populated by admin.js -->
                                 </tbody>
                             </table>
