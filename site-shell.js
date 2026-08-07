@@ -46,7 +46,22 @@
 
   window.fetch = async (...args) => {
     const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+    const isInternalApi = url.includes('/api/');
     const isBackgroundApi = url.includes('/api/auth/me') || url.includes('/api/products') || url.includes('/api/wallets');
+
+    if (isInternalApi && typeof args[0] === 'string') {
+      args[1] = args[1] || {};
+      args[1].credentials = args[1].credentials || 'include';
+      const token = localStorage.getItem('market_session_token');
+      if (token) {
+        args[1].headers = args[1].headers || {};
+        if (args[1].headers instanceof Headers) {
+          if (!args[1].headers.has('Authorization')) args[1].headers.set('Authorization', 'Bearer ' + token);
+        } else if (!args[1].headers['Authorization'] && !args[1].headers['authorization']) {
+          args[1].headers['Authorization'] = 'Bearer ' + token;
+        }
+      }
+    }
 
     if (!isBackgroundApi) {
       state.pendingRequests += 1;

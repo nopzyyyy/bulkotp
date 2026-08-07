@@ -79,7 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
 async function checkAdminAuth() {
   startTopProgress();
   try {
-    const res = await fetch('/api/auth/me?t=' + Date.now(), { credentials: 'include' });
+    const token = localStorage.getItem('market_session_token');
+    const headers = {};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    const res = await fetch('/api/auth/me?t=' + Date.now(), { credentials: 'include', headers });
     const data = await res.json();
     if (!res.ok || !data.authenticated || data.user.role !== 'ADMIN') {
       window.location.href = 'login.html?redirect=/admin.html';

@@ -134,6 +134,10 @@
         return;
       }
 
+      if (data.token) {
+        localStorage.setItem('market_session_token', data.token);
+      }
+
       showAlert('Signed in! Loading your account…', 'success');
       await window.SiteShell?.refreshAuth();
       window.setTimeout(() => location.assign(data.user?.role === 'ADMIN' && redirectTarget === '/index.html' ? '/admin.html' : redirectTarget), 350);

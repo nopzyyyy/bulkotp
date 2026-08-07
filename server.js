@@ -605,7 +605,13 @@ initDatabase();
 
 // Session Helper function
 function getSession(req) {
-  const token = req.cookies.market_session || (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null);
+  let token = (req.cookies && req.cookies.market_session) || null;
+  if (!token && req.headers && req.headers.authorization) {
+    token = req.headers.authorization.replace(/^Bearer\s+/i, '').trim();
+  }
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
   if (!token) return null;
 
   const sessions = readJson(FILES.sessions, []);
@@ -647,10 +653,7 @@ app.get('/api/admin/otps', requireAdmin, (req, res) => {
 // Page Access Control: Protected File Requests
 app.get('/admin.html', (req, res, next) => {
   const sess = getSession(req);
-  if (!sess) {
-    return res.redirect('/login.html?redirect=/admin.html');
-  }
-  if (sess.user.role !== 'ADMIN') {
+  if (sess && sess.user.role !== 'ADMIN') {
     return res.redirect('/');
   }
   next();
@@ -785,7 +788,7 @@ app.post(['/api/auth/verify-otp', '/api/auth/verify-email'], authRateLimit, (req
   res.cookie('market_session', session.token, secureCookieOptions(req));
 
   const { passwordHash, ...userWithoutPassword } = user;
-  res.json({ success: true, user: userWithoutPassword });
+  res.json({ success: true, user: userWithoutPassword, token: session.token });
 });
 
 // Resend OTP Code
@@ -856,7 +859,7 @@ app.post('/api/auth/login', authRateLimit, async (req, res) => {
   res.cookie('market_session', session.token, secureCookieOptions(req));
 
   const { passwordHash, ...userWithoutPassword } = user;
-  res.json({ success: true, user: userWithoutPassword });
+  res.json({ success: true, user: userWithoutPassword, token: session.token });
 });
 
 // Verify 2FA Login OTP
@@ -889,7 +892,7 @@ app.post('/api/auth/verify-login-otp', authRateLimit, (req, res) => {
   res.cookie('market_session', session.token, secureCookieOptions(req));
 
   const { passwordHash, ...userWithoutPassword } = user;
-  res.json({ success: true, user: userWithoutPassword });
+  res.json({ success: true, user: userWithoutPassword, token: session.token });
 });
 
 // Forgot Password Request
