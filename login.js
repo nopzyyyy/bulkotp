@@ -60,7 +60,7 @@
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        credentials: 'same-origin',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });

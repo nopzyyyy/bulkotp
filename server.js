@@ -419,19 +419,21 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
   if (!email || !/^\S+@\S+\.\S+$/.test(String(email).trim())) {
     return res.status(400).json({ error: 'A valid email address is required.' });
   }
-  if (!password || password.length < 8 || password.length > 128 || !/\d/.test(password)) {
+  if (!password || typeof password !== 'string' || password.length < 8 || password.length > 128 || !/\d/.test(password)) {
     return res.status(400).json({ error: 'Use 8–128 characters and include at least one number.' });
   }
 
-  const cleanEmail = email.toLowerCase().trim();
+  const cleanEmail = String(email).toLowerCase().trim();
   const users = readJson(FILES.users, []);
 
-  if (users.find(u => u.email === cleanEmail)) {
-    return res.status(400).json({ error: 'An account with this email already exists.' });
+  // Strict check to prevent creating multiple accounts with the same email address
+  const existingUser = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+  if (existingUser) {
+    return res.status(409).json({ error: 'An account with this email address already exists. Please sign in instead.' });
   }
 
   const newUser = {
-    id: `usr_${Date.now()}`,
+    id: `usr_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     email: cleanEmail,
     passwordHash: hashPasswordScrypt(password),
     balance: 0.00,
@@ -453,15 +455,15 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
 app.post('/api/auth/login', authRateLimit, (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).json({ error: 'Email/Username and password required.' });
+    return res.status(400).json({ error: 'Email address and password are required.' });
   }
 
-  const cleanEmail = email.toLowerCase().trim();
+  const cleanEmail = String(email).toLowerCase().trim();
   const users = readJson(FILES.users, []);
-  const user = users.find(u => u.email === cleanEmail);
+  const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
 
-  if (!user || !verifyPasswordScrypt(password, user.passwordHash)) {
-    return res.status(401).json({ error: 'Invalid email/username or password.' });
+  if (!user || !verifyPasswordScrypt(String(password), user.passwordHash)) {
+    return res.status(401).json({ error: 'Invalid email address or password.' });
   }
 
   const session = createSession(user.id);
