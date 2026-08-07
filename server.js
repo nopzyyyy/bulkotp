@@ -709,9 +709,24 @@ app.post('/api/auth/register', authRateLimit, async (req, res) => {
   const cleanEmail = String(email).toLowerCase().trim();
   const users = readJson(FILES.users, []);
 
-  // Strict check to prevent creating multiple accounts with the same email address
+  // Check if account already exists
   const existingUser = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
   if (existingUser) {
+    if (!existingUser.is_verified) {
+      // Allow unverified users to re-register / request fresh OTP
+      existingUser.passwordHash = hashPasswordScrypt(password);
+      writeJson(FILES.users, users);
+
+      const otpCode = storeOtp(cleanEmail, 'REGISTRATION', 5);
+      sendOtpEmail(cleanEmail, otpCode, 'REGISTRATION').catch(err => console.error('OTP email dispatch error:', err));
+
+      return res.status(200).json({
+        success: true,
+        requiresVerification: true,
+        email: cleanEmail,
+        message: 'Account updated! We sent a 6-digit verification code to your email.'
+      });
+    }
     return res.status(409).json({ error: 'An account with this email address already exists. Please sign in instead.' });
   }
 
@@ -730,7 +745,7 @@ app.post('/api/auth/register', authRateLimit, async (req, res) => {
   writeJson(FILES.users, users);
 
   const otpCode = storeOtp(cleanEmail, 'REGISTRATION', 5);
-  await sendOtpEmail(cleanEmail, otpCode, 'REGISTRATION');
+  sendOtpEmail(cleanEmail, otpCode, 'REGISTRATION').catch(err => console.error('OTP email dispatch error:', err));
 
   res.status(201).json({
     success: true,

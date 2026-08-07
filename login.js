@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  let pendingEmail = '';
-  let pendingOtpType = 'REGISTRATION'; // 'REGISTRATION' or 'LOGIN_2FA'
+  let pendingEmail = sessionStorage.getItem('pending_auth_email') || '';
+  let pendingOtpType = sessionStorage.getItem('pending_otp_type') || 'REGISTRATION'; // 'REGISTRATION' or 'LOGIN_2FA'
 
   const redirectTarget = (() => {
     const value = new URLSearchParams(location.search).get('redirect');
@@ -109,6 +109,8 @@
       if (data.requiresVerification || data.requires2FA) {
         pendingEmail = payload.email;
         pendingOtpType = data.requires2FA ? 'LOGIN_2FA' : 'REGISTRATION';
+        sessionStorage.setItem('pending_auth_email', pendingEmail);
+        sessionStorage.setItem('pending_otp_type', pendingOtpType);
         window.switchAuthTab('otp');
         showAlert(data.message || 'A 6-digit verification code has been sent to your email.', 'success');
         setSubmitting(button, false);
@@ -117,6 +119,7 @@
 
       if (endpoint.endsWith('forgot-password')) {
         pendingEmail = payload.email;
+        sessionStorage.setItem('pending_auth_email', pendingEmail);
         document.getElementById('resetCodeInput').value = '';
         window.switchAuthTab('reset');
         showAlert(data.message || 'Check your email for the 6-digit password reset code.', 'success');
@@ -216,9 +219,11 @@
     otpForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const code = document.getElementById('otpCodeInput').value.trim();
+      const targetEmail = pendingEmail || sessionStorage.getItem('pending_auth_email') || document.getElementById('regEmail')?.value.trim() || document.getElementById('loginEmail')?.value.trim();
+      if (!targetEmail) return showAlert('Email address missing. Please go back and try registering again.');
       if (!code || code.length !== 6) return showAlert('Enter the 6-digit OTP code sent to your email.');
       const endpoint = pendingOtpType === 'LOGIN_2FA' ? '/api/auth/verify-login-otp' : '/api/auth/verify-otp';
-      submitAuth(endpoint, { email: pendingEmail, code }, document.getElementById('otpVerifyBtn'), 'Verifying code…');
+      submitAuth(endpoint, { email: targetEmail, code }, document.getElementById('otpVerifyBtn'), 'Verifying code…');
     });
 
     forgotForm.addEventListener('submit', (event) => {
