@@ -79,7 +79,9 @@ const FILES = {
   orders: path.join(DATA_DIR, 'orders.json'),
   tickets: path.join(DATA_DIR, 'tickets.json'),
   auditLogs: path.join(DATA_DIR, 'audit-logs.json'),
-  store: path.join(DATA_DIR, 'store.json')
+  store: path.join(DATA_DIR, 'store.json'),
+  transactions: path.join(DATA_DIR, 'transactions.json'),
+  vouchers: path.join(DATA_DIR, 'vouchers.json')
 };
 
 // Helper: Read JSON File safely
@@ -499,11 +501,190 @@ app.all('/api/auth/logout', (req, res) => {
     writeJson(FILES.sessions, sessions);
   }
 
+  res.clearCookie('market_session', { path: '/' });
+  res.clearCookie('market_session', { path: '/', secure: true });
+  res.clearCookie('market_session', { path: '/', sameSite: 'lax' });
+  res.clearCookie('market_session', { path: '/', sameSite: 'lax', secure: true });
+
   res.setHeader('Set-Cookie', [
     'market_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; SameSite=Lax',
     'market_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; SameSite=Lax; Secure'
   ]);
+
+  if (req.method === 'GET' || (req.headers.accept && req.headers.accept.includes('text/html'))) {
+    return res.redirect('/login.html?logged_out=1');
+  }
+
   res.json({ success: true });
+});
+
+// ==========================================
+// STORE BALANCE & DEPOSIT ENDPOINTS
+// ==========================================
+
+// Get User Balance History
+app.get('/api/balance/history', requireAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const userId = req.currentUser.id;
+  const userEmail = req.currentUser.email;
+
+  const transactions = readJson(FILES.transactions, []);
+  const userTx = transactions.filter(t => t.userId === userId || t.email === userEmail);
+
+  // Also include purchases made via Store Balance from orders list
+  const orders = readJson(FILES.orders, []);
+  const userOrders = orders.filter(o => (o.userId === userId || o.email === userEmail) && o.paymentMethod === 'Store Balance');
+
+  const combined = [
+    ...userTx,
+    ...userOrders.map(o => ({
+      id: `tx_order_${o.id}`,
+      userId: o.userId,
+      type: 'PURCHASE',
+      amount: -Math.abs(Number(o.total || 0)),
+      description: `Purchase Pass Order #${o.orderNumber || o.id}`,
+      status: o.status || 'COMPLETED',
+      createdAt: o.createdAt
+    }))
+  ];
+
+  combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json(combined);
+});
+
+// Top-Up Account Balance
+app.post('/api/balance/topup', requireAuth, async (req, res) => {
+  const amount = Math.round(parseFloat(req.body.amount || 0) * 100) / 100;
+  if (!amount || amount < 5) {
+    return res.status(400).json({ error: 'Minimum top-up amount is $5.00 USD.' });
+  }
+
+  const requestedCurrency = String(req.body.payCurrency || 'usdt_trc20').toLowerCase();
+
+  // If NOWPayments is configured, generate a crypto invoice for the top-up
+  if (nowPaymentsConfigured()) {
+    try {
+      const topupId = `TOPUP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc' };
+      const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+
+      const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': NOWPAYMENTS_API_KEY },
+        body: JSON.stringify({
+          price_amount: amount,
+          price_currency: 'usd',
+          pay_currency: currencyMap[requestedCurrency] || 'usdttrc20',
+          order_id: topupId,
+          order_description: `BULK OTP Store Balance Top-Up $${amount.toFixed(2)}`,
+          ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
+          success_url: `${baseUrl}/balance.html?topup=success`,
+          cancel_url: `${baseUrl}/balance.html?topup=cancelled`
+        })
+      });
+
+      const invoiceData = await providerResponse.json();
+      if (!providerResponse.ok || !invoiceData.invoice_url) {
+        throw new Error(invoiceData.message || 'Failed to create NOWPayments invoice.');
+      }
+
+      // Record pending topup transaction
+      const transactions = readJson(FILES.transactions, []);
+      transactions.unshift({
+        id: topupId,
+        userId: req.currentUser.id,
+        email: req.currentUser.email,
+        type: 'TOPUP',
+        amount: amount,
+        description: `Crypto Balance Top-Up (${requestedCurrency.toUpperCase()})`,
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      });
+      writeJson(FILES.transactions, transactions);
+
+      return res.json({ success: true, invoiceUrl: invoiceData.invoice_url, paymentId: invoiceData.id });
+    } catch (err) {
+      console.error('Crypto topup invoice error:', err);
+    }
+  }
+
+  // Instant Top-Up fallback / Demo mode credit
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => u.id === req.currentUser.id);
+  if (!user) return res.status(404).json({ error: 'User account not found.' });
+
+  user.balance = Math.round((Number(user.balance || 0) + amount) * 100) / 100;
+  writeJson(FILES.users, users);
+
+  const transactions = readJson(FILES.transactions, []);
+  const txId = `tx_${Date.now()}`;
+  transactions.unshift({
+    id: txId,
+    userId: user.id,
+    email: user.email,
+    type: 'TOPUP',
+    amount: amount,
+    description: `Instant Balance Deposit ($${amount.toFixed(2)} USD)`,
+    status: 'COMPLETED',
+    createdAt: new Date().toISOString()
+  });
+  writeJson(FILES.transactions, transactions);
+
+  logAudit(user.email, 'BALANCE_TOPUP', `Top-up account balance by +$${amount.toFixed(2)}`, req.ip);
+  res.json({ success: true, balance: user.balance, transactionId: txId });
+});
+
+// Redeem Balance Voucher Code
+app.post('/api/balance/redeem', requireAuth, (req, res) => {
+  const code = String(req.body.code || '').trim().toUpperCase();
+  if (!code) {
+    return res.status(400).json({ error: 'Please enter a valid voucher code.' });
+  }
+
+  const vouchers = readJson(FILES.vouchers, [
+    { code: 'BULK-TOPUP-50USD', amount: 50.00, isUsed: false },
+    { code: 'WELCOME-10USD', amount: 10.00, isUsed: false },
+    { code: 'BONUS-25USD', amount: 25.00, isUsed: false }
+  ]);
+
+  const voucher = vouchers.find(v => v.code === code);
+  if (!voucher) {
+    return res.status(400).json({ error: 'Invalid voucher code.' });
+  }
+
+  if (voucher.isUsed) {
+    return res.status(400).json({ error: 'This voucher code has already been redeemed.' });
+  }
+
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => u.id === req.currentUser.id);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  const redeemAmt = Number(voucher.amount || 0);
+  user.balance = Math.round((Number(user.balance || 0) + redeemAmt) * 100) / 100;
+  voucher.isUsed = true;
+  voucher.usedBy = user.email;
+  voucher.usedAt = new Date().toISOString();
+
+  writeJson(FILES.users, users);
+  writeJson(FILES.vouchers, vouchers);
+
+  const transactions = readJson(FILES.transactions, []);
+  const txId = `tx_voucher_${Date.now()}`;
+  transactions.unshift({
+    id: txId,
+    userId: user.id,
+    email: user.email,
+    type: 'VOUCHER',
+    amount: redeemAmt,
+    description: `Redeemed Voucher Code: ${code}`,
+    status: 'COMPLETED',
+    createdAt: new Date().toISOString()
+  });
+  writeJson(FILES.transactions, transactions);
+
+  logAudit(user.email, 'REDEEM_VOUCHER', `Redeemed voucher ${code} for +$${redeemAmt.toFixed(2)}`, req.ip);
+  res.json({ success: true, newBalance: user.balance, amountRedeemed: redeemAmt });
 });
 
 // ==========================================

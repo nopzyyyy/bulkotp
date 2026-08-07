@@ -104,7 +104,7 @@ async function logoutAdmin() {
   try {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
   } catch (_) {}
-  window.location.href = 'login.html';
+  window.location.href = '/api/auth/logout';
 }
 
 function toggleMobileSidebar() {

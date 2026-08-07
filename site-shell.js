@@ -121,6 +121,7 @@
             <strong>$${balance}</strong>
           </div>
           <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="balance.html"><i class="fa-solid fa-wallet text-accent"></i> Balance &amp; Top-up</a>
           <a class="dropdown-item" href="orders.html"><i class="fa-solid fa-box-open text-accent"></i> Orders &amp; keys</a>
           <a class="dropdown-item" href="index.html?open=tickets" onclick="return SiteShell.openSupport(event)"><i class="fa-regular fa-life-ring text-green"></i> Support tickets</a>
           ${user.role === 'ADMIN' ? '<a class="dropdown-item" href="admin.html"><i class="fa-solid fa-gauge-high text-accent"></i> Admin panel</a>' : ''}
@@ -177,12 +178,7 @@
     } catch (_) {}
 
     document.dispatchEvent(new CustomEvent('site:auth', { detail: { user: null } }));
-
-    if (window.location.pathname.endsWith('/admin.html')) {
-      window.location.href = 'login.html';
-    } else {
-      window.location.href = 'index.html?logged_out=' + Date.now();
-    }
+    window.location.href = '/api/auth/logout';
   }
 
   function openSupport(event) {

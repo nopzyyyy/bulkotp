@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Top up your BULK OTP account store balance using Crypto or Redeem Codes.">
+    <title>Store Balance &amp; Top-Up — BULK OTP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter+Tight:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="balance">
+    <div id="topProgressBar"></div>
+    <div id="globalLoadingOverlay" class="global-loading-overlay">
+        <div class="spinner-ring-wrap">
+            <div class="crimson-spinner-ring"></div>
+            <img src="assets/brand_logo.png" alt="" class="spinner-logo-img">
+        </div>
+        <span class="spinner-loading-text">Loading balance portal…</span>
+    </div>
+    <div class="bg-grid"></div>
+    <div class="glow glow-1"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand" aria-label="BULK OTP home">
+                <div class="brand-logo-wrap"><img src="assets/brand_logo.png" alt="BULK OTP Logo" class="brand-logo-img"></div>
+                <span class="brand-text">BULK <span class="text-accent">OTP</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link" data-nav="passes">Passes</a>
+                <a href="index.html#features" class="nav-link" data-nav="features">Features</a>
+                <a href="orders.html" class="nav-link" data-nav="orders">Orders</a>
+                <a href="balance.html" class="nav-link active" data-nav="balance">Balance</a>
+            </div>
+            <div class="nav-right">
+                <a class="nav-cart-btn" href="cart.html" title="View cart" aria-label="View cart"><i class="fa-solid fa-cart-shopping"></i><span class="cart-badge">0</span></a>
+                <div data-user-header></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section">
+        <header class="orders-page-header">
+            <div>
+                <span class="subtitle">ACCOUNT FUNDS</span>
+                <h1>Store Balance &amp; Deposit Portal</h1>
+                <p>Top up your store balance using Cryptocurrency or redeem deposit voucher codes for instant checkout.</p>
+            </div>
+            <a class="btn btn-glass" href="index.html"><i class="fa-solid fa-shopping-bag"></i> Browse Passes</a>
+        </header>
+
+        <!-- Balance Card Hero -->
+        <section class="orders-summary" aria-label="Account balance overview" style="margin-bottom: 2rem;">
+            <div style="grid-column: span 3; background: linear-gradient(135deg, rgba(230, 0, 50, 0.12), rgba(20, 20, 26, 0.95)); border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 16px; padding: 1.75rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div style="width: 58px; height: 58px; border-radius: 14px; background: rgba(230, 0, 50, 0.15); border: 1px solid rgba(230, 0, 50, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; color: var(--accent);">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.85rem; text-transform: uppercase; tracking: 0.05em; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.25rem;">Available Account Balance</span>
+                        <strong id="balanceDisplayVal" style="font-size: 2.25rem; font-weight: 800; color: #fff; font-family: var(--font-heading); line-height: 1.1;">$0.00 USD</strong>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" onclick="scrollToTopUp()"><i class="fa-solid fa-circle-plus"></i> Top Up Balance</button>
+                    <a href="orders.html" class="btn btn-glass"><i class="fa-solid fa-history"></i> Order History</a>
+                </div>
+            </div>
+        </section>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;" id="topupSection">
+            <!-- Crypto Top-Up Form -->
+            <div class="orders-help-card" style="flex-direction: column; align-items: stretch; gap: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(230, 0, 50, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.25rem;">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;">Cryptocurrency Deposit</h3>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Instant automated deposit via USDT, BTC, LTC, ETH, SOL</p>
+                    </div>
+                </div>
+
+                <form id="cryptoTopupForm" onsubmit="handleCryptoTopupSubmit(event)">
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label class="form-label">Select Top-Up Amount ($ USD)</label>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <button type="button" class="btn btn-glass preset-amt-btn" onclick="selectTopupAmount(10, this)">$10</button>
+                            <button type="button" class="btn btn-glass preset-amt-btn active" onclick="selectTopupAmount(25, this)">$25</button>
+                            <button type="button" class="btn btn-glass preset-amt-btn" onclick="selectTopupAmount(50, this)">$50</button>
+                            <button type="button" class="btn btn-glass preset-amt-btn" onclick="selectTopupAmount(100, this)">$100</button>
+                        </div>
+                        <input type="number" step="1" min="5" max="5000" id="topupAmountInput" class="form-input" value="25" placeholder="Custom amount e.g. 50" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Payment Cryptocurrency</label>
+                        <select id="topupCurrencySelect" class="form-input">
+                            <option value="usdt_trc20">USDT (TRC-20) — Instant / Low Fee</option>
+                            <option value="btc">Bitcoin (BTC)</option>
+                            <option value="eth">Ethereum (ETH)</option>
+                            <option value="sol">Solana (SOL)</option>
+                            <option value="ltc">Litecoin (LTC)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="cryptoTopupBtn" class="btn btn-primary btn-block" style="padding: 0.85rem;">
+                        <i class="fa-solid fa-lock"></i> Generate Crypto Invoice
+                    </button>
+                </form>
+            </div>
+
+            <!-- Voucher Code Redeem Form -->
+            <div class="orders-help-card" style="flex-direction: column; align-items: stretch; gap: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(34, 197, 94, 0.15); display: flex; align-items: center; justify-content: center; color: #22c55e; font-size: 1.25rem;">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;">Redeem Balance Voucher</h3>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Redeem gift voucher code or balance top-up key</p>
+                    </div>
+                </div>
+
+                <form id="voucherRedeemForm" onsubmit="handleVoucherRedeemSubmit(event)">
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Voucher / Top-Up Code</label>
+                        <input type="text" id="voucherCodeInput" class="form-input font-mono" placeholder="BULK-TOPUP-XXXX-XXXX" required style="text-transform: uppercase;">
+                    </div>
+
+                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;"><i class="fa-solid fa-circle-info text-accent"></i> How vouchers work</span>
+                        <p style="font-size: 0.825rem; color: var(--text-secondary); margin: 0;">Vouchers add immediate USD credit to your account balance. Funds never expire and can be used on any pass.</p>
+                    </div>
+
+                    <button type="submit" id="voucherRedeemBtn" class="btn btn-glass btn-block" style="padding: 0.85rem; border-color: rgba(34, 197, 94, 0.4); color: #22c55e;">
+                        <i class="fa-solid fa-check-circle"></i> Redeem Code to Balance
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Balance History Table -->
+        <section class="orders-help-card" style="flex-direction: column; align-items: stretch; padding: 1.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #fff;">Balance Activity &amp; History</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Recent top-ups, purchases, and admin balance adjustments.</p>
+                </div>
+                <button type="button" class="btn btn-glass btn-sm" onclick="loadBalanceHistory()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+                            <th style="padding: 0.75rem 1rem;">Date</th>
+                            <th style="padding: 0.75rem 1rem;">Type</th>
+                            <th style="padding: 0.75rem 1rem;">Description</th>
+                            <th style="padding: 0.75rem 1rem; text-align: right;">Amount</th>
+                            <th style="padding: 0.75rem 1rem; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="balanceHistoryTable">
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Loading transaction history…
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+    <script src="site-shell.js"></script>
+    <script src="balance.js"></script>
+</body>
+</html>

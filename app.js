@@ -1302,6 +1302,10 @@ function renderHeaderUserArea() {
 
           <div class="dropdown-divider"></div>
 
+          <a href="balance.html" class="dropdown-item">
+            <i class="fa-solid fa-wallet text-accent"></i> Store Balance &amp; Top-Up
+          </a>
+
           <button class="dropdown-item" onclick="openMyOrdersModal()">
             <i class="fa-solid fa-box-open text-accent"></i> My Orders &amp; Keys
           </button>
@@ -1359,7 +1363,7 @@ async function handleUserLogout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
   } catch (e) {}
   currentUser = null;
-  window.location.href = 'index.html?logged_out=' + Date.now();
+  window.location.href = '/api/auth/logout';
 }
 
 async function openMyOrdersModal() {
