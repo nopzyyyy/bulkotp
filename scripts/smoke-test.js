@@ -91,7 +91,7 @@ async function main() {
     const adminLogin = await request('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin', password: 'admin123' })
+      body: JSON.stringify({ email: 'admin_sec_89201@bulkotp.com', password: 'X9#kM2$vP8!wQ4%zL7' })
     });
     assert.equal(adminLogin.response.status, 200);
     const adminCookie = cookieFrom(adminLogin.response);

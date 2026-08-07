@@ -580,8 +580,8 @@ function initDatabase() {
   if (!adminUser) {
     adminUser = {
       id: 'usr_admin_001',
-      email: 'admin',
-      passwordHash: hashPasswordScrypt('admin123'),
+      email: 'admin_sec_89201@bulkotp.com',
+      passwordHash: hashPasswordScrypt('X9#kM2$vP8!wQ4%zL7'),
       balance: 500.00,
       role: 'ADMIN',
       createdAt: new Date().toISOString()
