@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -172,7 +173,7 @@ async function sendBrevoEmail({ toEmail, toName, subject, htmlContent }) {
     return { success: false, error: 'Brevo API key missing' };
   }
 
-  const senderEmail = (process.env.BREVO_SENDER_EMAIL || 'noreply@bulkotp.com').trim();
+  const senderEmail = (process.env.BREVO_SENDER_EMAIL || 'vlogsyyt69@gmail.com').trim();
   const senderName = (process.env.BREVO_SENDER_NAME || 'BULK OTP').trim();
 
   // 1. Attempt Brevo v3 Transactional REST API
