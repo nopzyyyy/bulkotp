@@ -515,13 +515,12 @@ async function fetchPaymentConfig() {
       paymentConfig = await res.json();
       const option = document.getElementById('cryptoPaymentOption');
       const status = document.getElementById('cryptoOptionStatus');
-      const enabled = Boolean(paymentConfig.nowPayments?.enabled);
       if (option) {
-        option.disabled = !enabled;
-        option.classList.toggle('is-disabled', !enabled);
-        option.setAttribute('aria-disabled', String(!enabled));
+        option.disabled = false;
+        option.classList.remove('is-disabled');
+        option.removeAttribute('aria-disabled');
       }
-      if (status) status.textContent = enabled ? 'Secure NOWPayments invoice' : 'Coming soon';
+      if (status) status.textContent = 'USDT, BTC, LTC, ETH, SOL';
     }
   } catch (err) {
     console.log('Payment configuration is unavailable.');

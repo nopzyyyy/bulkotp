@@ -123,25 +123,19 @@ async function syncCartWithBackend({ quiet = false } = {}) {
 async function fetchCartPaymentConfig() {
   try {
     const response = await fetch('/api/payments/config', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Payment configuration unavailable');
-    cartPaymentConfig = await response.json();
+    if (response.ok) cartPaymentConfig = await response.json();
   } catch (_) {
-    cartPaymentConfig = { nowPayments: { enabled: false } };
+    cartPaymentConfig = { nowPayments: { enabled: true } };
   }
 
   const option = document.getElementById('cartCryptoPaymentOption');
   const status = document.getElementById('cartCryptoOptionStatus');
-  const enabled = Boolean(cartPaymentConfig.nowPayments?.enabled);
   if (option) {
-    option.disabled = !enabled;
-    option.classList.toggle('is-disabled', !enabled);
-    option.setAttribute('aria-disabled', String(!enabled));
+    option.disabled = false;
+    option.classList.remove('is-disabled');
+    option.removeAttribute('aria-disabled');
   }
-  if (status) status.textContent = enabled ? 'Secure NOWPayments invoice' : 'Coming soon';
-  if (!enabled && selectedCartPaymentMethod === 'crypto') {
-    const balanceOption = document.querySelector('.checkout-payment-method[data-method="balance"]');
-    selectCartPaymentMethod('balance', balanceOption);
-  }
+  if (status) status.textContent = 'USDT, BTC, LTC, ETH, SOL';
 }
 
 function renderCartPage() {

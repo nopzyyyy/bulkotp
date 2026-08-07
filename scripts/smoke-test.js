@@ -78,7 +78,7 @@ async function main() {
     assert.ok(customerCookie.startsWith('market_session='));
 
     const config = await request('/api/payments/config');
-    assert.equal(config.data.nowPayments.enabled, false);
+    assert.equal(config.data.nowPayments.enabled, true);
 
     const crypto = await request('/api/payments/nowpayments/invoice', {
       method: 'POST',

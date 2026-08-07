@@ -1474,9 +1474,10 @@ app.get('/api/payments/config', (req, res) => {
   res.json({
     balance: { enabled: true },
     nowPayments: {
-      enabled: nowPaymentsConfigured(),
+      enabled: true,
+      configured: nowPaymentsConfigured('cart'),
       provider: 'NOWPayments',
-      currencies: ['usdt_trc20', 'btc', 'eth', 'sol']
+      currencies: ['usdt_trc20', 'btc', 'eth', 'sol', 'ltc']
     }
   });
 });
