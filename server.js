@@ -19,16 +19,57 @@ const BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
+// 1. Extreme Security Headers & CSP Middleware
 app.use(cors({ origin: false }));
 app.use((req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' data: https: blob:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://nowpayments.io; connect-src 'self' https://api.nowpayments.io;"
   });
+  if (req.secure || req.get('x-forwarded-proto') === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
   next();
 });
+
+// 2. Direct Sensitive Directory & File Access Shield (Prevent Data Leaks)
+app.use(['/data', '/data/*', '/scripts', '/scripts/*', '/scratch', '/scratch/*', '/.git', '/.env'], (req, res) => {
+  res.status(403).json({ error: 'Access Denied: Protected System Resource.' });
+});
+
+// 3. Input Sanitization & Anti-Injection Middleware
+function sanitizeValue(data) {
+  if (typeof data === 'string') {
+    return data
+      .replace(/\0/g, '')
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript\s*:/gi, '');
+  }
+  if (Array.isArray(data)) {
+    return data.map(sanitizeValue);
+  }
+  if (data !== null && typeof data === 'object') {
+    const clean = {};
+    for (const key of Object.keys(data)) {
+      const cleanKey = key.replace(/^\$|\./g, '');
+      clean[cleanKey] = sanitizeValue(data[key]);
+    }
+    return clean;
+  }
+  return data;
+}
+
+app.use((req, res, next) => {
+  if (req.body) req.body = sanitizeValue(req.body);
+  if (req.query) req.query = sanitizeValue(req.query);
+  if (req.params) req.params = sanitizeValue(req.params);
+  next();
+});
+
 app.use(express.json({
   limit: '10mb',
   verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); }
@@ -681,8 +722,28 @@ app.get('/admin.html', (req, res, next) => {
   next();
 });
 
+// Strict Static Asset Shield (Block all database files, environment configs, and backend code from direct browser access)
+app.use((req, res, next) => {
+  const safePath = (req.path || '').toLowerCase();
+  const isForbidden =
+    safePath.startsWith('/data') ||
+    safePath.startsWith('/scripts') ||
+    safePath.startsWith('/scratch') ||
+    safePath.startsWith('/.git') ||
+    safePath.includes('.env') ||
+    safePath.includes('package.json') ||
+    safePath.includes('package-lock.json') ||
+    safePath.includes('server.js') ||
+    safePath.endsWith('.json');
+
+  if (isForbidden) {
+    return res.status(403).json({ error: 'Access Denied: Protected System Resource.' });
+  }
+  next();
+});
+
 // Static Middleware
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { dotfiles: 'ignore' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Multer Storage Configuration for Uploads
@@ -1940,6 +2001,15 @@ app.post('/api/admin/tickets/:id/reply', requireAdmin, (req, res) => {
 
   logAudit(req.currentUser.email, 'REPLY_TICKET', `Replied to ticket #${ticket.ticketNumber}`, req.ip);
   res.json({ success: true, ticket });
+});
+
+// Global Sanitized Error Handler (Prevent Data/Stack Trace Leakage)
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err.stack || err);
+  const isDev = process.env.NODE_ENV === 'development';
+  res.status(err.status || 500).json({
+    error: isDev ? err.message : 'An unexpected security condition occurred. Request halted.'
+  });
 });
 
 app.listen(PORT, () => {
