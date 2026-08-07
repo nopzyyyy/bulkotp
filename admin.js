@@ -140,6 +140,7 @@ async function switchAdminTab(tabId, btn) {
       users: 'Users & Balances Manager',
       vouchers: 'Vouchers & Gift Codes Manager',
       tickets: 'Customer Support Tickets',
+      payments: 'Payment Gateway Settings',
       audit: 'Security Audit Logs'
     };
     titleEl.textContent = titles[tabId] || 'Admin Dashboard';
@@ -158,6 +159,7 @@ async function switchAdminTab(tabId, btn) {
     else if (tabId === 'users') await loadAdminUsers();
     else if (tabId === 'vouchers') await loadAdminVouchers();
     else if (tabId === 'tickets') await loadAdminTickets();
+    else if (tabId === 'payments') await loadAdminPaymentSettings();
     else if (tabId === 'audit') await loadAdminAuditLogs();
   } catch (e) {
     console.error('Error switching tab:', e);
@@ -976,5 +978,73 @@ async function handleDeleteVoucher(code) {
   } finally {
     finishTopProgress();
     hideGlobalLoading();
+  }
+}
+
+// Payment Settings Management
+async function loadAdminPaymentSettings() {
+  try {
+    const res = await fetch('/api/admin/payment-settings', { credentials: 'include' });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load payment settings.');
+
+    const cartInput = document.getElementById('nowpaymentsCartApiKey');
+    const balanceInput = document.getElementById('nowpaymentsBalanceApiKey');
+    const secretInput = document.getElementById('nowpaymentsIpnSecret');
+    const webhookInput = document.getElementById('nowpaymentsWebhookUrl');
+
+    if (cartInput) cartInput.value = data.cartApiKey || '';
+    if (balanceInput) balanceInput.value = data.balanceApiKey || '';
+    if (secretInput) secretInput.value = data.ipnSecret || '';
+    if (webhookInput) webhookInput.value = data.webhookUrl || 'https://bulkotp.com/api/payments/nowpayments/ipn';
+  } catch (err) {
+    showToast(err.message || 'Error loading payment settings.', 'error');
+  }
+}
+
+async function handleSavePaymentSettings(event) {
+  event.preventDefault();
+
+  const cartApiKey = (document.getElementById('nowpaymentsCartApiKey')?.value || '').trim();
+  const balanceApiKey = (document.getElementById('nowpaymentsBalanceApiKey')?.value || '').trim();
+  const ipnSecret = (document.getElementById('nowpaymentsIpnSecret')?.value || '').trim();
+
+  if (!cartApiKey || !balanceApiKey || !ipnSecret) {
+    showToast('Please enter both API keys and the IPN Secret key.', 'error');
+    return;
+  }
+
+  if (!confirm('⚠️ ATTENTION: Changing payment API keys affects live customer checkouts.\nHave you verified your API keys twice on https://nowpayments.io/api?')) {
+    return;
+  }
+
+  startTopProgress();
+  showGlobalLoading('Saving payment gateway settings...');
+
+  try {
+    const res = await fetch('/api/admin/payment-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ cartApiKey, balanceApiKey, ipnSecret })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to save payment settings.');
+
+    showToast('Payment gateway settings saved successfully!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Error saving payment settings.', 'error');
+  } finally {
+    finishTopProgress();
+    hideGlobalLoading();
+  }
+}
+
+function copyWebhookUrl() {
+  const input = document.getElementById('nowpaymentsWebhookUrl');
+  if (input && input.value) {
+    navigator.clipboard.writeText(input.value);
+    showToast('Webhook URL copied to clipboard!', 'success');
   }
 }

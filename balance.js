@@ -17,6 +17,25 @@ async function initBalancePage() {
       updateBalanceDisplay(e.detail.user.balance);
     }
   });
+
+  // Check URL Query parameters for topup status
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('topup') === 'success') {
+    const amt = urlParams.get('amount') ? `$${parseFloat(urlParams.get('amount')).toFixed(2)} USD` : 'Funds';
+    showToast(`Payment confirmed! ${amt} credited to your account balance.`, 'success');
+
+    const topupHeader = document.querySelector('.orders-page-header');
+    if (topupHeader) {
+      const alertBanner = document.createElement('div');
+      alertBanner.style.cssText = 'background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 12px; padding: 1rem 1.25rem; margin-top: 1rem; color: #22c55e; display: flex; align-items: center; gap: 0.75rem; font-weight: 600;';
+      alertBanner.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size: 1.25rem;"></i> <span>Deposit confirmed! Your account balance has been updated to <strong>$${Number(user.balance || 0).toFixed(2)} USD</strong>.</span>`;
+      topupHeader.appendChild(alertBanner);
+    }
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (urlParams.get('topup') === 'cancelled') {
+    showToast('Top-up deposit payment was cancelled.', 'error');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 }
 
 function updateBalanceDisplay(balanceVal) {

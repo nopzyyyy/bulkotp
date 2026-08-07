@@ -85,8 +85,30 @@ const FILES = {
   store: path.join(DATA_DIR, 'store.json'),
   transactions: path.join(DATA_DIR, 'transactions.json'),
   vouchers: path.join(DATA_DIR, 'vouchers.json'),
-  otps: path.join(DATA_DIR, 'otps.json')
+  otps: path.join(DATA_DIR, 'otps.json'),
+  paymentSettings: path.join(DATA_DIR, 'payment_settings.json')
 };
+
+function getPaymentSettings() {
+  const defaults = {
+    cartApiKey: (process.env.NOWPAYMENTS_API_KEY || '').trim(),
+    balanceApiKey: (process.env.NOWPAYMENTS_BALANCE_API_KEY || process.env.NOWPAYMENTS_API_KEY || '').trim(),
+    ipnSecret: (process.env.NOWPAYMENTS_IPN_SECRET || '').trim()
+  };
+  const stored = readJson(FILES.paymentSettings, {});
+  return {
+    cartApiKey: (stored.cartApiKey || defaults.cartApiKey).trim(),
+    balanceApiKey: (stored.balanceApiKey || defaults.balanceApiKey || stored.cartApiKey || defaults.cartApiKey).trim(),
+    ipnSecret: (stored.ipnSecret || defaults.ipnSecret).trim()
+  };
+}
+
+function nowPaymentsConfigured(type = 'cart') {
+  const settings = getPaymentSettings();
+  const apiKey = type === 'balance' ? settings.balanceApiKey : settings.cartApiKey;
+  const looksLikePlaceholder = /placeholder|replace|your[_-]?api/i.test(apiKey);
+  return Boolean(apiKey && settings.ipnSecret && !looksLikePlaceholder);
+}
 
 // Helper: Read JSON File safely
 function readJson(filePath, fallback = []) {
@@ -1034,16 +1056,18 @@ app.post('/api/balance/topup', requireAuth, async (req, res) => {
 
   const requestedCurrency = String(req.body.payCurrency || 'usdt_trc20').toLowerCase();
 
-  // If NOWPayments is configured, generate a crypto invoice for the top-up
-  if (nowPaymentsConfigured()) {
+  // If NOWPayments is configured for balance topup, generate a crypto invoice
+  if (nowPaymentsConfigured('balance')) {
     try {
+      const settings = getPaymentSettings();
+      const apiKey = settings.balanceApiKey || settings.cartApiKey;
       const topupId = `TOPUP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc' };
       const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
 
       const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': NOWPAYMENTS_API_KEY },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
         body: JSON.stringify({
           price_amount: amount,
           price_currency: 'usd',
@@ -1051,7 +1075,7 @@ app.post('/api/balance/topup', requireAuth, async (req, res) => {
           order_id: topupId,
           order_description: `BULK OTP Store Balance Top-Up $${amount.toFixed(2)}`,
           ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
-          success_url: `${baseUrl}/balance.html?topup=success`,
+          success_url: `${baseUrl}/balance.html?topup=success&amount=${amount}`,
           cancel_url: `${baseUrl}/balance.html?topup=cancelled`
         })
       });
@@ -1368,7 +1392,7 @@ app.post('/api/orders/checkout', requireAuth, async (req, res) => {
 });
 
 app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
-  if (!nowPaymentsConfigured()) {
+  if (!nowPaymentsConfigured('cart')) {
     return res.status(503).json({
       code: 'PAYMENTS_NOT_CONFIGURED',
       error: 'Cryptocurrency checkout is not active yet. Please use store balance for now.'
@@ -1376,17 +1400,19 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
   }
 
   try {
+    const settings = getPaymentSettings();
+    const apiKey = settings.cartApiKey;
     const products = readJson(FILES.products, []);
     const quote = buildOrderQuote(req.body.items, products);
     const orderId = newOrderId();
     const requestedCurrency = String(req.body.payCurrency || 'usdt_trc20').toLowerCase();
-    const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol' };
+    const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc' };
     if (!currencyMap[requestedCurrency]) return res.status(400).json({ error: 'Unsupported cryptocurrency.' });
 
     const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
     const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': NOWPAYMENTS_API_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
       body: JSON.stringify({
         price_amount: quote.total,
         price_currency: 'usd',
@@ -1441,17 +1467,46 @@ function sortObject(value) {
 }
 
 app.post('/api/payments/nowpayments/ipn', (req, res) => {
-  if (!nowPaymentsConfigured()) return res.status(503).json({ error: 'Payment callbacks are not configured.' });
+  const settings = getPaymentSettings();
+  if (!settings.ipnSecret) return res.status(503).json({ error: 'Payment callbacks are not configured.' });
+
   const signature = String(req.get('x-nowpayments-sig') || '');
-  const expected = crypto.createHmac('sha512', NOWPAYMENTS_IPN_SECRET).update(JSON.stringify(sortObject(req.body))).digest('hex');
+  const expected = crypto.createHmac('sha512', settings.ipnSecret).update(JSON.stringify(sortObject(req.body))).digest('hex');
   const validSignature = signature.length === expected.length && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   if (!validSignature) return res.status(401).json({ error: 'Invalid payment signature.' });
 
+  const orderId = String(req.body.order_id || '');
+  const paymentStatus = String(req.body.payment_status || '').toLowerCase();
+
+  // Check if this is a Balance Top-Up (order_id starts with TOPUP-)
+  if (orderId.startsWith('TOPUP-')) {
+    const transactions = readJson(FILES.transactions, []);
+    const tx = transactions.find(t => t.id === orderId);
+
+    if (tx) {
+      const isPaid = ['confirmed', 'finished'].includes(paymentStatus);
+      tx.status = isPaid ? 'COMPLETED' : paymentStatus.toUpperCase();
+      tx.updatedAt = new Date().toISOString();
+      writeJson(FILES.transactions, transactions);
+
+      if (isPaid) {
+        const users = readJson(FILES.users, []);
+        const user = users.find(u => u.id === tx.userId || u.email === tx.email);
+        if (user) {
+          user.balance = Math.round((Number(user.balance || 0) + Number(tx.amount || 0)) * 100) / 100;
+          writeJson(FILES.users, users);
+          logAudit(user.email, 'TOPUP_COMPLETED', `Crypto topup confirmed: +$${Number(tx.amount || 0).toFixed(2)} USD`, req.ip);
+        }
+      }
+    }
+    return res.json({ success: true });
+  }
+
+  // Otherwise handle Cart Order
   const orders = readJson(FILES.orders, []);
-  const order = orders.find(candidate => candidate.id === req.body.order_id || candidate.externalPaymentId === String(req.body.payment_id || req.body.id));
+  const order = orders.find(candidate => candidate.id === orderId || candidate.externalPaymentId === String(req.body.payment_id || req.body.id));
   if (!order) return res.status(404).json({ error: 'Order not found.' });
 
-  const paymentStatus = String(req.body.payment_status || '').toLowerCase();
   order.providerStatus = paymentStatus;
   order.updatedAt = new Date().toISOString();
 
@@ -1466,6 +1521,9 @@ app.post('/api/payments/nowpayments/ipn', (req, res) => {
         allocateOrderKeys(order, order.userId, products);
         order.status = 'COMPLETED';
         order.paidAt = new Date().toISOString();
+
+        // Dispatch receipt email
+        sendOrderConfirmationEmail(order.email, order).catch(err => console.error('Order email error:', err));
       } catch (error) {
         order.status = 'PAID_REVIEW_REQUIRED';
         order.fulfillmentError = error.message;
@@ -1720,6 +1778,40 @@ app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const orders = readJson(FILES.orders, []);
   res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   res.json(orders);
+});
+
+// Admin Payment Gateway Settings (NOWPayments Cart & Balance Keys, IPN Secret)
+app.get('/api/admin/payment-settings', requireAdmin, (req, res) => {
+  const settings = getPaymentSettings();
+  const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+  res.json({
+    success: true,
+    cartApiKey: settings.cartApiKey,
+    balanceApiKey: settings.balanceApiKey,
+    ipnSecret: settings.ipnSecret,
+    webhookUrl: `${baseUrl}/api/payments/nowpayments/ipn`
+  });
+});
+
+app.post('/api/admin/payment-settings', requireAdmin, (req, res) => {
+  const { cartApiKey, balanceApiKey, ipnSecret } = req.body;
+  if (!cartApiKey || !balanceApiKey || !ipnSecret) {
+    return res.status(400).json({ error: 'All payment API keys and IPN secret are required.' });
+  }
+
+  const newSettings = {
+    cartApiKey: String(cartApiKey).trim(),
+    balanceApiKey: String(balanceApiKey).trim(),
+    ipnSecret: String(ipnSecret).trim(),
+    updatedAt: new Date().toISOString(),
+    updatedBy: req.currentUser.email
+  };
+
+  writeJson(FILES.paymentSettings, newSettings);
+  logAudit(req.currentUser.email, 'UPDATE_PAYMENT_SETTINGS', 'Updated NOWPayments Cart & Balance API keys and IPN Secret', req.ip);
+
+  res.json({ success: true, message: 'Payment gateway settings saved successfully.' });
 });
 
 // Image Upload Endpoint

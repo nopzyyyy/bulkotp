@@ -68,6 +68,9 @@
                 </button>
 
                 <div class="sidebar-category">SYSTEM</div>
+                <button class="sidebar-link" onclick="switchAdminTab('payments', this)">
+                    <i class="fa-solid fa-credit-card"></i> <span>Payment Gateways</span>
+                </button>
                 <button class="sidebar-link" onclick="switchAdminTab('audit', this)">
                     <i class="fa-solid fa-shield-halved"></i> <span>Audit Logs</span>
                 </button>
@@ -383,6 +386,87 @@
                                     <!-- Populated by admin.js -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Gateways & API Key Configuration -->
+                <div id="tab-payments" class="admin-tab-content">
+                    <div class="pinks-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #e60032; background: rgba(230, 0, 50, 0.06);">
+                        <div style="display: flex; align-items: flex-start; gap: 1rem; color: #ff255c;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.75rem; margin-top: 0.2rem;"></i>
+                            <div>
+                                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.1rem; font-weight: 800; color: #ffffff;">IMPORTANT SECURITY &amp; API KEY NOTICE</h3>
+                                <p style="font-size: 0.875rem; color: #d0d0e0; margin: 0; line-height: 1.5;">Be extremely careful when modifying payment settings! Please double check and verify your API keys twice on <a href="https://nowpayments.io/api" target="_blank" style="color: #ff255c; font-weight: 700; text-decoration: underline;">https://nowpayments.io/api</a> before saving. Invalid or mismatched API keys will disrupt live customer crypto checkouts.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOWPayments API Keys Form -->
+                    <div class="pinks-table-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1.25rem; font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-key text-accent"></i> NOWPayments API Keys
+                        </h3>
+
+                        <form id="paymentSettingsForm" onsubmit="handleSavePaymentSettings(event)" style="display: grid; gap: 1.25rem;">
+                            <div>
+                                <label class="form-label" for="nowpaymentsCartApiKey">
+                                    Direct Cart Checkout API Key
+                                    <span style="display: block; font-weight: 400; font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem;">Used for direct product pass purchases from the shopping cart.</span>
+                                </label>
+                                <input type="password" id="nowpaymentsCartApiKey" class="form-input font-mono" placeholder="Enter NOWPayments API Key for Cart Checkout" required>
+                            </div>
+
+                            <div>
+                                <label class="form-label" for="nowpaymentsBalanceApiKey">
+                                    Balance Top-Up API Key
+                                    <span style="display: block; font-weight: 400; font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem;">Used for customer account balance deposits on the Balance page.</span>
+                                </label>
+                                <input type="password" id="nowpaymentsBalanceApiKey" class="form-input font-mono" placeholder="Enter NOWPayments API Key for Balance Top-Up" required>
+                            </div>
+
+                            <div>
+                                <label class="form-label" for="nowpaymentsIpnSecret">
+                                    NOWPayments IPN Secret Key
+                                    <span style="display: block; font-weight: 400; font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem;">Used to verify HMAC-SHA512 webhook signatures for payment confirmation.</span>
+                                </label>
+                                <input type="password" id="nowpaymentsIpnSecret" class="form-input font-mono" placeholder="Enter NOWPayments IPN Secret Key" required>
+                            </div>
+
+                            <div style="margin-top: 0.5rem;">
+                                <button type="submit" id="btnSavePaymentSettings" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Payment Gateway Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Webhook URL & Callback Info Card -->
+                    <div class="pinks-table-card" style="padding: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem; font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-network-wired text-accent"></i> Webhook &amp; IPN Callback Configuration
+                        </h3>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <label class="form-label">
+                                Instant Payment Notification (IPN) Webhook URL
+                                <span style="display: block; font-weight: 400; font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem;">Copy this Webhook URL into your NOWPayments Account Settings under "IPN Callback URL".</span>
+                            </label>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <input type="text" id="nowpaymentsWebhookUrl" class="form-input font-mono" readonly value="https://bulkotp.com/api/payments/nowpayments/ipn" style="background: rgba(0,0,0,0.4); color: #22c55e; font-weight: 600; flex: 1; min-width: 280px;">
+                                <button type="button" class="btn btn-glass" onclick="copyWebhookUrl()"><i class="fa-regular fa-copy"></i> Copy Webhook URL</button>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 1.25rem;">
+                            <h4 style="margin: 0 0 0.5rem; font-size: 0.95rem; font-weight: 700; color: #fff;"><i class="fa-solid fa-circle-info text-accent"></i> How the Webhook Works:</h4>
+                            <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                                <li>When a customer submits a crypto payment (USDT, BTC, ETH, SOL, LTC), NOWPayments generates an automated invoice.</li>
+                                <li>Once the blockchain transaction confirms, NOWPayments sends an HTTP POST notification with an HMAC signature to this Webhook URL.</li>
+                                <li>The server validates the signature against your <strong>IPN Secret Key</strong>.</li>
+                                <li>For <strong>Cart Purchases</strong>: The system immediately allocates digital stock keys, marks the order as COMPLETED, and sends an HTML receipt email.</li>
+                                <li>For <strong>Balance Deposits</strong>: The system credits the customer's balance immediately, logs the deposit, and updates their balance in real-time.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
