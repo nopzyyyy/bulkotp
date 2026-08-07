@@ -151,26 +151,105 @@ function nowPaymentsConfigured(type = 'cart') {
   return Boolean(apiKey && settings.ipnSecret && !looksLikePlaceholder);
 }
 
-// Helper: Read JSON File safely
+// Ensure Database Backup Directory Exists
+const BACKUPS_DIR = process.env.BACKUPS_DIR ? path.resolve(process.env.BACKUPS_DIR) : path.join(__dirname, 'data_backups');
+if (!fs.existsSync(BACKUPS_DIR)) fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+
+// Auto-backup internal database snapshot helper
+function autoBackupDatabase(label = 'auto') {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const folder = path.join(BACKUPS_DIR, `snapshot_${label}_${timestamp}`);
+    if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+
+    Object.values(FILES).forEach(filePath => {
+      if (fs.existsSync(filePath)) {
+        const basename = path.basename(filePath);
+        fs.copyFileSync(filePath, path.join(folder, basename));
+      }
+    });
+
+    // Cleanup snapshots older than 48 entries
+    const allBackups = fs.readdirSync(BACKUPS_DIR)
+      .map(name => path.join(BACKUPS_DIR, name))
+      .filter(p => {
+        try { return fs.statSync(p).isDirectory(); } catch (_) { return false; }
+      })
+      .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+
+    if (allBackups.length > 48) {
+      allBackups.slice(48).forEach(oldDir => {
+        try { fs.rmSync(oldDir, { recursive: true, force: true }); } catch (_) {}
+      });
+    }
+  } catch (err) {
+    console.error('Error creating database snapshot:', err);
+  }
+}
+
+// 100% Atomic File Writer (Prevents 0-byte state or file corruption on process kill)
+function writeJson(filePath, data) {
+  try {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const tempFile = `${filePath}.${Date.now()}.${Math.floor(Math.random() * 10000)}.tmp`;
+    
+    // Write to temporary file
+    fs.writeFileSync(tempFile, jsonStr, 'utf8');
+    
+    // Atomic rename replaces original file instantly
+    fs.renameSync(tempFile, filePath);
+  } catch (err) {
+    console.error(`Error writing atomic JSON to ${filePath}:`, err);
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {
+      console.error(`Critical fallback write failed for ${filePath}:`, e);
+    }
+  }
+}
+
+// Resilient JSON Reader with Automatic Backup Snapshot Recovery
 function readJson(filePath, fallback = []) {
   try {
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(data);
+      if (data && data.trim().length > 0) {
+        return JSON.parse(data);
+      }
     }
   } catch (err) {
-    console.error(`Error reading ${filePath}:`, err);
+    console.error(`Corrupted database file detected at ${filePath}. Attempting auto-recovery:`, err);
   }
-  return fallback;
-}
 
-// Helper: Write JSON File safely
-function writeJson(filePath, data) {
+  // Attempt auto-recovery from latest backup snapshot
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (err) {
-    console.error(`Error writing ${filePath}:`, err);
+    const basename = path.basename(filePath);
+    if (fs.existsSync(BACKUPS_DIR)) {
+      const backups = fs.readdirSync(BACKUPS_DIR)
+        .map(name => path.join(BACKUPS_DIR, name))
+        .filter(p => {
+          try { return fs.statSync(p).isDirectory(); } catch (_) { return false; }
+        })
+        .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+
+      for (const backupDir of backups) {
+        const backupFile = path.join(backupDir, basename);
+        if (fs.existsSync(backupFile)) {
+          const backupData = fs.readFileSync(backupFile, 'utf8');
+          if (backupData && backupData.trim().length > 0) {
+            const restored = JSON.parse(backupData);
+            console.log(`[DATABASE RECOVERY] Successfully auto-restored ${basename} from snapshot ${backupDir}`);
+            writeJson(filePath, restored);
+            return restored;
+          }
+        }
+      }
+    }
+  } catch (recoveryErr) {
+    console.error(`Auto-recovery failed for ${filePath}:`, recoveryErr);
   }
+
+  return fallback;
 }
 
 // Password Hashing: Scrypt (salt:hash)
@@ -665,6 +744,8 @@ function initDatabase() {
 }
 
 initDatabase();
+autoBackupDatabase('startup');
+setInterval(() => autoBackupDatabase('hourly'), 60 * 60 * 1000);
 
 // Session Helper function
 function getSession(req) {
