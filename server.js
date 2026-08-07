@@ -256,6 +256,10 @@ function verifyOtp(email, code, type) {
 }
 
 async function sendOtpEmail(email, otpCode, type) {
+  console.log(`\n=================================================`);
+  console.log(`🔑 [BULK OTP CODE] Email: ${email} | Type: ${type} | Code: ${otpCode}`);
+  console.log(`=================================================\n`);
+
   let title = 'Verification Code';
   let subtitle = 'Your verification code for BULK OTP is below:';
 
@@ -589,6 +593,12 @@ function requireAdmin(req, res, next) {
   req.currentUser = sess.user;
   next();
 }
+
+// Admin OTP Monitor Endpoint
+app.get('/api/admin/otps', requireAdmin, (req, res) => {
+  const otps = readJson(FILES.otps, []).filter(o => o.expiresAt > Date.now());
+  res.json({ success: true, otps });
+});
 
 // Page Access Control: Protected File Requests
 app.get('/admin.html', (req, res, next) => {
