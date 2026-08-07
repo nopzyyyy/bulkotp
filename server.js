@@ -260,6 +260,8 @@ async function sendOtpEmail(email, otpCode, type) {
   console.log(`🔑 [BULK OTP CODE] Email: ${email} | Type: ${type} | Code: ${otpCode}`);
   console.log(`=================================================\n`);
 
+  const siteUrl = (PUBLIC_BASE_URL || 'https://bulkotp.com').replace(/\/$/, '');
+
   let title = 'Verification Code';
   let subtitle = 'Your verification code for BULK OTP is below:';
 
@@ -276,18 +278,40 @@ async function sendOtpEmail(email, otpCode, type) {
 
   const html = `
     <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0d0d12; color: #ffffff; padding: 40px 20px; text-align: center;">
-      <div style="max-width: 520px; margin: 0 auto; background: #14151a; border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <div style="max-width: 520px; margin: 0 auto; background: #14151a; border: 1px solid rgba(230, 0, 50, 0.35); border-radius: 20px; padding: 36px 28px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); position: relative;">
+        
+        <!-- Website Brand Logo Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="${siteUrl}" style="text-decoration: none; display: inline-block;">
+            <img src="${siteUrl}/assets/brand_logo.png" alt="BULK OTP Logo" style="height: 52px; width: auto; max-width: 140px; display: block; margin: 0 auto 10px auto; filter: drop-shadow(0 4px 12px rgba(230,0,50,0.4));">
+            <h1 style="color: #ffffff; font-size: 26px; margin: 0; font-weight: 800; letter-spacing: 1px;">BULK <span style="color: #e60032;">OTP</span></h1>
+          </a>
+        </div>
+
+        <h2 style="color: #ffffff; font-size: 20px; margin-bottom: 12px; font-weight: 700;">${title}</h2>
+        <p style="color: #a0a0b0; font-size: 14px; line-height: 1.6; margin-bottom: 28px; max-width: 440px; margin-left: auto; margin-right: auto;">${subtitle}</p>
+        
+        <!-- 6-Digit OTP Code Display Box -->
+        <div style="background: linear-gradient(135deg, rgba(230, 0, 50, 0.15) 0%, rgba(20, 21, 26, 0.9) 100%); border: 2px dashed #e60032; border-radius: 14px; padding: 22px; margin-bottom: 28px; box-shadow: inset 0 0 20px rgba(230, 0, 50, 0.15);">
+          <span style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #ffffff; text-shadow: 0 0 12px rgba(230, 0, 50, 0.5);">${otpCode}</span>
+        </div>
+
+        <!-- Website Crimson Button CTA -->
         <div style="margin-bottom: 24px;">
-          <h1 style="color: #ffffff; font-size: 26px; margin: 0; font-weight: 800;">BULK <span style="color: #e60032;">OTP</span></h1>
+          <a href="${siteUrl}/login.html" style="background: linear-gradient(135deg, #e60032 0%, #ff255c 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; box-shadow: 0 6px 20px rgba(230, 0, 50, 0.45); border: 1px solid rgba(255, 255, 255, 0.2);">
+            Enter Code on Site &rarr;
+          </a>
         </div>
-        <h2 style="color: #ffffff; font-size: 20px; margin-bottom: 12px;">${title}</h2>
-        <p style="color: #a0a0b0; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">${subtitle}</p>
-        <div style="background: rgba(230, 0, 50, 0.1); border: 2px dashed #e60032; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #ffffff;">${otpCode}</span>
-        </div>
-        <p style="color: #707080; font-size: 12px; margin-bottom: 0;">This code is valid for 5 minutes. If you did not request this, please ignore this email.</p>
+
+        <p style="color: #707080; font-size: 12px; margin-bottom: 0; line-height: 1.5;">This code is valid for 5 minutes. If you did not request this code, you can safely ignore this email.</p>
       </div>
-      <p style="color: #505060; font-size: 11px; margin-top: 20px;">&copy; 2026 BULK OTP Store. All rights reserved.</p>
+
+      <!-- Website Footer Branding & Logo Watermark -->
+      <div style="text-align: center; margin-top: 24px;">
+        <img src="${siteUrl}/assets/brand_logo.png" alt="" style="height: 24px; width: auto; vertical-align: middle; opacity: 0.6; margin-right: 6px;">
+        <span style="color: #505060; font-size: 12px; font-weight: 600;">BULK OTP &bull; Instant Digital Keys</span>
+        <p style="color: #404050; font-size: 11px; margin-top: 6px;">&copy; 2026 BULK OTP Store. All rights reserved.</p>
+      </div>
     </div>
   `;
 
@@ -300,6 +324,8 @@ async function sendOtpEmail(email, otpCode, type) {
 }
 
 async function sendOrderConfirmationEmail(userEmail, order) {
+  const siteUrl = (PUBLIC_BASE_URL || 'https://bulkotp.com').replace(/\/$/, '');
+
   const itemsHtml = (order.items || []).map(item => `
     <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
       <td style="padding: 12px 16px; color: #ffffff; font-weight: 600;">${item.title || item.name}</td>
@@ -309,37 +335,48 @@ async function sendOrderConfirmationEmail(userEmail, order) {
   `).join('');
 
   const keysHtml = (order.purchasedItems || []).map(k => `
-    <div style="background: #1c1d24; border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-family: monospace; font-size: 14px; color: #22c55e; word-break: break-all;">
+    <div style="background: #1c1d24; border: 1px solid rgba(230, 0, 50, 0.35); border-radius: 10px; padding: 14px; margin-bottom: 10px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 14px; color: #22c55e; word-break: break-all; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);">
+      <span style="color: #a0a0b0; font-size: 11px; display: block; margin-bottom: 4px; font-family: sans-serif; text-transform: uppercase;">KEY / CREDENTIALS:</span>
       ${k.credentials}
     </div>
   `).join('');
 
   const html = `
     <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0d0d12; color: #ffffff; padding: 40px 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background: #14151a; border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 800;">BULK <span style="color: #e60032;">OTP</span></h1>
-          <p style="color: #22c55e; font-size: 14px; font-weight: 600; margin-top: 6px;"><i style="font-style: normal;">✓</i> Payment Confirmed & Delivered</p>
+      <div style="max-width: 600px; margin: 0 auto; background: #14151a; border: 1px solid rgba(230, 0, 50, 0.35); border-radius: 20px; padding: 36px 30px; box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+        
+        <!-- Header with Website Logo -->
+        <div style="text-align: center; margin-bottom: 28px;">
+          <a href="${siteUrl}" style="text-decoration: none; display: inline-block;">
+            <img src="${siteUrl}/assets/brand_logo.png" alt="BULK OTP Logo" style="height: 54px; width: auto; max-width: 150px; display: block; margin: 0 auto 10px auto; filter: drop-shadow(0 4px 12px rgba(230,0,50,0.4));">
+            <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 800; letter-spacing: 1px;">BULK <span style="color: #e60032;">OTP</span></h1>
+          </a>
+          <p style="color: #22c55e; font-size: 14px; font-weight: 700; margin-top: 8px;"><span style="display: inline-block; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); padding: 4px 12px; border-radius: 20px;">✓ Payment Confirmed & Delivered</span></p>
         </div>
 
-        <div style="border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 0; margin-bottom: 24px; display: flex; justify-content: space-between;">
-          <div>
-            <span style="color: #707080; font-size: 12px; display: block;">ORDER NUMBER</span>
-            <strong style="color: #ffffff; font-size: 16px;">#${order.orderNumber || order.id}</strong>
-          </div>
-          <div style="text-align: right;">
-            <span style="color: #707080; font-size: 12px; display: block;">TOTAL PAID</span>
-            <strong style="color: #e60032; font-size: 18px;">$${Number(order.total || 0).toFixed(2)} USD</strong>
-          </div>
+        <!-- Order Summary Box -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; margin-bottom: 28px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td>
+                <span style="color: #707080; font-size: 11px; text-transform: uppercase; display: block; letter-spacing: 0.5px;">ORDER NUMBER</span>
+                <strong style="color: #ffffff; font-size: 17px; font-family: monospace;">#${order.orderNumber || order.id}</strong>
+              </td>
+              <td style="text-align: right;">
+                <span style="color: #707080; font-size: 11px; text-transform: uppercase; display: block; letter-spacing: 0.5px;">TOTAL PAID</span>
+                <strong style="color: #e60032; font-size: 20px;">$${Number(order.total || 0).toFixed(2)} USD</strong>
+              </td>
+            </tr>
+          </table>
         </div>
 
-        <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 12px;">Purchased Items</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
+        <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 14px; font-weight: 700;">Purchased Items</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 14px;">
           <thead>
-            <tr style="background: rgba(255,255,255,0.04); color: #707080; font-size: 11px; text-transform: uppercase;">
-              <th style="padding: 10px 16px; text-align: left;">Item</th>
-              <th style="padding: 10px 16px; text-align: center;">Qty</th>
-              <th style="padding: 10px 16px; text-align: right;">Price</th>
+            <tr style="background: rgba(255,255,255,0.05); color: #808090; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+              <th style="padding: 12px 16px; text-align: left; border-radius: 8px 0 0 8px;">Item Description</th>
+              <th style="padding: 12px 16px; text-align: center;">Qty</th>
+              <th style="padding: 12px 16px; text-align: right; border-radius: 0 8px 8px 0;">Price</th>
             </tr>
           </thead>
           <tbody>
@@ -348,17 +385,24 @@ async function sendOrderConfirmationEmail(userEmail, order) {
         </table>
 
         ${keysHtml ? `
-          <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 12px;">Delivered Access Keys</h3>
+          <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 14px; font-weight: 700;">Delivered Access Keys</h3>
           ${keysHtml}
         ` : ''}
 
-        <div style="text-align: center; margin-top: 32px;">
-          <a href="${PUBLIC_BASE_URL || 'https://bulkotp.com'}/orders.html" style="background: #e60032; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; display: inline-block;">
-            View Order in Account
+        <!-- Website Crimson Button CTA -->
+        <div style="text-align: center; margin-top: 36px; margin-bottom: 12px;">
+          <a href="${siteUrl}/orders.html" style="background: linear-gradient(135deg, #e60032 0%, #ff255c 100%); color: #ffffff; text-decoration: none; padding: 15px 32px; border-radius: 12px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; box-shadow: 0 6px 20px rgba(230, 0, 50, 0.45); border: 1px solid rgba(255, 255, 255, 0.2);">
+            View Keys in Account &rarr;
           </a>
         </div>
       </div>
-      <p style="color: #505060; font-size: 11px; text-align: center; margin-top: 20px;">Thank you for shopping at BULK OTP!</p>
+
+      <!-- Website Footer Branding & Watermark Logo -->
+      <div style="text-align: center; margin-top: 24px;">
+        <img src="${siteUrl}/assets/brand_logo.png" alt="" style="height: 24px; width: auto; vertical-align: middle; opacity: 0.6; margin-right: 6px;">
+        <span style="color: #505060; font-size: 12px; font-weight: 600;">BULK OTP &bull; Instant Digital Keys</span>
+        <p style="color: #404050; font-size: 11px; margin-top: 6px;">Thank you for shopping at BULK OTP!</p>
+      </div>
     </div>
   `;
 
