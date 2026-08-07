@@ -1,6 +1,9 @@
 (() => {
   'use strict';
 
+  let pendingEmail = '';
+  let pendingOtpType = 'REGISTRATION'; // 'REGISTRATION' or 'LOGIN_2FA'
+
   const redirectTarget = (() => {
     const value = new URLSearchParams(location.search).get('redirect');
     return value && value.startsWith('/') && !value.startsWith('//') ? value : '/index.html';
@@ -31,19 +34,38 @@
   }
 
   window.switchAuthTab = (mode) => {
-    const loginMode = mode === 'login';
-    document.getElementById('tabLogin').classList.toggle('active', loginMode);
-    document.getElementById('tabLogin').setAttribute('aria-selected', String(loginMode));
-    document.getElementById('tabRegister').classList.toggle('active', !loginMode);
-    document.getElementById('tabRegister').setAttribute('aria-selected', String(!loginMode));
-    document.getElementById('loginForm').style.display = loginMode ? 'grid' : 'none';
-    document.getElementById('registerForm').style.display = loginMode ? 'none' : 'grid';
+    document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+
+    document.getElementById('loginForm').style.display = mode === 'login' ? 'grid' : 'none';
+    document.getElementById('registerForm').style.display = mode === 'register' ? 'grid' : 'none';
+    document.getElementById('otpForm').style.display = mode === 'otp' ? 'grid' : 'none';
+    document.getElementById('forgotForm').style.display = mode === 'forgot' ? 'grid' : 'none';
+    document.getElementById('resetForm').style.display = mode === 'reset' ? 'grid' : 'none';
+
     document.getElementById('authAlert').style.display = 'none';
-    document.getElementById('authKicker').textContent = loginMode ? 'WELCOME BACK' : 'GET STARTED';
-    document.getElementById('authTitle').textContent = loginMode ? 'Sign in to your account' : 'Create your customer account';
-    document.getElementById('authIntro').textContent = loginMode
-      ? 'Access your orders, keys, balance, and support tickets.'
-      : 'Your orders and delivered keys will stay attached to this account.';
+
+    if (mode === 'login') {
+      document.getElementById('authKicker').textContent = 'WELCOME BACK';
+      document.getElementById('authTitle').textContent = 'Sign in to your account';
+      document.getElementById('authIntro').textContent = 'Access your orders, keys, balance, and support tickets.';
+    } else if (mode === 'register') {
+      document.getElementById('authKicker').textContent = 'GET STARTED';
+      document.getElementById('authTitle').textContent = 'Create your customer account';
+      document.getElementById('authIntro').textContent = 'Your orders and delivered keys will stay attached to this account.';
+    } else if (mode === 'otp') {
+      document.getElementById('authKicker').textContent = 'SECURITY VERIFICATION';
+      document.getElementById('authTitle').textContent = pendingOtpType === 'LOGIN_2FA' ? 'Smart 2FA Sign-In' : 'Verify Email Address';
+      document.getElementById('authIntro').textContent = `Enter the 6-digit code sent to ${pendingEmail || 'your email'}.`;
+    } else if (mode === 'forgot') {
+      document.getElementById('authKicker').textContent = 'ACCOUNT RECOVERY';
+      document.getElementById('authTitle').textContent = 'Forgot your password?';
+      document.getElementById('authIntro').textContent = 'Enter your email address to receive a 6-digit reset code.';
+    } else if (mode === 'reset') {
+      document.getElementById('authKicker').textContent = 'RESET PASSWORD';
+      document.getElementById('authTitle').textContent = 'Set new password';
+      document.getElementById('authIntro').textContent = 'Enter the 6-digit code from your email and your new password.';
+    }
   };
 
   window.togglePassword = (inputId, button) => {
@@ -53,6 +75,23 @@
     input.type = reveal ? 'text' : 'password';
     button.innerHTML = `<i class="fa-regular ${reveal ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
     button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+  };
+
+  window.resendOtpCode = async () => {
+    if (!pendingEmail) return showAlert('No email specified for OTP resend.');
+    try {
+      const res = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: pendingEmail, type: pendingOtpType })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to resend code.');
+      showAlert(data.message || 'A new 6-digit code has been sent to your email.', 'success');
+    } catch (err) {
+      showAlert(err.message || 'Error resending verification code.');
+    }
   };
 
   async function submitAuth(endpoint, payload, button, loadingText) {
@@ -65,8 +104,34 @@
         body: JSON.stringify(payload)
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success) throw new Error(data.error || 'We could not complete that request.');
-      showAlert(endpoint.endsWith('register') ? 'Account created. Taking you to the store…' : 'Signed in. Loading your account…', 'success');
+      if (!response.ok) throw new Error(data.error || 'We could not complete that request.');
+
+      if (data.requiresVerification || data.requires2FA) {
+        pendingEmail = payload.email;
+        pendingOtpType = data.requires2FA ? 'LOGIN_2FA' : 'REGISTRATION';
+        window.switchAuthTab('otp');
+        showAlert(data.message || 'A 6-digit verification code has been sent to your email.', 'success');
+        setSubmitting(button, false);
+        return;
+      }
+
+      if (endpoint.endsWith('forgot-password')) {
+        pendingEmail = payload.email;
+        document.getElementById('resetCodeInput').value = '';
+        window.switchAuthTab('reset');
+        showAlert(data.message || 'Check your email for the 6-digit password reset code.', 'success');
+        setSubmitting(button, false);
+        return;
+      }
+
+      if (endpoint.endsWith('reset-password')) {
+        window.switchAuthTab('login');
+        showAlert(data.message || 'Password reset! You can now sign in with your new password.', 'success');
+        setSubmitting(button, false);
+        return;
+      }
+
+      showAlert('Signed in! Loading your account…', 'success');
       await window.SiteShell?.refreshAuth();
       window.setTimeout(() => location.assign(data.user?.role === 'ADMIN' && redirectTarget === '/index.html' ? '/admin.html' : redirectTarget), 350);
     } catch (error) {
@@ -122,13 +187,16 @@
   document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
+    const otpForm = document.getElementById('otpForm');
+    const forgotForm = document.getElementById('forgotForm');
+    const resetForm = document.getElementById('resetForm');
     const password = document.getElementById('regPassword');
 
     loginForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const passwordValue = document.getElementById('loginPassword').value;
-      if (!email || !passwordValue) return showAlert('Enter your email or username and password.');
+      if (!email || !passwordValue) return showAlert('Enter your email address and password.');
       submitAuth('/api/auth/login', { email, password: passwordValue }, document.getElementById('loginBtn'), 'Signing in…');
     });
 
@@ -143,6 +211,30 @@
       if (passwordValue !== confirmation) return showAlert('The passwords do not match.');
       if (!document.getElementById('regConsent').checked) return showAlert('Please confirm the digital delivery notice.');
       submitAuth('/api/auth/register', { email, password: passwordValue }, document.getElementById('regBtn'), 'Creating account…');
+    });
+
+    otpForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const code = document.getElementById('otpCodeInput').value.trim();
+      if (!code || code.length !== 6) return showAlert('Enter the 6-digit OTP code sent to your email.');
+      const endpoint = pendingOtpType === 'LOGIN_2FA' ? '/api/auth/verify-login-otp' : '/api/auth/verify-otp';
+      submitAuth(endpoint, { email: pendingEmail, code }, document.getElementById('otpVerifyBtn'), 'Verifying code…');
+    });
+
+    forgotForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const email = document.getElementById('forgotEmailInput').value.trim();
+      if (!/^\S+@\S+\.\S+$/.test(email)) return showAlert('Enter a valid email address.');
+      submitAuth('/api/auth/forgot-password', { email }, document.getElementById('forgotBtn'), 'Sending code…');
+    });
+
+    resetForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const code = document.getElementById('resetCodeInput').value.trim();
+      const newPassword = document.getElementById('resetPasswordInput').value;
+      if (!code || code.length !== 6) return showAlert('Enter the 6-digit reset code.');
+      if (newPassword.length < 8 || !/\d/.test(newPassword)) return showAlert('Password must be at least 8 characters with a number.');
+      submitAuth('/api/auth/reset-password', { email: pendingEmail, code, newPassword }, document.getElementById('resetBtn'), 'Resetting password…');
     });
 
     password.addEventListener('input', () => {

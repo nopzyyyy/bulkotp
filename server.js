@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -12,6 +13,7 @@ const NOWPAYMENTS_API_KEY = (process.env.NOWPAYMENTS_API_KEY || '').trim();
 const NOWPAYMENTS_IPN_SECRET = (process.env.NOWPAYMENTS_IPN_SECRET || '').trim();
 const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
 const NOWPAYMENTS_API_URL = 'https://api.nowpayments.io/v1';
+const BREVO_API_KEY = (process.env.BREVO_API_KEY || '').trim();
 
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
@@ -81,7 +83,8 @@ const FILES = {
   auditLogs: path.join(DATA_DIR, 'audit-logs.json'),
   store: path.join(DATA_DIR, 'store.json'),
   transactions: path.join(DATA_DIR, 'transactions.json'),
-  vouchers: path.join(DATA_DIR, 'vouchers.json')
+  vouchers: path.join(DATA_DIR, 'vouchers.json'),
+  otps: path.join(DATA_DIR, 'otps.json')
 };
 
 // Helper: Read JSON File safely
@@ -135,6 +138,231 @@ function secureCookieOptions(req) {
     path: '/',
     maxAge: SESSION_TTL_MS
   };
+}
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return String(forwarded).split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || '127.0.0.1';
+}
+
+let brevoSmtpTransporter = null;
+
+function getBrevoSmtpTransporter() {
+  if (!brevoSmtpTransporter) {
+    const smtpUser = (process.env.BREVO_USER || process.env.BREVO_SENDER_EMAIL || 'vlogsyyt69@gmail.com').trim();
+    brevoSmtpTransporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: smtpUser,
+        pass: BREVO_API_KEY
+      }
+    });
+  }
+  return brevoSmtpTransporter;
+}
+
+async function sendBrevoEmail({ toEmail, toName, subject, htmlContent }) {
+  if (!BREVO_API_KEY) {
+    console.warn('Brevo API key missing.');
+    return { success: false, error: 'Brevo API key missing' };
+  }
+
+  const senderEmail = (process.env.BREVO_SENDER_EMAIL || 'noreply@bulkotp.com').trim();
+  const senderName = (process.env.BREVO_SENDER_NAME || 'BULK OTP').trim();
+
+  // 1. Attempt Brevo v3 Transactional REST API
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: toEmail, name: toName || toEmail.split('@')[0] }],
+        subject: subject,
+        htmlContent: htmlContent
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      return { success: true, messageId: data.messageId, provider: 'brevo-rest' };
+    }
+    console.warn('Brevo REST API returned error:', data.message || data, '- attempting SMTP fallback...');
+  } catch (err) {
+    console.warn('Brevo REST API request failed:', err.message, '- attempting SMTP fallback...');
+  }
+
+  // 2. Fallback to Nodemailer SMTP Transport
+  try {
+    const transporter = getBrevoSmtpTransporter();
+    const info = await transporter.sendMail({
+      from: `"${senderName}" <${senderEmail}>`,
+      to: toEmail,
+      subject: subject,
+      html: htmlContent
+    });
+    return { success: true, messageId: info.messageId, provider: 'brevo-smtp' };
+  } catch (smtpErr) {
+    console.error('Brevo SMTP Transport Error:', smtpErr.message);
+    return { success: false, error: smtpErr.message };
+  }
+}
+
+function generateNumericOtp() {
+  return String(crypto.randomInt(100000, 999999));
+}
+
+function storeOtp(email, type, ttlMinutes = 5) {
+  const cleanEmail = email.toLowerCase().trim();
+  const otps = readJson(FILES.otps, []);
+  const code = generateNumericOtp();
+  const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
+
+  const filtered = otps.filter(o => !(o.email === cleanEmail && o.type === type));
+  filtered.push({
+    email: cleanEmail,
+    code,
+    type,
+    expiresAt,
+    createdAt: new Date().toISOString()
+  });
+
+  writeJson(FILES.otps, filtered);
+  return code;
+}
+
+function verifyOtp(email, code, type) {
+  const cleanEmail = email.toLowerCase().trim();
+  const cleanCode = String(code || '').trim();
+  const otps = readJson(FILES.otps, []);
+
+  const index = otps.findIndex(o => o.email === cleanEmail && o.code === cleanCode && o.type === type && Date.now() <= o.expiresAt);
+
+  if (index === -1) return false;
+
+  otps.splice(index, 1);
+  writeJson(FILES.otps, otps);
+  return true;
+}
+
+async function sendOtpEmail(email, otpCode, type) {
+  let title = 'Verification Code';
+  let subtitle = 'Your verification code for BULK OTP is below:';
+
+  if (type === 'REGISTRATION') {
+    title = 'Verify Your Email Address';
+    subtitle = 'Thank you for registering with BULK OTP! Please use the 6-digit code below to activate your account:';
+  } else if (type === 'LOGIN_2FA') {
+    title = '2FA Security Verification';
+    subtitle = 'A login attempt was detected from a new IP address. Enter the 6-digit security code below to approve sign in:';
+  } else if (type === 'PASSWORD_RESET') {
+    title = 'Password Reset Request';
+    subtitle = 'We received a request to reset your password. Use the 6-digit code below to set a new password:';
+  }
+
+  const html = `
+    <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0d0d12; color: #ffffff; padding: 40px 20px; text-align: center;">
+      <div style="max-width: 520px; margin: 0 auto; background: #14151a; border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="margin-bottom: 24px;">
+          <h1 style="color: #ffffff; font-size: 26px; margin: 0; font-weight: 800;">BULK <span style="color: #e60032;">OTP</span></h1>
+        </div>
+        <h2 style="color: #ffffff; font-size: 20px; margin-bottom: 12px;">${title}</h2>
+        <p style="color: #a0a0b0; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">${subtitle}</p>
+        <div style="background: rgba(230, 0, 50, 0.1); border: 2px dashed #e60032; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #ffffff;">${otpCode}</span>
+        </div>
+        <p style="color: #707080; font-size: 12px; margin-bottom: 0;">This code is valid for 5 minutes. If you did not request this, please ignore this email.</p>
+      </div>
+      <p style="color: #505060; font-size: 11px; margin-top: 20px;">&copy; 2026 BULK OTP Store. All rights reserved.</p>
+    </div>
+  `;
+
+  return await sendBrevoEmail({
+    toEmail: email,
+    toName: email.split('@')[0],
+    subject: `[BULK OTP] ${title} - ${otpCode}`,
+    htmlContent: html
+  });
+}
+
+async function sendOrderConfirmationEmail(userEmail, order) {
+  const itemsHtml = (order.items || []).map(item => `
+    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <td style="padding: 12px 16px; color: #ffffff; font-weight: 600;">${item.title || item.name}</td>
+      <td style="padding: 12px 16px; color: #a0a0b0; text-align: center;">${item.qty || 1}</td>
+      <td style="padding: 12px 16px; color: #ffffff; text-align: right; font-weight: 700;">$${Number(item.price || 0).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const keysHtml = (order.purchasedItems || []).map(k => `
+    <div style="background: #1c1d24; border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-family: monospace; font-size: 14px; color: #22c55e; word-break: break-all;">
+      ${k.credentials}
+    </div>
+  `).join('');
+
+  const html = `
+    <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #0d0d12; color: #ffffff; padding: 40px 20px;">
+      <div style="max-width: 600px; margin: 0 auto; background: #14151a; border: 1px solid rgba(230, 0, 50, 0.3); border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #ffffff; font-size: 28px; margin: 0; font-weight: 800;">BULK <span style="color: #e60032;">OTP</span></h1>
+          <p style="color: #22c55e; font-size: 14px; font-weight: 600; margin-top: 6px;"><i style="font-style: normal;">✓</i> Payment Confirmed & Delivered</p>
+        </div>
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 0; margin-bottom: 24px; display: flex; justify-content: space-between;">
+          <div>
+            <span style="color: #707080; font-size: 12px; display: block;">ORDER NUMBER</span>
+            <strong style="color: #ffffff; font-size: 16px;">#${order.orderNumber || order.id}</strong>
+          </div>
+          <div style="text-align: right;">
+            <span style="color: #707080; font-size: 12px; display: block;">TOTAL PAID</span>
+            <strong style="color: #e60032; font-size: 18px;">$${Number(order.total || 0).toFixed(2)} USD</strong>
+          </div>
+        </div>
+
+        <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 12px;">Purchased Items</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.04); color: #707080; font-size: 11px; text-transform: uppercase;">
+              <th style="padding: 10px 16px; text-align: left;">Item</th>
+              <th style="padding: 10px 16px; text-align: center;">Qty</th>
+              <th style="padding: 10px 16px; text-align: right;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+
+        ${keysHtml ? `
+          <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 12px;">Delivered Access Keys</h3>
+          ${keysHtml}
+        ` : ''}
+
+        <div style="text-align: center; margin-top: 32px;">
+          <a href="${PUBLIC_BASE_URL || 'https://bulkotp.com'}/orders.html" style="background: #e60032; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; display: inline-block;">
+            View Order in Account
+          </a>
+        </div>
+      </div>
+      <p style="color: #505060; font-size: 11px; text-align: center; margin-top: 20px;">Thank you for shopping at BULK OTP!</p>
+    </div>
+  `;
+
+  return await sendBrevoEmail({
+    toEmail: userEmail,
+    toName: userEmail.split('@')[0],
+    subject: `[BULK OTP] Order Receipt #${order.orderNumber || order.id} ($${Number(order.total || 0).toFixed(2)})`,
+    htmlContent: html
+  });
 }
 
 function createSession(userId) {
@@ -414,7 +642,7 @@ function logAudit(adminEmail, action, details, ip) {
 // ==========================================
 
 // Register
-app.post('/api/auth/register', authRateLimit, (req, res) => {
+app.post('/api/auth/register', authRateLimit, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !/^\S+@\S+\.\S+$/.test(String(email).trim())) {
     return res.status(400).json({ error: 'A valid email address is required.' });
@@ -438,21 +666,78 @@ app.post('/api/auth/register', authRateLimit, (req, res) => {
     passwordHash: hashPasswordScrypt(password),
     balance: 0.00,
     role: 'USER',
+    is_verified: false,
+    known_ips: [],
     createdAt: new Date().toISOString()
   };
 
   users.push(newUser);
   writeJson(FILES.users, users);
 
-  const session = createSession(newUser.id);
-  res.cookie('market_session', session.token, secureCookieOptions(req));
+  const otpCode = storeOtp(cleanEmail, 'REGISTRATION', 5);
+  await sendOtpEmail(cleanEmail, otpCode, 'REGISTRATION');
 
-  const { passwordHash, ...userWithoutPassword } = newUser;
-  res.status(201).json({ success: true, user: userWithoutPassword });
+  res.status(201).json({
+    success: true,
+    requiresVerification: true,
+    email: cleanEmail,
+    message: 'Account created! We sent a 6-digit verification code to your email.'
+  });
 });
 
-// Login
-app.post('/api/auth/login', authRateLimit, (req, res) => {
+// Verify Registration OTP / Email
+app.post(['/api/auth/verify-otp', '/api/auth/verify-email'], authRateLimit, (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email address and 6-digit OTP code are required.' });
+  }
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+
+  if (!user) return res.status(404).json({ error: 'User account not found.' });
+
+  const isValid = verifyOtp(cleanEmail, code, 'REGISTRATION');
+  if (!isValid) {
+    return res.status(400).json({ error: 'Invalid or expired verification code. Please request a new code.' });
+  }
+
+  user.is_verified = true;
+  const clientIp = getClientIp(req);
+  user.known_ips = Array.isArray(user.known_ips) ? user.known_ips : [];
+  if (!user.known_ips.includes(clientIp)) {
+    user.known_ips.push(clientIp);
+  }
+  writeJson(FILES.users, users);
+
+  const session = createSession(user.id);
+  res.cookie('market_session', session.token, secureCookieOptions(req));
+
+  const { passwordHash, ...userWithoutPassword } = user;
+  res.json({ success: true, user: userWithoutPassword });
+});
+
+// Resend OTP Code
+app.post('/api/auth/resend-otp', authRateLimit, async (req, res) => {
+  const { email, type } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email address is required.' });
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+
+  if (!user) return res.status(404).json({ error: 'User account not found.' });
+
+  const otpType = type || (user.is_verified ? 'LOGIN_2FA' : 'REGISTRATION');
+  const otpCode = storeOtp(cleanEmail, otpType, 5);
+  await sendOtpEmail(cleanEmail, otpCode, otpType);
+
+  res.json({ success: true, message: 'A new 6-digit verification code has been sent to your email.' });
+});
+
+// Login (IP-Aware Smart 2FA)
+app.post('/api/auth/login', authRateLimit, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email address and password are required.' });
@@ -466,11 +751,124 @@ app.post('/api/auth/login', authRateLimit, (req, res) => {
     return res.status(401).json({ error: 'Invalid email address or password.' });
   }
 
+  // If email is not yet verified, require registration OTP
+  if (user.is_verified === false) {
+    const otpCode = storeOtp(cleanEmail, 'REGISTRATION', 5);
+    await sendOtpEmail(cleanEmail, otpCode, 'REGISTRATION');
+    return res.json({
+      success: true,
+      requiresVerification: true,
+      email: cleanEmail,
+      message: 'Email verification required. A 6-digit OTP code has been sent to your email.'
+    });
+  }
+
+  const clientIp = getClientIp(req);
+  user.known_ips = Array.isArray(user.known_ips) ? user.known_ips : [];
+
+  // Smart IP-Aware 2FA Check
+  const isKnownIp = user.known_ips.includes(clientIp) || user.known_ips.length === 0;
+
+  if (!isKnownIp) {
+    // Unrecognized IP: Trigger 2FA OTP
+    const otpCode = storeOtp(cleanEmail, 'LOGIN_2FA', 5);
+    await sendOtpEmail(cleanEmail, otpCode, 'LOGIN_2FA');
+    return res.json({
+      success: true,
+      requires2FA: true,
+      email: cleanEmail,
+      message: `Sign-in attempt from new IP address (${clientIp}). Enter the 6-digit 2FA code sent to your email.`
+    });
+  }
+
+  // Recognized IP: Issue session
   const session = createSession(user.id);
   res.cookie('market_session', session.token, secureCookieOptions(req));
 
   const { passwordHash, ...userWithoutPassword } = user;
   res.json({ success: true, user: userWithoutPassword });
+});
+
+// Verify 2FA Login OTP
+app.post('/api/auth/verify-login-otp', authRateLimit, (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email and 6-digit 2FA code required.' });
+  }
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+
+  if (!user) return res.status(404).json({ error: 'User account not found.' });
+
+  const isValid = verifyOtp(cleanEmail, code, 'LOGIN_2FA');
+  if (!isValid) {
+    return res.status(400).json({ error: 'Invalid or expired 2FA code. Please try again.' });
+  }
+
+  // Add new IP to known_ips
+  const clientIp = getClientIp(req);
+  user.known_ips = Array.isArray(user.known_ips) ? user.known_ips : [];
+  if (!user.known_ips.includes(clientIp)) {
+    user.known_ips.push(clientIp);
+  }
+  writeJson(FILES.users, users);
+
+  const session = createSession(user.id);
+  res.cookie('market_session', session.token, secureCookieOptions(req));
+
+  const { passwordHash, ...userWithoutPassword } = user;
+  res.json({ success: true, user: userWithoutPassword });
+});
+
+// Forgot Password Request
+app.post('/api/auth/forgot-password', authRateLimit, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email address is required.' });
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+
+  if (user) {
+    const otpCode = storeOtp(cleanEmail, 'PASSWORD_RESET', 10);
+    await sendOtpEmail(cleanEmail, otpCode, 'PASSWORD_RESET');
+  }
+
+  res.json({
+    success: true,
+    email: cleanEmail,
+    message: 'If an account exists with that email address, a 6-digit reset code has been sent.'
+  });
+});
+
+// Reset Password Submission
+app.post('/api/auth/reset-password', authRateLimit, (req, res) => {
+  const { email, code, newPassword } = req.body;
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ error: 'Email, reset code, and new password are required.' });
+  }
+
+  if (typeof newPassword !== 'string' || newPassword.length < 8 || !/\d/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long and contain a number.' });
+  }
+
+  const cleanEmail = String(email).toLowerCase().trim();
+  const users = readJson(FILES.users, []);
+  const user = users.find(u => String(u.email || '').toLowerCase().trim() === cleanEmail);
+
+  if (!user) return res.status(404).json({ error: 'User account not found.' });
+
+  const isValid = verifyOtp(cleanEmail, code, 'PASSWORD_RESET');
+  if (!isValid) {
+    return res.status(400).json({ error: 'Invalid or expired reset code.' });
+  }
+
+  user.passwordHash = hashPasswordScrypt(newPassword);
+  writeJson(FILES.users, users);
+
+  res.json({ success: true, message: 'Password reset successful! You can now sign in with your new password.' });
 });
 
 // Current User Session
@@ -826,6 +1224,9 @@ app.post('/api/orders/checkout', requireAuth, async (req, res) => {
     const orders = readJson(FILES.orders, []);
     orders.unshift(order);
     writeJson(FILES.orders, orders);
+
+    // Send Order Confirmation Email via Brevo
+    sendOrderConfirmationEmail(user.email, order).catch(err => console.error('Order email error:', err));
 
     res.json({ success: true, orderId: order.id, order, keys: order.purchasedItems.map(item => item.credentials), balance: user.balance });
   } catch (error) {

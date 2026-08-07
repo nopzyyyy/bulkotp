@@ -60,9 +60,21 @@ async function main() {
       body: JSON.stringify({ email, password: 'Customer123' })
     });
     assert.equal(registration.response.status, 201);
-    assert.equal(registration.data.user.role, 'USER');
-    assert.equal(Object.hasOwn(registration.data, 'token'), false);
-    const customerCookie = cookieFrom(registration.response);
+    assert.equal(registration.data.requiresVerification, true);
+
+    const otpsPath = path.join(testRoot, 'data', 'otps.json');
+    const otps = JSON.parse(fs.readFileSync(otpsPath, 'utf8'));
+    const otp = otps.find(o => o.email === email && o.type === 'REGISTRATION');
+    assert.ok(otp);
+
+    const verification = await request('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code: otp.code })
+    });
+    assert.equal(verification.response.status, 200);
+    assert.equal(verification.data.user.role, 'USER');
+    const customerCookie = cookieFrom(verification.response);
     assert.ok(customerCookie.startsWith('market_session='));
 
     const config = await request('/api/payments/config');
