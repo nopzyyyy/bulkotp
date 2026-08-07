@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function checkAdminAuth() {
   startTopProgress();
   try {
-    const res = await fetch('/api/auth/me');
+    const res = await fetch('/api/auth/me?t=' + Date.now(), { credentials: 'include' });
     const data = await res.json();
     if (!res.ok || !data.authenticated || data.user.role !== 'ADMIN') {
       window.location.href = 'login.html?redirect=/admin.html';
@@ -96,8 +96,14 @@ async function checkAdminAuth() {
 }
 
 async function logoutAdmin() {
+  if (window.SiteShell && typeof window.SiteShell.logout === 'function') {
+    await window.SiteShell.logout();
+    return;
+  }
   startTopProgress();
-  await fetch('/api/auth/logout', { method: 'POST' });
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch (_) {}
   window.location.href = 'login.html';
 }
 

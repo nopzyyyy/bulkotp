@@ -138,7 +138,7 @@
 
   async function refreshAuth() {
     try {
-      const response = await originalFetch('/api/auth/me', { credentials: 'same-origin' });
+      const response = await originalFetch('/api/auth/me?t=' + Date.now(), { credentials: 'include' });
       const data = await response.json();
       state.user = response.ok && data.authenticated ? data.user : null;
     } catch (_) {
@@ -163,7 +163,7 @@
     else showLoading('Signing out…');
 
     try {
-      await originalFetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      await originalFetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (_) {}
 
     state.user = null;
@@ -172,7 +172,11 @@
     try {
       localStorage.removeItem('user');
       sessionStorage.removeItem('user');
+      localStorage.removeItem('bulk_otp_user');
+      sessionStorage.removeItem('bulk_otp_user');
     } catch (_) {}
+
+    document.dispatchEvent(new CustomEvent('site:auth', { detail: { user: null } }));
 
     if (window.location.pathname.endsWith('/admin.html')) {
       window.location.href = 'login.html';

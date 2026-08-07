@@ -1261,7 +1261,7 @@ function initBackgroundParticles() {
 
 async function fetchCurrentUser() {
   try {
-    const res = await fetch('/api/auth/me');
+    const res = await fetch('/api/auth/me?t=' + Date.now(), { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
       if (data.authenticated) {
@@ -1269,6 +1269,8 @@ async function fetchCurrentUser() {
       } else {
         currentUser = null;
       }
+    } else {
+      currentUser = null;
     }
   } catch (err) {
     currentUser = null;
@@ -1352,9 +1354,9 @@ async function handleUserLogout() {
     await window.SiteShell.logout();
     return;
   }
-  showGlobalLoading('Signing out...');
+  if (typeof showGlobalLoading === 'function') showGlobalLoading('Signing out...');
   try {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
   } catch (e) {}
   currentUser = null;
   window.location.href = 'index.html?logged_out=' + Date.now();

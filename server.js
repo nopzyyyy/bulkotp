@@ -43,7 +43,17 @@ function parseCookies(req) {
   if (rc) {
     rc.split(';').forEach(cookie => {
       const parts = cookie.split('=');
-      list[parts.shift().trim()] = decodeURIComponent(parts.join('='));
+      const key = parts.shift()?.trim();
+      if (!key) return;
+      let val = parts.join('=').trim();
+      if (val.startsWith('"') && val.endsWith('"')) {
+        val = val.slice(1, -1);
+      }
+      try {
+        list[key] = decodeURIComponent(val);
+      } catch (_) {
+        list[key] = val;
+      }
     });
   }
   return list;
@@ -461,6 +471,7 @@ app.post('/api/auth/login', authRateLimit, (req, res) => {
 
 // Current User Session
 app.get('/api/auth/me', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   const sess = getSession(req);
   if (!sess) {
     return res.json({ authenticated: false, user: null });
@@ -471,21 +482,26 @@ app.get('/api/auth/me', (req, res) => {
 
 // Logout (GET & POST)
 app.all('/api/auth/logout', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   const cookies = parseCookies(req);
-  const token = cookies.market_session || (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null);
+  const token = cookies.market_session || (req.headers.authorization ? req.headers.authorization.replace(/^Bearer\s+/i, '').trim() : null);
   
   const sess = getSession(req);
   const userId = sess ? sess.userId : null;
 
   let sessions = readJson(FILES.sessions, []);
   if (token || userId) {
-    sessions = sessions.filter(s => s.token !== token && (!userId || s.userId !== userId));
+    sessions = sessions.filter(s => {
+      if (token && s.token === token) return false;
+      if (userId && s.userId === userId) return false;
+      return true;
+    });
     writeJson(FILES.sessions, sessions);
   }
 
   res.setHeader('Set-Cookie', [
-    'market_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax',
-    'market_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax'
+    'market_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; SameSite=Lax',
+    'market_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; SameSite=Lax; Secure'
   ]);
   res.json({ success: true });
 });
