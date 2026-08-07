@@ -642,6 +642,55 @@ code {
   letter-spacing: 0.02em;
 }
 
+.khaled-how-it-works-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, rgba(230, 0, 50, 0.2) 0%, rgba(20, 21, 26, 0.95) 100%);
+  border: 1px solid var(--accent);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.925rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(230, 0, 50, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 0.5rem;
+}
+
+.khaled-how-it-works-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(135deg, #e60032 0%, #ff255c 100%);
+  box-shadow: 0 8px 25px rgba(230, 0, 50, 0.6);
+  border-color: #ffffff;
+}
+
+.khaled-how-it-works-btn i {
+  color: var(--accent);
+  transition: color 0.2s ease;
+}
+
+.khaled-how-it-works-btn:hover i {
+  color: #ffffff;
+}
+
+.video-card-wrapper {
+  background: #14151a;
+  border: 1px solid rgba(230, 0, 50, 0.45);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(230, 0, 50, 0.25);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.video-card-wrapper:hover {
+  border-color: rgba(230, 0, 50, 0.75);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 40px rgba(230, 0, 50, 0.4);
+}
+
 .khaled-subtitle {
   font-family: var(--font-mono);
   font-size: 0.875rem;
