@@ -1196,9 +1196,13 @@ app.post('/api/admin/vouchers/create', requireAdmin, (req, res) => {
   res.status(201).json({ success: true, vouchers: created });
 });
 
-// Admin: Delete Voucher
-app.delete('/api/admin/vouchers/:code', requireAdmin, (req, res) => {
-  const code = String(req.params.code || '').trim().toUpperCase();
+// Admin: Delete Voucher (POST & DELETE)
+app.all(['/api/admin/vouchers/delete', '/api/admin/vouchers/:code'], requireAdmin, (req, res) => {
+  const code = String(req.body?.code || req.params?.code || '').trim().toUpperCase();
+  if (!code) {
+    return res.status(400).json({ error: 'Voucher code is required.' });
+  }
+
   let vouchers = readJson(FILES.vouchers, []);
   const voucher = vouchers.find(v => v.code === code);
 
@@ -1683,6 +1687,7 @@ app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {
 app.get('/api/admin/users', requireAdmin, (req, res) => {
   const users = readJson(FILES.users, []);
   const safeUsers = users.map(({ passwordHash, ...u }) => u);
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   res.json(safeUsers);
 });
 
@@ -1710,6 +1715,7 @@ app.post('/api/admin/users/balance', requireAdmin, (req, res) => {
 // Admin Orders List
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const orders = readJson(FILES.orders, []);
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   res.json(orders);
 });
 

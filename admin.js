@@ -165,7 +165,7 @@ async function switchAdminTab(tabId, btn) {
 
 async function loadAdminDashboardData() {
   try {
-    const res = await fetch('/api/admin/stats');
+    const res = await fetch('/api/admin/stats', { credentials: 'include' });
     if (!res.ok) return;
     const stats = await res.json();
 
@@ -405,7 +405,7 @@ window.addEventListener('resize', () => {
 // Products Management
 async function loadAdminProducts() {
   try {
-    const res = await fetch('/api/admin/products');
+    const res = await fetch('/api/admin/products', { credentials: 'include' });
     if (!res.ok) return;
     allAdminProducts = await res.json();
     renderAdminProducts(allAdminProducts);
@@ -537,7 +537,7 @@ async function deleteProduct(id) {
 // Users & Balances Management
 async function loadAdminUsers() {
   try {
-    const res = await fetch('/api/admin/users');
+    const res = await fetch('/api/admin/users', { credentials: 'include' });
     if (!res.ok) return;
     allAdminUsers = await res.json();
     renderAdminUsers(allAdminUsers);
@@ -618,7 +618,7 @@ async function handleAdjustBalanceSubmit(e) {
 // Orders List
 async function loadAdminOrders() {
   try {
-    const res = await fetch('/api/admin/orders');
+    const res = await fetch('/api/admin/orders', { credentials: 'include' });
     if (!res.ok) return;
     allAdminOrders = await res.json();
     renderAdminOrders(allAdminOrders);
@@ -661,7 +661,7 @@ function renderAdminOrders(orders) {
 // Support Tickets Management
 async function loadAdminTickets() {
   try {
-    const res = await fetch('/api/admin/tickets');
+    const res = await fetch('/api/admin/tickets', { credentials: 'include' });
     if (!res.ok) return;
     allAdminTickets = await res.json();
     renderAdminTickets(allAdminTickets);
@@ -761,7 +761,7 @@ async function handleAdminTicketReplySubmit(e) {
 // Audit Logs
 async function loadAdminAuditLogs() {
   try {
-    const res = await fetch('/api/admin/audit-logs');
+    const res = await fetch('/api/admin/audit-logs', { credentials: 'include' });
     if (!res.ok) return;
     const logs = await res.json();
     renderAdminAuditLogs(logs);
@@ -951,13 +951,16 @@ async function handleCreateVouchers(event) {
 }
 
 async function handleDeleteVoucher(code) {
-  if (!confirm(`Are you sure you want to delete voucher code ${code}?`)) return;
+  if (!confirm(`Are you sure you want to delete voucher code "${code}"?`)) return;
 
   startTopProgress();
+  showGlobalLoading('Deleting voucher...');
   try {
-    const res = await fetch(`/api/admin/vouchers/${encodeURIComponent(code)}`, {
-      method: 'DELETE',
-      credentials: 'include'
+    const res = await fetch('/api/admin/vouchers/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ code })
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete voucher.');
@@ -968,5 +971,6 @@ async function handleDeleteVoucher(code) {
     showToast(err.message || 'Error deleting voucher.');
   } finally {
     finishTopProgress();
+    hideGlobalLoading();
   }
 }
