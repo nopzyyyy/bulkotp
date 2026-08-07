@@ -3,3 +3,5 @@ node_modules/
 *.log
 scratch/
 __pycache__/
+data/*.json
+!data/store.json
