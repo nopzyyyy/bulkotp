@@ -2521,11 +2521,13 @@ input:checked + .slider:before {
 
   .product-card {
     border-radius: var(--radius-md);
-    width: 92% !important;
-    max-width: 92% !important;
+    width: 95% !important;
+    max-width: 95% !important;
     margin: 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
+    transform: scale(0.95);
+    transform-origin: top center;
   }
 
   .card-body {
@@ -3971,6 +3973,8 @@ button:disabled {
 
   .product-card {
     border-radius: 16px !important;
+    transform: scale(0.95);
+    transform-origin: top center;
   }
 
   .card-banner {
@@ -4451,7 +4455,13 @@ button:disabled {
   .khaled-link-card { max-width: none !important; }
 
   .product-grid { padding-inline: 0 !important; }
-  .product-card { width: 100% !important; max-width: 100% !important; }
+  .product-card {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 0 auto !important;
+    transform: scale(0.95);
+    transform-origin: top center;
+  }
   .card-view-link { min-height: 40px; padding-inline: 0.4rem; }
   .filter-bar { align-items: stretch; }
   .category-tabs { scrollbar-width: none; }
