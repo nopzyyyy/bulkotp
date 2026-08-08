@@ -132,9 +132,9 @@ const FILES = {
 
 function getPaymentSettings() {
   const defaults = {
-    cartApiKey: (process.env.NOWPAYMENTS_API_KEY || '').trim(),
-    balanceApiKey: (process.env.NOWPAYMENTS_BALANCE_API_KEY || process.env.NOWPAYMENTS_API_KEY || '').trim(),
-    ipnSecret: (process.env.NOWPAYMENTS_IPN_SECRET || '').trim()
+    cartApiKey: (process.env.NOWPAYMENTS_API_KEY || 'R043HDX-JAK4S1X-PBGQJSY-45PAB2A').trim(),
+    balanceApiKey: (process.env.NOWPAYMENTS_BALANCE_API_KEY || process.env.NOWPAYMENTS_API_KEY || 'R043HDX-JAK4S1X-PBGQJSY-45PAB2A').trim(),
+    ipnSecret: (process.env.NOWPAYMENTS_IPN_SECRET || 'D8DX9KM-YVZ4FSE-J7YV8R6-MVYEPF5').trim()
   };
   let stored = {};
   try {
@@ -160,7 +160,9 @@ function nowPaymentsConfigured(type = 'cart') {
   const settings = getPaymentSettings();
   const apiKey = type === 'balance' ? (settings.balanceApiKey || settings.cartApiKey) : settings.cartApiKey;
   const looksLikePlaceholder = /placeholder|replace|your[_-]?api/i.test(apiKey);
-  return Boolean(apiKey && !looksLikePlaceholder);
+  const result = Boolean(apiKey && !looksLikePlaceholder);
+  console.log('[DEBUG nowPaymentsConfigured]', { type, apiKey, looksLikePlaceholder, result });
+  return result;
 }
 
 // Ensure Database Backup Directory Exists
