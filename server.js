@@ -146,9 +146,9 @@ function getPaymentSettings() {
 
 function nowPaymentsConfigured(type = 'cart') {
   const settings = getPaymentSettings();
-  const apiKey = type === 'balance' ? settings.balanceApiKey : settings.cartApiKey;
+  const apiKey = type === 'balance' ? (settings.balanceApiKey || settings.cartApiKey) : settings.cartApiKey;
   const looksLikePlaceholder = /placeholder|replace|your[_-]?api/i.test(apiKey);
-  return Boolean(apiKey && settings.ipnSecret && !looksLikePlaceholder);
+  return Boolean(apiKey && !looksLikePlaceholder);
 }
 
 // Ensure Database Backup Directory Exists
@@ -1939,22 +1939,26 @@ app.get('/api/admin/payment-settings', requireAdmin, (req, res) => {
 
 app.post('/api/admin/payment-settings', requireAdmin, (req, res) => {
   const { cartApiKey, balanceApiKey, ipnSecret } = req.body;
-  if (!cartApiKey || !balanceApiKey || !ipnSecret) {
-    return res.status(400).json({ error: 'All payment API keys and IPN secret are required.' });
+  const cartKey = String(cartApiKey || '').trim();
+  const balanceKey = String(balanceApiKey || cartKey).trim();
+  const secret = String(ipnSecret || '').trim();
+
+  if (!cartKey && !balanceKey) {
+    return res.status(400).json({ error: 'Please enter at least one NOWPayments API key.' });
   }
 
   const newSettings = {
-    cartApiKey: String(cartApiKey).trim(),
-    balanceApiKey: String(balanceApiKey).trim(),
-    ipnSecret: String(ipnSecret).trim(),
+    cartApiKey: cartKey || balanceKey,
+    balanceApiKey: balanceKey || cartKey,
+    ipnSecret: secret,
     updatedAt: new Date().toISOString(),
     updatedBy: req.currentUser.email
   };
 
   writeJson(FILES.paymentSettings, newSettings);
-  logAudit(req.currentUser.email, 'UPDATE_PAYMENT_SETTINGS', 'Updated NOWPayments Cart & Balance API keys and IPN Secret', req.ip);
+  logAudit(req.currentUser.email, 'UPDATE_PAYMENT_SETTINGS', 'Updated NOWPayments API keys and IPN Secret', req.ip);
 
-  res.json({ success: true, message: 'Payment gateway settings saved successfully.' });
+  res.json({ success: true, message: 'Payment gateway settings saved successfully.', settings: newSettings });
 });
 
 // Image Upload Endpoint

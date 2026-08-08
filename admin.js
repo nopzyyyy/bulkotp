@@ -1009,12 +1009,12 @@ async function handleSavePaymentSettings(event) {
   const balanceApiKey = (document.getElementById('nowpaymentsBalanceApiKey')?.value || '').trim();
   const ipnSecret = (document.getElementById('nowpaymentsIpnSecret')?.value || '').trim();
 
-  if (!cartApiKey || !balanceApiKey || !ipnSecret) {
-    showToast('Please enter both API keys and the IPN Secret key.', 'error');
+  if (!cartApiKey && !balanceApiKey) {
+    showToast('Please enter your NOWPayments API key.', 'error');
     return;
   }
 
-  if (!confirm('⚠️ ATTENTION: Changing payment API keys affects live customer checkouts.\nHave you verified your API keys twice on https://nowpayments.io/api?')) {
+  if (!confirm('⚠️ ATTENTION: Confirm updating your live payment gateway keys?')) {
     return;
   }
 
