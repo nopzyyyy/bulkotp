@@ -63,6 +63,12 @@ function sanitizeValue(data) {
   return data;
 }
 
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); }
+}));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use((req, res, next) => {
   if (req.body) req.body = sanitizeValue(req.body);
   if (req.query) req.query = sanitizeValue(req.query);
@@ -70,11 +76,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json({
-  limit: '10mb',
-  verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); }
-}));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api', (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method) || req.path === '/upload' || req.is('application/json')) return next();
   return res.status(415).json({ error: 'API requests must use application/json.' });
