@@ -1219,22 +1219,33 @@ app.post('/api/balance/topup', requireAuth, async (req, res) => {
       const settings = getPaymentSettings();
       const apiKey = settings.balanceApiKey || settings.cartApiKey;
       const topupId = `TOPUP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc' };
+      const CURRENCY_MAP = {
+        usdt_trc20: 'usdttrc20', usdttrc20: 'usdttrc20',
+        usdt_erc20: 'usdterc20', usdterc20: 'usdterc20',
+        usdt_sol: 'usdtsol', usdtsol: 'usdtsol',
+        usdt_bsc: 'usdtbsc', usdt: 'usdttrc20',
+        btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc', trx: 'trx',
+        bnb: 'bnbbsc', bnb_bsc: 'bnbbsc', doge: 'doge', xrp: 'xrp', ada: 'ada'
+      };
       const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const topupPayload = {
+        price_amount: amount,
+        price_currency: 'usd',
+        order_id: topupId,
+        order_description: `BULK OTP Store Balance Top-Up $${amount.toFixed(2)}`,
+        ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
+        success_url: `${baseUrl}/balance.html?topup=success&amount=${amount}`,
+        cancel_url: `${baseUrl}/balance.html?topup=cancelled`
+      };
+
+      if (requestedCurrency && requestedCurrency !== 'all' && CURRENCY_MAP[requestedCurrency]) {
+        topupPayload.pay_currency = CURRENCY_MAP[requestedCurrency];
+      }
 
       const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
-        body: JSON.stringify({
-          price_amount: amount,
-          price_currency: 'usd',
-          pay_currency: currencyMap[requestedCurrency] || 'usdttrc20',
-          order_id: topupId,
-          order_description: `BULK OTP Store Balance Top-Up $${amount.toFixed(2)}`,
-          ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
-          success_url: `${baseUrl}/balance.html?topup=success&amount=${amount}`,
-          cancel_url: `${baseUrl}/balance.html?topup=cancelled`
-        })
+        body: JSON.stringify(topupPayload)
       });
 
       const invoiceData = await providerResponse.json();
@@ -1569,7 +1580,14 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     const quote = buildOrderQuote(req.body.items, products);
     const orderId = newOrderId();
     const requestedCurrency = String(req.body.payCurrency || '').toLowerCase();
-    const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc' };
+    const CURRENCY_MAP = {
+      usdt_trc20: 'usdttrc20', usdttrc20: 'usdttrc20',
+      usdt_erc20: 'usdterc20', usdterc20: 'usdterc20',
+      usdt_sol: 'usdtsol', usdtsol: 'usdtsol',
+      usdt_bsc: 'usdtbsc', usdt: 'usdttrc20',
+      btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc', trx: 'trx',
+      bnb: 'bnbbsc', bnb_bsc: 'bnbbsc', doge: 'doge', xrp: 'xrp', ada: 'ada'
+    };
     const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
     const invoicePayload = {
       price_amount: quote.total,
@@ -1582,8 +1600,8 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     };
 
     // If specific currency requested, include it, otherwise omit so NOWPayments allows ALL coins
-    if (requestedCurrency && currencyMap[requestedCurrency]) {
-      invoicePayload.pay_currency = currencyMap[requestedCurrency];
+    if (requestedCurrency && requestedCurrency !== 'all' && CURRENCY_MAP[requestedCurrency]) {
+      invoicePayload.pay_currency = CURRENCY_MAP[requestedCurrency];
     }
 
     const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {

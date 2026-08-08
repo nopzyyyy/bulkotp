@@ -118,9 +118,29 @@
                             </button>
                             <button type="button" id="cartCryptoPaymentOption" class="checkout-payment-method" data-method="crypto" aria-pressed="false" onclick="selectCartPaymentMethod('crypto', this)">
                                 <span class="checkout-method-icon crypto"><i class="fa-brands fa-bitcoin"></i></span>
-                                <span class="checkout-method-copy"><strong>Crypto</strong><small id="cartCryptoOptionStatus">Checking availability</small></span>
+                                <span class="checkout-method-copy"><strong>Crypto</strong><small id="cartCryptoOptionStatus">USDT, BTC, ETH, SOL, LTC</small></span>
                                 <span class="checkout-method-check"><i class="fa-solid fa-check"></i></span>
                             </button>
+                        </div>
+
+                        <!-- Cryptocurrency Coin Selector -->
+                        <div id="cartCryptoCoinSelectorWrap" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--bg-surface-deep); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                            <label class="form-label" style="margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 600; color: #fff;">
+                                <i class="fa-solid fa-coins text-accent"></i> Choose Payment Currency:
+                            </label>
+                            <select id="cartCryptoCurrencySelect" class="form-input" style="background: #111118; color: #fff; font-weight: 600; border-color: #2a2a3c;">
+                                <option value="all">🌐 All Cryptocurrencies (Choose on Checkout)</option>
+                                <option value="usdt_trc20" selected>💎 USDT (TRC20 - TRON Network)</option>
+                                <option value="usdt_erc20">🪙 USDT (ERC20 - Ethereum Network)</option>
+                                <option value="usdt_sol">⚡ USDT (Solana Network)</option>
+                                <option value="btc">🟠 Bitcoin (BTC)</option>
+                                <option value="eth">🔷 Ethereum (ETH)</option>
+                                <option value="sol">🟣 Solana (SOL)</option>
+                                <option value="ltc">⚪ Litecoin (LTC)</option>
+                                <option value="trx">🔴 TRON (TRX)</option>
+                                <option value="bnb">🟡 BNB (Binance Smart Chain)</option>
+                                <option value="doge">🐕 Dogecoin (DOGE)</option>
+                            </select>
                         </div>
                     </div>
 

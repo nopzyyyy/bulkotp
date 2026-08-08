@@ -245,14 +245,10 @@ function selectCartPaymentMethod(method, element) {
     option.classList.toggle('active', active);
     option.setAttribute('aria-pressed', String(active));
   });
-  const cryptoBox = document.getElementById('cartCryptoBox');
-  if (cryptoBox) cryptoBox.style.display = method === 'crypto' ? 'block' : 'none';
+  const selectorWrap = document.getElementById('cartCryptoCoinSelectorWrap');
+  if (selectorWrap) selectorWrap.style.display = method === 'crypto' ? 'block' : 'none';
   updateCheckoutButtonState();
 }
-
-function selectCartCryptoCoin(coin, element) {
-  selectedCartCryptoCoin = coin;
-  document.querySelectorAll('.crypto-coin-btn').forEach(button => button.classList.remove('active'));
   element?.classList.add('active');
 }
 
@@ -283,6 +279,7 @@ async function processCartPageCheckout(event) {
 
   try {
     const isCrypto = selectedCartPaymentMethod === 'crypto';
+    const chosenCurrency = (document.getElementById('cartCryptoCurrencySelect')?.value || 'all').trim();
     const endpoint = isCrypto ? '/api/payments/nowpayments/invoice' : '/api/orders/checkout';
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -290,7 +287,7 @@ async function processCartPageCheckout(event) {
       body: JSON.stringify({
         items: pageCart.map(item => ({ productId: item.id, qty: item.qty })),
         paymentMethod: selectedCartPaymentMethod,
-        payCurrency: selectedCartCryptoCoin
+        payCurrency: chosenCurrency
       })
     });
     const data = await response.json().catch(() => ({}));
