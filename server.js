@@ -1982,19 +1982,19 @@ app.post('/api/admin/payment-settings', requireAdmin, async (req, res) => {
   // Run live verification script against NOWPayments API
   try {
     const testKey = cartKey || balanceKey;
-    const verifyRes = await fetch(`${NOWPAYMENTS_API_URL}/status`, {
+    const verifyRes = await fetch(`${NOWPAYMENTS_API_URL}/merchant/coins`, {
       headers: { 'x-api-key': testKey },
       signal: AbortSignal.timeout(10000)
     });
     const verifyData = await verifyRes.json().catch(() => ({}));
 
-    if (!verifyRes.ok || verifyData.message === 'Unauthorized' || verifyData.error) {
+    if (!verifyRes.ok || verifyData.statusCode === 401 || verifyData.statusCode === 403 || verifyData.code === 'INVALID_API_KEY') {
       return res.status(400).json({
-        error: `❌ Invalid NOWPayments API Key: Could not authenticate with NOWPayments (${verifyData.message || 'Unauthorized'}). Please double-check your API key.`
+        error: `❌ Invalid NOWPayments API Key: Could not authenticate with NOWPayments API (${verifyData.message || 'Invalid API Key'}). Please double-check your API key.`
       });
     }
   } catch (verifyErr) {
-    console.warn('NOWPayments status check warning:', verifyErr.message);
+    console.warn('NOWPayments key verification warning:', verifyErr.message);
   }
 
   const newSettings = {
