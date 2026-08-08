@@ -29,11 +29,37 @@ document.addEventListener('site:auth', (event) => {
   if (balance) balance.textContent = `$${Number(cartCurrentUser?.balance || 0).toFixed(2)} balance`;
 });
 
+const LEGACY_ID_MAP = {
+  'compact-1h': 'hourly-1h',
+  'extended-3h': 'hourly-3h',
+  'daylong-24h': 'daily-1d',
+  'multiday-3d': 'daily-3d',
+  'biweekly-2w': 'weekly-2w',
+  'weekly-1w': 'weekly-1w',
+  'monthly-1m': 'monthly-1m',
+  'monthly-3m': 'monthly-3m',
+  'monthly-6m': 'monthly-6m',
+  'yearly-1y': 'yearly-1y'
+};
+
 function loadCartFromLocalStorage() {
   try {
     const raw = localStorage.getItem('bulk_otp_cart');
     const parsed = raw ? JSON.parse(raw) : [];
-    pageCart = Array.isArray(parsed) ? parsed : [];
+    pageCart = (Array.isArray(parsed) ? parsed : []).map(item => {
+      const canonicalId = LEGACY_ID_MAP[item.id] || item.id;
+      return {
+        ...item,
+        id: canonicalId,
+        qty: Math.max(1, Number(item.qty || 1)),
+        title: item.title || item.shortTitle || 'OTP BOT Pass Key',
+        shortTitle: item.shortTitle || item.title || 'Access Pass',
+        price: Number(item.price || 17.00),
+        duration: item.duration || 'PASS',
+        art: item.art || 'assets/pass_1h.png',
+        stock: Number(item.stock || 10)
+      };
+    });
   } catch (_) {
     pageCart = [];
   }
@@ -78,7 +104,7 @@ function setCartStockStatus(kind, message) {
 async function syncCartWithBackend({ quiet = false } = {}) {
   if (cartStockRequestInFlight) return cartStockConfirmed;
   cartStockRequestInFlight = true;
-  if (!quiet) setCartStockStatus('checking', 'Checking live stock…');
+  if (!quiet && pageCart.length > 0) setCartStockStatus('checking', 'Checking live stock…');
 
   try {
     const response = await fetch('/api/products', { cache: 'no-store' });
@@ -90,16 +116,18 @@ async function syncCartWithBackend({ quiet = false } = {}) {
     cartStockConfirmed = true;
     const previous = JSON.stringify(pageCart);
     pageCart = pageCart.map(item => {
-      const live = cartCatalog.get(item.id);
+      const canonicalId = LEGACY_ID_MAP[item.id] || item.id;
+      const live = cartCatalog.get(canonicalId) || cartCatalog.get(item.id);
       if (!live) return { ...item, stock: 0, unavailable: true };
       return {
         ...item,
+        id: live.id,
         title: live.title,
-        shortTitle: live.shortTitle,
-        duration: live.duration,
-        price: live.price,
-        art: live.art,
-        stock: live.stock,
+        shortTitle: live.shortTitle || live.title,
+        duration: live.duration || 'PASS',
+        price: Number(live.price || item.price || 0),
+        art: live.art || item.art || 'assets/pass_1h.png',
+        stock: Number(live.stock || 0),
         unavailable: false
       };
     });
