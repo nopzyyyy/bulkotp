@@ -133,9 +133,9 @@ const FILES = {
 
 function getPaymentSettings() {
   const defaults = {
-    cartApiKey: (process.env.NOWPAYMENTS_API_KEY || 'R043HDX-JAK4S1X-PBGQJSY-45PAB2A').trim(),
-    balanceApiKey: (process.env.NOWPAYMENTS_BALANCE_API_KEY || process.env.NOWPAYMENTS_API_KEY || 'R043HDX-JAK4S1X-PBGQJSY-45PAB2A').trim(),
-    ipnSecret: (process.env.NOWPAYMENTS_IPN_SECRET || 'D8DX9KM-YVZ4FSE-J7YV8R6-MVYEPF5').trim()
+    cartApiKey: (process.env.NOWPAYMENTS_API_KEY || 'FSXZNYD-3MH4KB4-P92JQS7-98PB9P9').trim(),
+    balanceApiKey: (process.env.NOWPAYMENTS_BALANCE_API_KEY || 'BXJ2GSJ-ZNCM6ZP-QJBZNF4-JDWRN8M').trim(),
+    ipnSecret: (process.env.NOWPAYMENTS_IPN_SECRET || 'EHeUGXXIUpLjsGZWW/PuhUJ7+jTGFL8V').trim()
   };
   let stored = {};
   try {
