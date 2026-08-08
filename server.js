@@ -1550,7 +1550,12 @@ app.post('/api/orders/checkout', requireAuth, async (req, res) => {
 });
 
 app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
-  if (!nowPaymentsConfigured('cart')) {
+  const settings = getPaymentSettings();
+  const apiKey = (settings.cartApiKey || 'R043HDX-JAK4S1X-PBGQJSY-45PAB2A').trim();
+  const isConfigured = Boolean(apiKey && !/placeholder|replace|your[_-]?api/i.test(apiKey));
+  console.log('[NOWPayments Invoice Request]', { apiKey, isConfigured });
+
+  if (!isConfigured) {
     return res.status(503).json({
       code: 'PAYMENTS_NOT_CONFIGURED',
       error: 'Cryptocurrency payment is temporarily unavailable. Please try again in a few moments or use your account balance.'
