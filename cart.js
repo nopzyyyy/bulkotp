@@ -296,8 +296,37 @@ async function processCartPageCheckout(event) {
     const data = await response.json().catch(() => ({}));
 
     if (response.ok && data.success && isCrypto && data.invoiceUrl) {
-      window.SiteShell?.showLoading('Opening secure payment…');
-      window.location.assign(data.invoiceUrl);
+      // Hide cart and show Invoice Ready view
+      const cartLayout = document.getElementById('cartContentLayout');
+      const invoiceView = document.getElementById('cartInvoiceReadyView');
+      const orderIdEl = document.getElementById('cartInvoiceOrderId');
+      const totalEl = document.getElementById('cartInvoiceTotal');
+      const payBtn = document.getElementById('cartInvoicePayBtn');
+      const popupNotice = document.getElementById('cartPopupNotice');
+
+      if (orderIdEl) orderIdEl.textContent = data.orderId || 'ORD-NEW';
+      if (totalEl) totalEl.textContent = `$${Number(data.total || 0).toFixed(2)}`;
+      if (payBtn) payBtn.href = data.invoiceUrl;
+
+      if (cartLayout) cartLayout.style.display = 'none';
+      if (invoiceView) invoiceView.style.display = 'block';
+
+      // Open NOWPayments invoice in a new tab
+      let payWindow = null;
+      try {
+        payWindow = window.open(data.invoiceUrl, '_blank', 'noopener,noreferrer');
+      } catch (_) {
+        payWindow = null;
+      }
+
+      if (popupNotice) {
+        popupNotice.style.display = (!payWindow || payWindow.closed || typeof payWindow.closed === 'undefined') ? 'flex' : 'none';
+      }
+
+      // Clear Cart state
+      pageCart = [];
+      saveCartToLocalStorage();
+      showToast('Order registered! Complete your crypto payment.');
       return;
     }
     if (response.ok && data.success && !isCrypto) {

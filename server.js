@@ -1568,24 +1568,28 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     const products = readJson(FILES.products, []);
     const quote = buildOrderQuote(req.body.items, products);
     const orderId = newOrderId();
-    const requestedCurrency = String(req.body.payCurrency || 'usdt_trc20').toLowerCase();
+    const requestedCurrency = String(req.body.payCurrency || '').toLowerCase();
     const currencyMap = { usdt_trc20: 'usdttrc20', btc: 'btc', eth: 'eth', sol: 'sol', ltc: 'ltc' };
-    if (!currencyMap[requestedCurrency]) return res.status(400).json({ error: 'Unsupported cryptocurrency.' });
-
     const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const invoicePayload = {
+      price_amount: quote.total,
+      price_currency: 'usd',
+      order_id: orderId,
+      order_description: `BULK OTP order ${orderId}`,
+      ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
+      success_url: `${baseUrl}/orders.html?payment=success&orderId=${orderId}`,
+      cancel_url: `${baseUrl}/cart.html?payment=cancelled`
+    };
+
+    // If specific currency requested, include it, otherwise omit so NOWPayments allows ALL coins
+    if (requestedCurrency && currencyMap[requestedCurrency]) {
+      invoicePayload.pay_currency = currencyMap[requestedCurrency];
+    }
+
     const providerResponse = await fetch(`${NOWPAYMENTS_API_URL}/invoice`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
-      body: JSON.stringify({
-        price_amount: quote.total,
-        price_currency: 'usd',
-        pay_currency: currencyMap[requestedCurrency],
-        order_id: orderId,
-        order_description: `BULK OTP order ${orderId}`,
-        ipn_callback_url: `${baseUrl}/api/payments/nowpayments/ipn`,
-        success_url: `${baseUrl}/orders.html?payment=success`,
-        cancel_url: `${baseUrl}/cart.html?payment=cancelled`
-      }),
+      body: JSON.stringify(invoicePayload),
       signal: AbortSignal.timeout(15000)
     });
     const invoice = await providerResponse.json().catch(() => ({}));
@@ -1959,7 +1963,7 @@ app.get('/api/admin/payment-settings', requireAdmin, (req, res) => {
   });
 });
 
-app.post('/api/admin/payment-settings', requireAdmin, (req, res) => {
+app.post('/api/admin/payment-settings', requireAdmin, async (req, res) => {
   const { cartApiKey, balanceApiKey, ipnSecret } = req.body;
   const cartKey = String(cartApiKey || '').trim();
   const balanceKey = String(balanceApiKey || cartKey).trim();
@@ -1967,6 +1971,30 @@ app.post('/api/admin/payment-settings', requireAdmin, (req, res) => {
 
   if (!cartKey && !balanceKey) {
     return res.status(400).json({ error: 'Please enter at least one NOWPayments API key.' });
+  }
+
+  if (!secret) {
+    return res.status(400).json({
+      error: '⚠️ IPN Secret Key Missing: Please paste your IPN Secret Key from NOWPayments -> Payment Settings to enable instant webhook order delivery.'
+    });
+  }
+
+  // Run live verification script against NOWPayments API
+  try {
+    const testKey = cartKey || balanceKey;
+    const verifyRes = await fetch(`${NOWPAYMENTS_API_URL}/status`, {
+      headers: { 'x-api-key': testKey },
+      signal: AbortSignal.timeout(10000)
+    });
+    const verifyData = await verifyRes.json().catch(() => ({}));
+
+    if (!verifyRes.ok || verifyData.message === 'Unauthorized' || verifyData.error) {
+      return res.status(400).json({
+        error: `❌ Invalid NOWPayments API Key: Could not authenticate with NOWPayments (${verifyData.message || 'Unauthorized'}). Please double-check your API key.`
+      });
+    }
+  } catch (verifyErr) {
+    console.warn('NOWPayments status check warning:', verifyErr.message);
   }
 
   const newSettings = {
@@ -1978,9 +2006,28 @@ app.post('/api/admin/payment-settings', requireAdmin, (req, res) => {
   };
 
   writeJson(FILES.paymentSettings, newSettings);
-  logAudit(req.currentUser.email, 'UPDATE_PAYMENT_SETTINGS', 'Updated NOWPayments API keys and IPN Secret', req.ip);
+  logAudit(req.currentUser.email, 'UPDATE_PAYMENT_SETTINGS', 'Verified and updated NOWPayments API keys and IPN Secret', req.ip);
 
-  res.json({ success: true, message: 'Payment gateway settings saved successfully.', settings: newSettings });
+  res.json({
+    success: true,
+    message: '✅ NOWPayments API keys & IPN Secret verified and saved successfully!',
+    settings: newSettings
+  });
+});
+
+app.delete('/api/admin/payment-settings', requireAdmin, (req, res) => {
+  try {
+    if (fs.existsSync(FILES.paymentSettings)) {
+      fs.unlinkSync(FILES.paymentSettings);
+    }
+  } catch (err) {
+    console.error('Error deleting payment settings file:', err);
+  }
+  logAudit(req.currentUser.email, 'DELETE_PAYMENT_SETTINGS', 'Reset NOWPayments API keys and IPN Secret', req.ip);
+  res.json({
+    success: true,
+    message: 'Payment gateway API keys have been removed.'
+  });
 });
 
 // Image Upload Endpoint

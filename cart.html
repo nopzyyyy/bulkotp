@@ -168,6 +168,59 @@
                 </a>
             </div>
         </div>
+
+        <!-- Invoice Ready Screen View (Crypto NOWPayments Checkout) -->
+        <div id="cartInvoiceReadyView" style="display: none; max-width: 540px; margin: 2rem auto 0;">
+            <div class="admin-panel-card" style="padding: 2.5rem 2rem; text-align: center; border: 1px solid var(--border-subtle); background: #0e0e13; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+                
+                <!-- Glowing Pink Circle Checkmark -->
+                <div style="width: 72px; height: 72px; background: rgba(255, 37, 92, 0.12); border: 2px solid rgba(255, 37, 92, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; box-shadow: 0 0 25px rgba(255, 37, 92, 0.25);">
+                    <i class="fa-solid fa-check" style="font-size: 28px; color: #ff255c;"></i>
+                </div>
+
+                <h2 style="font-size: 1.85rem; font-weight: 800; color: #ffffff; margin-bottom: 0.4rem; letter-spacing: -0.5px;">Invoice Ready</h2>
+                <p style="color: #9090a8; font-size: 0.95rem; margin-bottom: 1.75rem;">Order registered. Complete your crypto payment to finalize delivery.</p>
+
+                <!-- Order Details Card -->
+                <div style="background: #14141d; border: 1px solid #222230; border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; text-align: left; display: grid; gap: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #808098; font-size: 0.875rem;">Order ID</span>
+                        <span id="cartInvoiceOrderId" style="font-family: monospace; font-weight: 700; color: #ffffff; font-size: 1rem;">ORD-8BC90FC8</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #202030; padding-top: 0.75rem;">
+                        <span style="color: #808098; font-size: 0.875rem;">Total</span>
+                        <span id="cartInvoiceTotal" style="font-weight: 800; color: #ff255c; font-size: 1.25rem;">$0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #202030; padding-top: 0.75rem;">
+                        <span style="color: #808098; font-size: 0.875rem;">Status</span>
+                        <span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 7px; height: 7px; background: #fbbf24; border-radius: 50%; display: inline-block;"></span> AWAITING PAYMENT
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Primary Action Button (Hot Pink / Magenta) -->
+                <a id="cartInvoicePayBtn" href="#" target="_blank" class="btn" style="width: 100%; padding: 1.05rem; background: linear-gradient(135deg, #ff255c 0%, #d91b4b 100%); color: #ffffff; font-weight: 700; font-size: 1.05rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 24px rgba(255, 37, 92, 0.35); text-decoration: none; margin-bottom: 0.75rem;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Pay with Crypto Now
+                </a>
+
+                <!-- Popup Blocked Notice -->
+                <p id="cartPopupNotice" style="color: #f59e0b; font-size: 0.8125rem; font-weight: 500; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-circle-info"></i> Popup blocked — click the button above to open payment.
+                </p>
+
+                <!-- Secondary Action Buttons -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <a href="orders.html" class="btn" style="background: #1a1a24; color: #ffffff; border: 1px solid #2a2a38; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; text-decoration: none; border-radius: 10px; text-align: center;">View My Orders</a>
+                    <a href="index.html" class="btn" style="background: #1a1a24; color: #a0a0b5; border: 1px solid #2a2a38; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; text-decoration: none; border-radius: 10px; text-align: center;">Continue Shopping</a>
+                </div>
+
+                <!-- Footer Security Note -->
+                <p style="color: #606075; font-size: 0.78125rem; line-height: 1.5; margin: 0;">
+                    Once the blockchain confirms your payment (typically 5–20 minutes), your order is delivered automatically. Track progress on the Orders page.
+                </p>
+            </div>
+        </div>
     </main>
 
     <!-- Toast Notification Container -->

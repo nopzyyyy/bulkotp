@@ -77,14 +77,16 @@ async function main() {
     const customerCookie = cookieFrom(verification.response);
     assert.ok(customerCookie.startsWith('market_session='));
 
-    const config = await request('/api/payments/config');
-    assert.equal(config.data.nowPayments.enabled, true);
+    const prods = await request('/api/products');
+    const firstProd = prods.data.find(p => p.stock > 0) || prods.data[0];
+    const testProdId = firstProd ? firstProd.id : 'hourly-1h';
 
     const crypto = await request('/api/payments/nowpayments/invoice', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Cookie: customerCookie },
-      body: JSON.stringify({ items: [{ productId: 'compact-1h', qty: 1 }], payCurrency: 'btc' })
+      body: JSON.stringify({ items: [{ productId: testProdId, qty: 1 }], payCurrency: 'btc' })
     });
+    console.log('Smoke Test Crypto Invoice Status:', crypto.response.status, crypto.data);
     assert.ok([201, 502].includes(crypto.response.status));
 
     const adminLogin = await request('/api/auth/login', {

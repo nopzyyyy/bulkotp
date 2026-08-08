@@ -1010,16 +1010,17 @@ async function handleSavePaymentSettings(event) {
   const ipnSecret = (document.getElementById('nowpaymentsIpnSecret')?.value || '').trim();
 
   if (!cartApiKey && !balanceApiKey) {
-    showToast('Please enter your NOWPayments API key.', 'error');
+    showToast('Please enter at least one NOWPayments API key.', 'error');
     return;
   }
 
-  if (!confirm('⚠️ ATTENTION: Confirm updating your live payment gateway keys?')) {
+  if (!ipnSecret) {
+    showToast('⚠️ IPN Secret Key is required to enable automatic webhook payment confirmation.', 'error');
     return;
   }
 
   startTopProgress();
-  showGlobalLoading('Saving payment gateway settings...');
+  showGlobalLoading('Testing & verifying NOWPayments API keys...');
 
   try {
     const res = await fetch('/api/admin/payment-settings', {
@@ -1032,9 +1033,40 @@ async function handleSavePaymentSettings(event) {
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to save payment settings.');
 
-    showToast('Payment gateway settings saved successfully!', 'success');
+    showToast(data.message || 'Payment gateway settings verified and saved successfully!', 'success');
+    await loadAdminPaymentSettings();
   } catch (err) {
     showToast(err.message || 'Error saving payment settings.', 'error');
+  } finally {
+    finishTopProgress();
+    hideGlobalLoading();
+  }
+}
+
+async function handleDeletePaymentSettings() {
+  if (!confirm('Are you sure you want to delete and reset your NOWPayments API keys?')) return;
+
+  startTopProgress();
+  showGlobalLoading('Removing payment API keys...');
+
+  try {
+    const res = await fetch('/api/admin/payment-settings', {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete payment settings.');
+
+    const cartInput = document.getElementById('nowpaymentsCartApiKey');
+    const balanceInput = document.getElementById('nowpaymentsBalanceApiKey');
+    const secretInput = document.getElementById('nowpaymentsIpnSecret');
+    if (cartInput) cartInput.value = '';
+    if (balanceInput) balanceInput.value = '';
+    if (secretInput) secretInput.value = '';
+
+    showToast(data.message || 'Payment gateway API keys removed.', 'success');
+  } catch (err) {
+    showToast(err.message || 'Error deleting payment settings.', 'error');
   } finally {
     finishTopProgress();
     hideGlobalLoading();

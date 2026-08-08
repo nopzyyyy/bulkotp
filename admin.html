@@ -433,9 +433,12 @@
                                 <input type="password" id="nowpaymentsIpnSecret" class="form-input font-mono" placeholder="Enter NOWPayments IPN Secret Key (Optional)">
                             </div>
 
-                            <div style="margin-top: 0.5rem;">
+                            <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                 <button type="submit" id="btnSavePaymentSettings" class="btn btn-primary" style="padding: 0.75rem 2rem;">
-                                    <i class="fa-solid fa-floppy-disk"></i> Save Payment Gateway Settings
+                                    <i class="fa-solid fa-floppy-disk"></i> Test &amp; Save Payment Gateway Settings
+                                </button>
+                                <button type="button" id="btnDeletePaymentSettings" class="btn btn-glass" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.35);" onclick="handleDeletePaymentSettings()">
+                                    <i class="fa-solid fa-trash-can"></i> Delete / Reset API Keys
                                 </button>
                             </div>
                         </form>
