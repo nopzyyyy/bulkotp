@@ -1449,7 +1449,7 @@ details[open] .faq-icon {
   transform: scale(1.05);
 }
 
-/* Compact Custom Cryptocurrency Dropdown */
+/* Compact Custom Cryptocurrency Dropdown - Strictly Single Line & Mobile Perfect */
 .crypto-custom-dropdown {
   position: relative;
   width: 100%;
@@ -1468,6 +1468,7 @@ details[open] .faq-icon {
   transition: all 0.18s ease;
   user-select: none;
   min-height: 42px;
+  white-space: nowrap;
 }
 .crypto-custom-trigger:hover,
 .crypto-custom-dropdown.is-active .crypto-custom-trigger {
@@ -1479,6 +1480,8 @@ details[open] .faq-icon {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .crypto-trigger-icon {
   width: 22px;
@@ -1489,32 +1492,37 @@ details[open] .faq-icon {
   justify-content: center;
   flex-shrink: 0;
 }
-.crypto-trigger-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 .crypto-trigger-title {
   font-weight: 700;
   font-size: 0.88rem;
   color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  white-space: nowrap;
 }
-.crypto-trigger-subtitle {
-  display: none !important;
-}
-.crypto-network-badge {
+.crypto-network-pill {
   font-size: 0.65rem;
-  padding: 0.1rem 0.4rem;
+  padding: 0.12rem 0.45rem;
   border-radius: 4px;
   background: rgba(255, 37, 92, 0.15);
   color: #ff4d79;
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
 }
+.crypto-network-pill.trc20 { background: rgba(38, 161, 123, 0.18); color: #26a17b; }
+.crypto-network-pill.btc { background: rgba(247, 147, 26, 0.18); color: #f7931a; }
+.crypto-network-pill.eth { background: rgba(98, 126, 234, 0.18); color: #627eea; }
+.crypto-network-pill.sol { background: rgba(153, 69, 255, 0.18); color: #c084fc; }
+.crypto-network-pill.ltc { background: rgba(52, 93, 157, 0.22); color: #60a5fa; }
+.crypto-network-pill.trx { background: rgba(235, 0, 41, 0.18); color: #f87171; }
+.crypto-network-pill.bnb { background: rgba(243, 186, 47, 0.18); color: #facc15; }
+.crypto-network-pill.doge { background: rgba(194, 166, 51, 0.22); color: #fbbf24; }
+
 .crypto-custom-menu {
   position: absolute;
   top: calc(100% + 4px);
@@ -1526,7 +1534,7 @@ details[open] .faq-icon {
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
   padding: 0.3rem;
   z-index: 1000;
-  max-height: 260px;
+  max-height: 250px;
   overflow-y: auto;
   display: none;
 }
@@ -1537,11 +1545,13 @@ details[open] .faq-icon {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.45rem 0.65rem;
+  padding: 0.5rem 0.7rem;
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.12s ease;
   user-select: none;
+  white-space: nowrap;
+  gap: 8px;
 }
 .crypto-custom-item:hover {
   background: #1c1c2b;
@@ -1554,6 +1564,8 @@ details[open] .faq-icon {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .crypto-item-icon {
   width: 22px;
@@ -1564,30 +1576,36 @@ details[open] .faq-icon {
   justify-content: center;
   flex-shrink: 0;
 }
-.crypto-item-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 .crypto-item-name {
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 600;
+  font-size: 0.86rem;
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.crypto-item-network {
-  font-size: 0.72rem;
-  color: #88889c;
+  white-space: nowrap;
 }
 .crypto-item-check {
   color: #ff255c;
   font-size: 0.8rem;
   display: none;
+  flex-shrink: 0;
 }
 .crypto-custom-item.selected .crypto-item-check {
   display: block;
+}
+
+@media (max-width: 600px) {
+  .crypto-custom-trigger {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  .crypto-trigger-title {
+    font-size: 0.82rem;
+  }
+  .crypto-custom-item {
+    padding: 0.55rem 0.65rem;
+  }
+  .crypto-item-name {
+    font-size: 0.82rem;
+  }
 }
 
 .payment-option {

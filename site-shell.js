@@ -292,17 +292,15 @@
     // Copy icon and labels to trigger
     const trigger = dropdown.querySelector('.crypto-custom-trigger');
     const itemIcon = itemEl.querySelector('.crypto-item-icon')?.innerHTML || '';
-    const itemName = itemEl.querySelector('.crypto-item-name')?.innerHTML || '';
-    const itemNetwork = itemEl.querySelector('.crypto-item-network')?.textContent || '';
+    const itemName = itemEl.querySelector('.crypto-item-name')?.textContent || '';
+    const itemPill = itemEl.querySelector('.crypto-network-pill')?.outerHTML || '';
 
     if (trigger) {
       const triggerIcon = trigger.querySelector('.crypto-trigger-icon');
       const triggerTitle = trigger.querySelector('.crypto-trigger-title');
-      const triggerSubtitle = trigger.querySelector('.crypto-trigger-subtitle');
 
       if (triggerIcon) triggerIcon.innerHTML = itemIcon;
-      if (triggerTitle) triggerTitle.innerHTML = itemName;
-      if (triggerSubtitle) triggerSubtitle.textContent = itemNetwork;
+      if (triggerTitle) triggerTitle.innerHTML = `${itemName} ${itemPill}`;
     }
 
     dropdown.classList.remove('is-active');
