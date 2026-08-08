@@ -136,12 +136,24 @@ function getPaymentSettings() {
     balanceApiKey: (process.env.NOWPAYMENTS_BALANCE_API_KEY || process.env.NOWPAYMENTS_API_KEY || '').trim(),
     ipnSecret: (process.env.NOWPAYMENTS_IPN_SECRET || '').trim()
   };
-  const stored = readJson(FILES.paymentSettings, {});
-  return {
-    cartApiKey: (stored.cartApiKey || defaults.cartApiKey).trim(),
-    balanceApiKey: (stored.balanceApiKey || defaults.balanceApiKey || stored.cartApiKey || defaults.cartApiKey).trim(),
-    ipnSecret: (stored.ipnSecret || defaults.ipnSecret).trim()
-  };
+  let stored = {};
+  try {
+    const file = FILES.paymentSettings;
+    if (fs.existsSync(file)) {
+      const content = fs.readFileSync(file, 'utf8');
+      if (content && content.trim().length > 0) {
+        stored = JSON.parse(content);
+      }
+    }
+  } catch (err) {
+    console.error('Error reading paymentSettings file:', err);
+  }
+
+  const cartApiKey = String(stored.cartApiKey || defaults.cartApiKey || '').trim();
+  const balanceApiKey = String(stored.balanceApiKey || defaults.balanceApiKey || cartApiKey || '').trim();
+  const ipnSecret = String(stored.ipnSecret || defaults.ipnSecret || '').trim();
+
+  return { cartApiKey, balanceApiKey, ipnSecret };
 }
 
 function nowPaymentsConfigured(type = 'cart') {
@@ -1538,7 +1550,7 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
   if (!nowPaymentsConfigured('cart')) {
     return res.status(503).json({
       code: 'PAYMENTS_NOT_CONFIGURED',
-      error: 'Crypto Gateway Setup Required: Please enter your NOWPayments API Key in Admin Panel -> Payment Gateways.'
+      error: 'Cryptocurrency payment is temporarily unavailable. Please try again in a few moments or use your account balance.'
     });
   }
 
