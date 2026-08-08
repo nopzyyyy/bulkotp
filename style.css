@@ -1449,6 +1449,149 @@ details[open] .faq-icon {
   transform: scale(1.05);
 }
 
+/* Custom Cryptocurrency Dropdown with Real SVGs */
+.crypto-custom-dropdown {
+  position: relative;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+.crypto-custom-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #11111a;
+  border: 1px solid #28283c;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.crypto-custom-trigger:hover,
+.crypto-custom-dropdown.is-active .crypto-custom-trigger {
+  border-color: #ff255c;
+  background: #151522;
+  box-shadow: 0 0 20px rgba(255, 37, 92, 0.2);
+}
+.crypto-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.crypto-trigger-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.crypto-trigger-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.crypto-trigger-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.crypto-trigger-subtitle {
+  font-size: 0.75rem;
+  color: #88889c;
+  font-weight: 500;
+}
+.crypto-network-badge {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 37, 92, 0.15);
+  color: #ff4d79;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.crypto-custom-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #12121c;
+  border: 1px solid #2a2a3e;
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+  padding: 0.4rem;
+  z-index: 1000;
+  max-height: 330px;
+  overflow-y: auto;
+  display: none;
+}
+.crypto-custom-dropdown.is-active .crypto-custom-menu {
+  display: block;
+}
+.crypto-custom-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.crypto-custom-item:hover {
+  background: #1c1c2c;
+}
+.crypto-custom-item.selected {
+  background: rgba(255, 37, 92, 0.15);
+  border: 1px solid rgba(255, 37, 92, 0.35);
+}
+.crypto-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.crypto-item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.crypto-item-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.crypto-item-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.crypto-item-network {
+  font-size: 0.73rem;
+  color: #8888a0;
+}
+.crypto-item-check {
+  color: #ff255c;
+  font-size: 0.9rem;
+  display: none;
+}
+.crypto-custom-item.selected .crypto-item-check {
+  display: block;
+}
+
 .payment-option {
   transition: border-color var(--trans-fast), background var(--trans-fast);
 }

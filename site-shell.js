@@ -269,6 +269,51 @@
     window.addEventListener('storage', updateCartBadges);
   }
 
+  window.toggleCryptoCustomDropdown = function(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('is-active');
+    document.querySelectorAll('.crypto-custom-dropdown').forEach(d => d.classList.remove('is-active'));
+    if (!isOpen) dropdown.classList.add('is-active');
+  };
+
+  window.selectCryptoCustomCoin = function(dropdownId, inputId, itemEl) {
+    const dropdown = document.getElementById(dropdownId);
+    const input = document.getElementById(inputId);
+    if (!dropdown || !itemEl) return;
+
+    const value = itemEl.getAttribute('data-value') || 'all';
+    if (input) input.value = value;
+
+    // Mark selected item
+    dropdown.querySelectorAll('.crypto-custom-item').forEach(item => item.classList.remove('selected'));
+    itemEl.classList.add('selected');
+
+    // Copy icon and labels to trigger
+    const trigger = dropdown.querySelector('.crypto-custom-trigger');
+    const itemIcon = itemEl.querySelector('.crypto-item-icon')?.innerHTML || '';
+    const itemName = itemEl.querySelector('.crypto-item-name')?.innerHTML || '';
+    const itemNetwork = itemEl.querySelector('.crypto-item-network')?.textContent || '';
+
+    if (trigger) {
+      const triggerIcon = trigger.querySelector('.crypto-trigger-icon');
+      const triggerTitle = trigger.querySelector('.crypto-trigger-title');
+      const triggerSubtitle = trigger.querySelector('.crypto-trigger-subtitle');
+
+      if (triggerIcon) triggerIcon.innerHTML = itemIcon;
+      if (triggerTitle) triggerTitle.innerHTML = itemName;
+      if (triggerSubtitle) triggerSubtitle.textContent = itemNetwork;
+    }
+
+    dropdown.classList.remove('is-active');
+  };
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.crypto-custom-dropdown')) {
+      document.querySelectorAll('.crypto-custom-dropdown').forEach(d => d.classList.remove('is-active'));
+    }
+  });
+
   window.SiteShell = {
     showLoading,
     hideLoading,
