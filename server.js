@@ -1590,7 +1590,8 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     });
     const invoice = await providerResponse.json().catch(() => ({}));
     if (!providerResponse.ok || !invoice.invoice_url) {
-      return res.status(502).json({ error: invoice.message || 'NOWPayments could not create an invoice.' });
+      console.error('NOWPayments API Error Response:', providerResponse.status, invoice);
+      return res.status(502).json({ error: invoice.message || invoice.error || 'NOWPayments could not create an invoice.' });
     }
 
     const order = {
@@ -1613,8 +1614,9 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     writeJson(FILES.orders, orders);
     res.status(201).json({ success: true, orderId, total: quote.total, invoiceUrl: invoice.invoice_url });
   } catch (error) {
+    console.error('NOWPayments invoice endpoint error:', error);
     const timeout = error.name === 'TimeoutError' || error.name === 'AbortError';
-    res.status(timeout ? 504 : 500).json({ error: timeout ? 'Payment provider timed out. Please try again.' : 'Could not create the payment invoice.' });
+    res.status(timeout ? 504 : 500).json({ error: timeout ? 'Payment provider timed out. Please try again.' : (error.message || 'Could not create the payment invoice.') });
   }
 });
 
