@@ -1266,37 +1266,14 @@ app.post('/api/balance/topup', requireAuth, async (req, res) => {
         createdAt: new Date().toISOString()
       });
       writeJson(FILES.transactions, transactions);
-
       return res.json({ success: true, invoiceUrl: invoiceData.invoice_url, paymentId: invoiceData.id });
     } catch (err) {
       console.error('Crypto topup invoice error:', err);
+      return res.status(502).json({ error: err.message || 'Could not generate cryptocurrency invoice. Please try again.' });
     }
   }
 
-  // Instant Top-Up fallback / Demo mode credit
-  const users = readJson(FILES.users, []);
-  const user = users.find(u => u.id === req.currentUser.id);
-  if (!user) return res.status(404).json({ error: 'User account not found.' });
-
-  user.balance = Math.round((Number(user.balance || 0) + amount) * 100) / 100;
-  writeJson(FILES.users, users);
-
-  const transactions = readJson(FILES.transactions, []);
-  const txId = `tx_${Date.now()}`;
-  transactions.unshift({
-    id: txId,
-    userId: user.id,
-    email: user.email,
-    type: 'TOPUP',
-    amount: amount,
-    description: `Instant Balance Deposit ($${amount.toFixed(2)} USD)`,
-    status: 'COMPLETED',
-    createdAt: new Date().toISOString()
-  });
-  writeJson(FILES.transactions, transactions);
-
-  logAudit(user.email, 'BALANCE_TOPUP', `Top-up account balance by +$${amount.toFixed(2)}`, req.ip);
-  res.json({ success: true, balance: user.balance, transactionId: txId });
+  return res.status(503).json({ error: 'Cryptocurrency deposit is currently unavailable. Please contact support or try again shortly.' });
 });
 
 // Redeem Balance Voucher Code

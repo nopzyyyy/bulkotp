@@ -288,8 +288,6 @@ function selectCartPaymentMethod(method, element) {
   if (selectorWrap) selectorWrap.style.display = method === 'crypto' ? 'block' : 'none';
   updateCheckoutButtonState();
 }
-  element?.classList.add('active');
-}
 
 async function processCartPageCheckout(event) {
   event.preventDefault();
