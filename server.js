@@ -1593,6 +1593,7 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
       return res.status(502).json({ error: invoice.message || invoice.error || 'NOWPayments could not create an invoice.' });
     }
 
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const order = {
       id: orderId,
       orderNumber: orderId,
@@ -1604,6 +1605,8 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
       paymentMethod: `Crypto (${requestedCurrency.toUpperCase()})`,
       paymentProvider: 'NOWPayments',
       externalPaymentId: String(invoice.id),
+      invoiceUrl: invoice.invoice_url,
+      expiresAt: expiresAt,
       status: 'AWAITING_PAYMENT',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -1611,7 +1614,7 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
     const orders = readJson(FILES.orders, []);
     orders.unshift(order);
     writeJson(FILES.orders, orders);
-    res.status(201).json({ success: true, orderId, total: quote.total, invoiceUrl: invoice.invoice_url });
+    res.status(201).json({ success: true, orderId, total: quote.total, invoiceUrl: invoice.invoice_url, expiresAt });
   } catch (error) {
     console.error('NOWPayments invoice endpoint error:', error);
     const timeout = error.name === 'TimeoutError' || error.name === 'AbortError';

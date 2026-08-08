@@ -345,6 +345,9 @@ async function processCartPageCheckout(event) {
       if (cartLayout) cartLayout.style.display = 'none';
       if (invoiceView) invoiceView.style.display = 'block';
 
+      // Start dynamic expiration countdown timer
+      startInvoiceCountdown(data.expiresAt);
+
       // Open NOWPayments invoice in a new tab
       let payWindow = null;
       try {
@@ -494,4 +497,29 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+let invoiceCountdownInterval = null;
+
+function startInvoiceCountdown(expiresAt) {
+  if (invoiceCountdownInterval) clearInterval(invoiceCountdownInterval);
+  const targetTime = expiresAt ? new Date(expiresAt).getTime() : (Date.now() + 60 * 60 * 1000);
+  const el = document.getElementById('cartInvoiceExpiresIn');
+
+  function update() {
+    if (!el) return;
+    const remainingMs = targetTime - Date.now();
+    if (remainingMs <= 0) {
+      el.innerHTML = '<span style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Expired</span>';
+      clearInterval(invoiceCountdownInterval);
+      return;
+    }
+    const totalSecs = Math.floor(remainingMs / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    el.innerHTML = `⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} remaining`;
+  }
+
+  update();
+  invoiceCountdownInterval = setInterval(update, 1000);
 }
