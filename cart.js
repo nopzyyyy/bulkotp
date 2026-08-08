@@ -61,6 +61,11 @@ function getCartStockIssues() {
 function setCartStockStatus(kind, message) {
   const status = document.getElementById('cartStockSyncStatus');
   if (!status) return;
+  if (!pageCart || !pageCart.length) {
+    status.style.display = 'none';
+    return;
+  }
+  status.style.display = 'flex';
   const icons = {
     checking: 'fa-solid fa-rotate fa-spin',
     ready: 'fa-solid fa-circle-check',
