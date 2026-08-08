@@ -1538,7 +1538,7 @@ app.post('/api/payments/nowpayments/invoice', requireAuth, async (req, res) => {
   if (!nowPaymentsConfigured('cart')) {
     return res.status(503).json({
       code: 'PAYMENTS_NOT_CONFIGURED',
-      error: 'Cryptocurrency checkout is not active yet. Please use store balance for now.'
+      error: 'Crypto Gateway Setup Required: Please enter your NOWPayments API Key in Admin Panel -> Payment Gateways.'
     });
   }
 
